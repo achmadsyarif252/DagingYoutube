@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/ambil_video.py *)",
+      "Bash(python scripts/buat_dokumen.py *)",
+      "Bash(python scripts/siapkan_topik.py *)",
+      "PowerShell(python scripts/ambil_video.py *)",
+      "PowerShell(python scripts/buat_dokumen.py *)",
+      "PowerShell(python scripts/siapkan_topik.py *)",
+      "WebSearch",
+      "WebFetch",
+      "Edit(kerja/**)",
+      "Skill(daging)",
+      "Skill(riset)"
+    ]
+  }
+}

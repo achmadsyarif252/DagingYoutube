@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daging</title>
+<meta name="description" content="Rak baca dokumen Daging YouTube dan riset topik.">
+<meta name="theme-color" content="#faf8f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ikon/ikon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="ikon/ikon-192.png">
+<link rel="stylesheet" href="app.css">
+<script>
+  try { const t = JSON.parse(localStorage.getItem("daging:setelan") || "{}").tema; if (t && t !== "auto") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+
+<!-- Rak: daftar dokumen -->
+<main id="rak" hidden>
+  <header class="rak-kepala">
+    <div class="merek">
+      <span class="merek-label">Daging</span>
+      <h1>Rak Baca</h1>
+    </div>
+    <button class="ikon-tombol" id="tombol-setelan" aria-label="Setelan">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <section id="lanjut" hidden></section>
+
+  <div class="saring">
+    <label class="cari">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="cari" type="search" placeholder="Cari judul…" autocomplete="off">
+    </label>
+    <div class="chip-baris" id="chips">
+      <button class="chip" data-f="semua" aria-pressed="true">Semua</button>
+      <button class="chip" data-f="video" aria-pressed="false">Video</button>
+      <button class="chip" data-f="topik" aria-pressed="false">Topik</button>
+      <button class="chip" data-f="belum" aria-pressed="false">Belum selesai</button>
+    </div>
+  </div>
+
+  <ul id="daftar" class="daftar"></ul>
+  <p id="kosong" class="kosong" hidden></p>
+</main>
+
+<!-- Pembaca -->
+<div id="pembaca" hidden>
+  <header class="baca-kepala">
+    <button class="ikon-tombol" id="tombol-kembali" aria-label="Kembali ke rak">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="baca-judul" id="baca-judul"></div>
+    <button class="ikon-tombol" id="tombol-isi" aria-label="Daftar isi">
+      <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+    </button>
+    <button class="ikon-tombol" id="tombol-aa" aria-label="Tampilan">
+      <svg viewBox="0 0 24 24"><path d="M3 19 8 5l5 14M4.8 14h6.4M14 19l3.5-9 3.5 9M15.2 16h4.6"/></svg>
+    </button>
+    <div class="kemajuan"><div id="kemajuan-isi"></div></div>
+  </header>
+  <article id="naskah" class="naskah"></article>
+  <div id="halaman-pdf" class="halaman-pdf" hidden></div>
+  <div id="memuat" class="memuat" hidden>Memuat…</div>
+</div>
+
+<!-- Lembar bawah: daftar isi / setelan -->
+<div id="latar" class="latar" hidden></div>
+<section id="lembar" class="lembar" hidden aria-modal="true" role="dialog">
+  <div class="lembar-pegangan"></div>
+  <div id="lembar-isi"></div>
+</section>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js" type="module"></script>
+</body>
+</html>
