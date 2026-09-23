@@ -11,7 +11,8 @@
       "WebFetch",
       "Edit(kerja/**)",
       "Skill(daging)",
-      "Skill(riset)"
+      "Skill(riset)",
+      "Bash(python scripts/terbitkan.py*)"
     ]
   }
 }

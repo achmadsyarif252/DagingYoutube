@@ -1,0 +1,7 @@
+{
+  "jenis": "topik",
+  "judul": "Membedah Large Language Model (LLM)",
+  "subjudul": "Apa itu LLM dan bagaimana ia dibuat dari nol: data, tokenisasi, Transformer, backpropagation, pretraining, post-training, hingga inferensi, dengan bahasa teknis dan penjelasan awam, tanpa rumus",
+  "kode": "topik-cara-kerja-large-language-model-llm",
+  "tanggal": "2026-09-23"
+}

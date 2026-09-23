@@ -1,0 +1,1556 @@
+
+<section class="cover topik">
+  <div class="label">Daging · Riset Mendalam</div>
+  <h1>Membedah Large Language Model (LLM)</h1>
+  <p class="subjudul">Apa itu LLM dan bagaimana ia dibuat dari nol: data, tokenisasi, Transformer, backpropagation, pretraining, post-training, hingga inferensi, dengan bahasa teknis dan penjelasan awam, tanpa rumus</p>
+  <div class="dibuat">Dokumen dibuat 23 September 2026. Disusun dari riset berbagai sumber; rujukan tiap klaim
+  tercantum sebagai catatan kaki di akhir dokumen. Data dan angka berlaku per tanggal sumbernya.</div>
+</section><div class="toc">
+<ul>
+<li><a href="#pendahuluan">Pendahuluan</a><ul>
+<li><a href="#ruang-lingkup-dan-batasan">Ruang lingkup dan batasan</a></li>
+<li><a href="#cara-membaca">Cara membaca</a></li>
+</ul>
+</li>
+<li><a href="#gambaran-besar">Gambaran Besar</a><ul>
+<li><a href="#satu-kalimat-yang-menjelaskan-hampir-semuanya">Satu kalimat yang menjelaskan hampir semuanya</a></li>
+<li><a href="#peta-jalan-dari-teks-mentah-sampai-asisten">Peta jalan: dari teks mentah sampai asisten</a></li>
+<li><a href="#fakta-kunci">Fakta kunci</a></li>
+</ul>
+</li>
+<li><a href="#fondasi-apa-itu-model-bahasa">Fondasi: Apa Itu "Model Bahasa"?</a><ul>
+<li><a href="#definisi-mesin-probabilitas-atas-teks">Definisi: mesin probabilitas atas teks</a></li>
+<li><a href="#mengapa-large">Mengapa "large"?</a></li>
+<li><a href="#sejarah-singkat-dari-menghitung-frekuensi-ke-transformer">Sejarah singkat: dari menghitung frekuensi ke Transformer</a></li>
+</ul>
+</li>
+<li><a href="#jaringan-saraf-dan-cara-belajarnya">Jaringan Saraf dan Cara Belajarnya</a><ul>
+<li><a href="#neuron-tiruan-kenop-penjumlahan-dan-saklar">Neuron tiruan: kenop, penjumlahan, dan saklar</a></li>
+<li><a href="#lapisan-dan-kedalaman">Lapisan dan kedalaman</a></li>
+<li><a href="#belajar-mengurangi-kesalahan">Belajar = mengurangi kesalahan</a></li>
+<li><a href="#gradient-descent-menuruni-bukit-dalam-kabut">Gradient descent: menuruni bukit dalam kabut</a></li>
+<li><a href="#backpropagation-rantai-tanggung-jawab-dari-belakang-ke-depan">Backpropagation: rantai tanggung jawab dari belakang ke depan</a></li>
+<li><a href="#optimizer-cara-melangkah-yang-lebih-cerdas">Optimizer: cara melangkah yang lebih cerdas</a></li>
+<li><a href="#generalisasi-overfitting-dan-mengapa-data-harus-beragam">Generalisasi, overfitting, dan mengapa data harus beragam</a></li>
+<li><a href="#stabilitas-pada-jaringan-sangat-dalam-residual-dan-normalisasi">Stabilitas pada jaringan sangat dalam: residual dan normalisasi</a></li>
+</ul>
+</li>
+<li><a href="#data-dan-tokenisasi-bahan-baku-llm">Data dan Tokenisasi: Bahan Baku LLM</a><ul>
+<li><a href="#dari-mana-datanya">Dari mana datanya?</a></li>
+<li><a href="#membersihkan-internet">Membersihkan internet</a></li>
+<li><a href="#resep-campuran-data-data-mix">Resep campuran data (data mix)</a></li>
+<li><a href="#tokenisasi-memotong-teks-menjadi-keping-bernomor">Tokenisasi: memotong teks menjadi keping bernomor</a></li>
+<li><a href="#embedding-memberi-setiap-token-koordinat-makna">Embedding: memberi setiap token koordinat makna</a></li>
+</ul>
+</li>
+<li><a href="#arsitektur-transformer-mesin-di-balik-llm">Arsitektur Transformer: Mesin di Balik LLM</a><ul>
+<li><a href="#self-attention-setiap-kata-bertanya-setiap-kata-menawarkan">Self-attention: setiap kata bertanya, setiap kata menawarkan</a></li>
+<li><a href="#posisi-memberi-tahu-urutan-kata">Posisi: memberi tahu urutan kata</a></li>
+<li><a href="#feed-forward-network-tempat-fakta-banyak-tersimpan">Feed-forward network: tempat "fakta" banyak tersimpan</a></li>
+<li><a href="#menumpuk-blok-kedalaman-dan-residual-stream">Menumpuk blok: kedalaman dan residual stream</a></li>
+<li><a href="#mixture-of-experts-moe-model-besar-yang-hemat">Mixture of Experts (MoE): model besar yang hemat</a></li>
+<li><a href="#berapa-banyak-parameter-dan-di-mana">Berapa banyak parameter, dan di mana?</a></li>
+</ul>
+</li>
+<li><a href="#pretraining-membaca-internet-dan-menebak-kata-berikutnya">Pretraining: Membaca Internet dan Menebak Kata Berikutnya</a><ul>
+<li><a href="#tujuannya-sederhana-next-token-prediction">Tujuannya sederhana: next-token prediction</a></li>
+<li><a href="#satu-langkah-pelatihan-dari-awal-sampai-akhir">Satu langkah pelatihan, dari awal sampai akhir</a></li>
+<li><a href="#hukum-penskalaan-scaling-laws">Hukum penskalaan (scaling laws)</a></li>
+<li><a href="#infrastruktur-pabrik-komputasi">Infrastruktur: pabrik komputasi</a></li>
+<li><a href="#hasilnya-base-model">Hasilnya: base model</a></li>
+</ul>
+</li>
+<li><a href="#post-training-dari-pembaca-internet-menjadi-asisten">Post-training: Dari Pembaca Internet Menjadi Asisten</a><ul>
+<li><a href="#tahap-1-supervised-fine-tuning-sft">Tahap 1: Supervised Fine-Tuning (SFT)</a></li>
+<li><a href="#tahap-2-belajar-dari-preferensi-rlhf-dpo-rlaif">Tahap 2: Belajar dari preferensi (RLHF, DPO, RLAIF)</a></li>
+<li><a href="#tahap-3-reinforcement-learning-untuk-penalaran">Tahap 3: Reinforcement learning untuk penalaran</a></li>
+<li><a href="#pelatihan-keamanan-kepribadian-dan-penggunaan-alat">Pelatihan keamanan, kepribadian, dan penggunaan alat</a></li>
+<li><a href="#distilasi-guru-besar-murid-kecil">Distilasi: guru besar, murid kecil</a></li>
+<li><a href="#ringkasan-post-training">Ringkasan post-training</a></li>
+</ul>
+</li>
+<li><a href="#evaluasi-bagaimana-tahu-modelnya-bagus">Evaluasi: Bagaimana Tahu Modelnya Bagus?</a><ul>
+<li><a href="#jenis-jenis-evaluasi">Jenis-jenis evaluasi</a></li>
+<li><a href="#masalah-masalah-evaluasi">Masalah-masalah evaluasi</a></li>
+</ul>
+</li>
+<li><a href="#inferensi-apa-yang-terjadi-saat-anda-bertanya">Inferensi: Apa yang Terjadi Saat Anda Bertanya</a><ul>
+<li><a href="#langkah-demi-langkah">Langkah demi langkah</a></li>
+<li><a href="#sampling-memilih-dari-distribusi-peluang">Sampling: memilih dari distribusi peluang</a></li>
+<li><a href="#kv-cache-tidak-menghitung-ulang-yang-sudah-lewat">KV cache: tidak menghitung ulang yang sudah lewat</a></li>
+<li><a href="#jendela-konteks-context-window">Jendela konteks (context window)</a></li>
+<li><a href="#membuat-inferensi-lebih-murah-dan-cepat">Membuat inferensi lebih murah dan cepat</a></li>
+<li><a href="#memperluas-kemampuan-saat-inferensi-rag-alat-dan-agen">Memperluas kemampuan saat inferensi: RAG, alat, dan agen</a></li>
+</ul>
+</li>
+<li><a href="#resep-lengkap-membangun-llm-dari-nol">Resep Lengkap: Membangun LLM dari Nol</a><ul>
+<li><a href="#langkah-0-tentukan-tujuan-dan-anggaran">Langkah 0: Tentukan tujuan dan anggaran</a></li>
+<li><a href="#langkah-1-bangun-korpus-data">Langkah 1: Bangun korpus data</a></li>
+<li><a href="#langkah-2-latih-tokenizer">Langkah 2: Latih tokenizer</a></li>
+<li><a href="#langkah-3-rancang-arsitektur">Langkah 3: Rancang arsitektur</a></li>
+<li><a href="#langkah-4-siapkan-infrastruktur">Langkah 4: Siapkan infrastruktur</a></li>
+<li><a href="#langkah-5-pretraining">Langkah 5: Pretraining</a></li>
+<li><a href="#langkah-6-post-training">Langkah 6: Post-training</a></li>
+<li><a href="#langkah-7-evaluasi-dan-red-teaming">Langkah 7: Evaluasi dan red-teaming</a></li>
+<li><a href="#langkah-8-optimasi-dan-penerapan">Langkah 8: Optimasi dan penerapan</a></li>
+</ul>
+</li>
+<li><a href="#batasan-dan-miskonsepsi">Batasan dan Miskonsepsi</a><ul>
+<li><a href="#halusinasi">Halusinasi</a></li>
+<li><a href="#miskonsepsi-umum">Miskonsepsi umum</a></li>
+<li><a href="#batasan-lain">Batasan lain</a></li>
+</ul>
+</li>
+<li><a href="#data-angka-kunci">Data &amp; Angka Kunci</a><ul>
+<li><a href="#skala-model-model-tonggak-hanya-yang-datanya-dipublikasikan">Skala model-model tonggak (hanya yang datanya dipublikasikan)</a></li>
+<li><a href="#tren-komputasi-biaya-dan-sumber-daya">Tren komputasi, biaya, dan sumber daya</a></li>
+<li><a href="#data-dan-batasnya">Data dan batasnya</a></li>
+<li><a href="#post-training-angka-dari-instructgpt">Post-training: angka dari InstructGPT</a></li>
+</ul>
+</li>
+<li><a href="#perdebatan-perspektif">Perdebatan &amp; Perspektif</a><ul>
+<li><a href="#apakah-llm-memahami-burung-beo-stokastik-vs-model-dunia">Apakah LLM "memahami"? Burung beo stokastik vs model dunia</a></li>
+<li><a href="#kemampuan-emergen-nyata-atau-ilusi-pengukuran">Kemampuan emergen: nyata atau ilusi pengukuran?</a></li>
+<li><a href="#apakah-penskalaan-akan-terus-berhasil">Apakah penskalaan akan terus berhasil?</a></li>
+<li><a href="#apakah-data-akan-habis-data-sintetis-dan-keruntuhan-model">Apakah data akan habis? Data sintetis dan "keruntuhan model"</a></li>
+<li><a href="#model-terbuka-vs-tertutup">Model terbuka vs tertutup</a></li>
+<li><a href="#etika-hak-cipta-dan-dampak-sosial">Etika, hak cipta, dan dampak sosial</a></li>
+</ul>
+</li>
+<li><a href="#kondisi-terkini-prospek">Kondisi Terkini &amp; Prospek</a><ul>
+<li><a href="#keadaan-saat-ini">Keadaan saat ini</a></li>
+<li><a href="#tren-dan-pertanyaan-ke-depan">Tren dan pertanyaan ke depan</a></li>
+</ul>
+</li>
+<li><a href="#kronologi">Kronologi</a></li>
+<li><a href="#glosarium">Glosarium</a></li>
+<li><a href="#kesimpulan">Kesimpulan</a></li>
+<li><a href="#bacaan-lanjutan">Bacaan Lanjutan</a></li>
+</ul>
+</div>
+<h1 id="pendahuluan">Pendahuluan</h1>
+<p>Pada 30 November 2022, OpenAI membuka ChatGPT untuk umum. Dua bulan kemudian, menurut estimasi analis UBS berbasis data Similarweb, layanan itu sudah dipakai sekitar 100 juta orang per bulan, laju adopsi tercepat yang pernah tercatat untuk aplikasi konsumen<sup id="fnref:59"><a class="footnote-ref" href="#fn:59">59</a></sup>. Tiga setengah tahun kemudian, Stanford AI Index 2026 mencatat bahwa AI generatif telah mencapai tingkat adopsi 53% populasi dalam tiga tahun, lebih cepat daripada komputer pribadi maupun internet<sup id="fnref:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</p>
+<p>Di balik semua itu ada satu jenis program yang disebut <strong>Large Language Model (LLM)</strong>, "model bahasa berukuran besar". Kebanyakan orang memakainya setiap hari tanpa tahu apa yang sebenarnya terjadi di dalamnya. Ada yang membayangkan LLM sebagai mesin pencari yang pandai merangkai kata, ada yang mengira ia menyimpan "database jawaban", ada pula yang yakin ia sudah "berpikir seperti manusia". Ketiga gambaran itu keliru, masing-masing dengan cara yang berbeda.</p>
+<p>Dokumen ini berusaha menjawab dua pertanyaan besar:</p>
+<ol>
+<li><strong>LLM itu sebenarnya apa?</strong> Apa yang dihitung, disimpan, dan dihasilkannya?</li>
+<li><strong>Bagaimana LLM dibuat dari nol?</strong> Mulai dari mengumpulkan teks internet, mengubahnya menjadi angka, merancang arsitektur jaringan saraf (Transformer), melatihnya dengan <em>backpropagation</em> pada ribuan GPU (<em>pretraining</em>), lalu "mendidiknya" menjadi asisten yang berguna dan aman (<em>post-training</em>: SFT, RLHF, DPO, dan <em>reinforcement learning</em> untuk penalaran), sampai ia melayani pengguna (<em>inferensi</em>).</li>
+</ol>
+<h2 id="ruang-lingkup-dan-batasan">Ruang lingkup dan batasan</h2>
+<p>Sesuai permintaan, dokumen ini <strong>tidak memakai rumus matematika</strong>. Semua mekanisme dijelaskan dengan dua lapis bahasa:</p>
+<ul>
+<li><strong>Bahasa teknis</strong>, dengan istilah yang dipakai para peneliti (<em>gradient</em>, <em>loss</em>, <em>attention</em>, <em>reward model</em>, dan sebagainya), supaya pembaca bisa melanjutkan ke literatur aslinya.</li>
+<li><strong>Bahasa mudah</strong>, berupa analogi dan contoh sehari-hari, supaya intuisinya tertanam.</li>
+</ul>
+<p>Dokumen ini juga <strong>bukan tutorial pemrograman</strong>. Tujuannya adalah pemahaman konseptual yang utuh, cukup dalam sehingga pembaca mengerti <em>mengapa</em> setiap tahap ada, apa yang terjadi kalau tahap itu dilewati, dan di mana letak batas-batasnya. Fokusnya adalah LLM berbasis teks. Model multimodal (yang juga memahami gambar, suara, video) disinggung seperlunya karena prinsip dasarnya sama.</p>
+<div class="admonition catatan">
+<p class="admonition-title">Soal angka dan nama model</p>
+<p>Dunia LLM bergerak sangat cepat. Angka-angka dalam dokumen ini selalu disertai tahun dan sumbernya. Banyak laboratorium besar sekarang tidak lagi membuka detail pelatihan model andalan mereka; Stanford AI Index 2026 mencatat skor rata-rata indeks transparansi model fondasi justru turun dari 58 menjadi 40<sup id="fnref2:58"><a class="footnote-ref" href="#fn:58">58</a></sup>. Karena itu, contoh-contoh teknis di sini sengaja banyak diambil dari model yang <strong>laporannya terbuka</strong> (GPT-3, Chinchilla, Llama 3, DeepSeek-V3/R1), bukan dari model tertutup yang detailnya hanya bisa ditebak.</p>
+</div>
+<h2 id="cara-membaca">Cara membaca</h2>
+<p>Pembaca yang ingin gambaran cepat bisa membaca <strong>Gambaran Besar</strong>, lalu <strong>Resep Lengkap: Membangun LLM dari Nol</strong> dan <strong>Kesimpulan</strong>. Pembaca yang ingin memahami mesinnya sebaiknya membaca berurutan, karena setiap bagian dibangun di atas bagian sebelumnya: jaringan saraf dan backpropagation → data dan token → Transformer → pretraining → post-training → inferensi. Istilah-istilah teknis dijelaskan saat pertama kali muncul dan dirangkum di <strong>Glosarium</strong>.</p>
+<h1 id="gambaran-besar">Gambaran Besar</h1>
+<h2 id="satu-kalimat-yang-menjelaskan-hampir-semuanya">Satu kalimat yang menjelaskan hampir semuanya</h2>
+<p>Kalau harus diringkas dalam satu kalimat: <strong>LLM adalah jaringan saraf raksasa yang dilatih untuk menebak potongan kata berikutnya dalam sebuah teks, dan dari latihan menebak yang dilakukan triliunan kali itu, ia terpaksa mempelajari tata bahasa, fakta, gaya, dan pola penalaran yang tersimpan dalam bahasa manusia.</strong></p>
+<p>Bayangkan fitur <em>autocomplete</em> di papan ketik ponsel yang menebak kata berikutnya saat Anda mengetik. LLM pada dasarnya adalah autocomplete, tetapi dengan tiga perbedaan skala yang mengubah segalanya:</p>
+<ul>
+<li>Ia membaca <strong>jauh lebih banyak</strong>: belasan triliun potongan kata, setara jutaan kali isi seluruh Wikipedia bahasa Indonesia.</li>
+<li>Ia punya <strong>"otak" jauh lebih besar</strong>: puluhan hingga ratusan miliar angka yang bisa disetel (disebut <em>parameter</em>).</li>
+<li>Ia melihat <strong>konteks jauh lebih panjang</strong>: bukan hanya dua-tiga kata sebelumnya, tetapi ribuan hingga ratusan ribu kata sekaligus.</li>
+</ul>
+<p>Untuk menebak dengan baik kata berikutnya dalam kalimat "Ibu kota Jepang adalah ...", model harus "tahu" fakta geografi. Untuk menebak baris berikutnya dari sebuah kode program, ia harus "mengerti" logika pemrograman. Untuk menebak langkah berikutnya dari penyelesaian soal matematika, ia harus meniru pola penalaran. Inilah paradoks yang membuat LLM begitu menarik: tujuan latihannya sangat sederhana, tetapi untuk mencapainya dengan baik, model dipaksa membangun representasi internal yang kaya tentang dunia.</p>
+<h2 id="peta-jalan-dari-teks-mentah-sampai-asisten">Peta jalan: dari teks mentah sampai asisten</h2>
+<p>Pembuatan LLM modern bisa dibagi menjadi enam tahap besar. Andrej Karpathy, salah satu pendiri OpenAI, memakai pembagian serupa dalam kuliah populernya tahun 2025<sup id="fnref:60"><a class="footnote-ref" href="#fn:60">60</a></sup>.</p>
+<table>
+<thead>
+<tr>
+<th>Tahap</th>
+<th>Istilah teknis</th>
+<th>Bahasa mudah</th>
+<th>Hasil</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Data</td>
+<td><em>Data collection, filtering, deduplication</em></td>
+<td>Mengumpulkan dan membersihkan "perpustakaan" raksasa dari internet, buku, kode</td>
+<td>Korpus teks bersih, belasan triliun token</td>
+</tr>
+<tr>
+<td>2. Tokenisasi</td>
+<td><em>Tokenization (BPE)</em></td>
+<td>Memotong teks menjadi keping-keping kecil dan memberi nomor</td>
+<td>Deretan angka (ID token)</td>
+</tr>
+<tr>
+<td>3. Arsitektur</td>
+<td><em>Transformer, self-attention</em></td>
+<td>Merancang "otak" kosong dengan miliaran kenop yang bisa disetel</td>
+<td>Model dengan parameter acak</td>
+</tr>
+<tr>
+<td>4. Pretraining</td>
+<td><em>Next-token prediction, backpropagation, gradient descent</em></td>
+<td>Menyuruh model menebak kata berikutnya triliunan kali dan mengoreksinya setiap kali salah</td>
+<td><em>Base model</em>: "pembaca internet" yang pandai melanjutkan teks</td>
+</tr>
+<tr>
+<td>5. Post-training</td>
+<td><em>SFT, RLHF, DPO, RL with verifiable rewards</em></td>
+<td>"Menyekolahkan" model agar menjadi asisten: menjawab pertanyaan, sopan, jujur, bisa bernalar</td>
+<td><em>Instruct/chat model</em>, <em>reasoning model</em></td>
+</tr>
+<tr>
+<td>6. Inferensi</td>
+<td><em>Sampling, KV cache, quantization</em></td>
+<td>Menjalankan model untuk melayani pengguna, satu token demi satu token</td>
+<td>Jawaban yang Anda baca di layar</td>
+</tr>
+</tbody>
+</table>
+<p>Di sela-sela tahapan itu ada <strong>evaluasi</strong> (mengukur kemampuan dan keamanan) yang dilakukan terus-menerus.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Analogi keseluruhan: dari pembaca rakus menjadi profesional</p>
+<p>Pretraining itu seperti seorang anak yang dikurung di perpustakaan terbesar di dunia dan membaca semuanya tanpa bimbingan: novel, forum, jurnal, kode, resep, gosip. Ia jadi tahu banyak hal, tetapi tidak tahu cara bersikap: kalau ditanya, ia mungkin melanjutkan pertanyaan Anda dengan pertanyaan lain, karena di internet pertanyaan sering muncul berderet.</p>
+<p>Post-training adalah sekolah profesi. Mula-mula ia diberi contoh-contoh jawaban teladan (SFT). Lalu ia diberi umpan balik tentang jawaban mana yang lebih baik (RLHF/DPO). Terakhir, ia berlatih mengerjakan soal-soal yang jawabannya bisa dicek sampai terampil bernalar (RL dengan hadiah terverifikasi). Pengetahuannya hampir seluruhnya berasal dari masa membaca di perpustakaan; sekolah profesi terutama membentuk <strong>cara</strong> ia memakai pengetahuan itu.</p>
+</div>
+<h2 id="fakta-kunci">Fakta kunci</h2>
+<table>
+<thead>
+<tr>
+<th>Aspek</th>
+<th>Fakta</th>
+<th>Sumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arsitektur dasar</td>
+<td>Transformer, diperkenalkan 2017 dalam makalah "Attention Is All You Need"</td>
+<td>Vaswani dkk., 2017<sup id="fnref7:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+</tr>
+<tr>
+<td>Algoritma belajar</td>
+<td>Backpropagation + gradient descent (dipopulerkan 1986)</td>
+<td>Rumelhart dkk., 1986<sup id="fnref3:2"><a class="footnote-ref" href="#fn:2">2</a></sup></td>
+</tr>
+<tr>
+<td>Tujuan pretraining</td>
+<td>Menebak token berikutnya (<em>next-token prediction</em>)</td>
+<td>GPT-1 s.d. GPT-3<sup id="fnref2:14"><a class="footnote-ref" href="#fn:14">14</a></sup><sup id="fnref6:17"><a class="footnote-ref" href="#fn:17">17</a></sup></td>
+</tr>
+<tr>
+<td>Skala data (contoh terbuka)</td>
+<td>Llama 3 405B: ±15,6 triliun token; DeepSeek-V3: 14,8 triliun token</td>
+<td>Meta 2024<sup id="fnref14:18"><a class="footnote-ref" href="#fn:18">18</a></sup>; DeepSeek 2024<sup id="fnref7:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+</tr>
+<tr>
+<td>Skala parameter (contoh)</td>
+<td>GPT-3: 175 miliar; Llama 3: 405 miliar; DeepSeek-V3: 671 miliar (37 miliar aktif per token)</td>
+<td><sup id="fnref7:17"><a class="footnote-ref" href="#fn:17">17</a></sup><sup id="fnref15:18"><a class="footnote-ref" href="#fn:18">18</a></sup><sup id="fnref8:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+</tr>
+<tr>
+<td>Komputasi (contoh)</td>
+<td>Llama 3.1 405B: 30,84 juta jam-GPU H100</td>
+<td>Model card Llama 3.1<sup id="fnref2:19"><a class="footnote-ref" href="#fn:19">19</a></sup></td>
+</tr>
+<tr>
+<td>Biaya komputasi</td>
+<td>Transformer asli (2017) ±US$670; GPT-4 ±US$78 juta; Gemini Ultra ±US$192 juta (estimasi)</td>
+<td>AI Index 2025<sup id="fnref4:57"><a class="footnote-ref" href="#fn:57">57</a></sup></td>
+</tr>
+<tr>
+<td>Pertumbuhan komputasi</td>
+<td>Komputasi pelatihan model terdepan tumbuh ±4–5× per tahun (2010–2024)</td>
+<td>Epoch AI<sup id="fnref5:28"><a class="footnote-ref" href="#fn:28">28</a></sup></td>
+</tr>
+<tr>
+<td>Post-training klasik</td>
+<td>SFT → reward model → RL (PPO), dipopulerkan InstructGPT</td>
+<td>Ouyang dkk., 2022<sup id="fnref8:33"><a class="footnote-ref" href="#fn:33">33</a></sup></td>
+</tr>
+<tr>
+<td>Model penalaran</td>
+<td>RL dengan hadiah terverifikasi memunculkan <em>chain-of-thought</em> panjang</td>
+<td>DeepSeek-R1, Nature 2025<sup id="fnref10:37"><a class="footnote-ref" href="#fn:37">37</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h1 id="fondasi-apa-itu-model-bahasa">Fondasi: Apa Itu "Model Bahasa"?</h1>
+<h2 id="definisi-mesin-probabilitas-atas-teks">Definisi: mesin probabilitas atas teks</h2>
+<p>Secara teknis, <strong>model bahasa</strong> (<em>language model</em>) adalah sistem yang memberi <strong>probabilitas</strong> pada urutan kata. Diberi awal sebuah teks, ia menghasilkan daftar semua kemungkinan kelanjutannya beserta peluang masing-masing.</p>
+<p>Misalnya, diberi teks "Saya minum kopi setiap ...", model yang baik akan memberi peluang tinggi pada "pagi", cukup tinggi pada "hari" dan "malam", dan peluang sangat kecil pada "kulkas". Model tidak "memilih" satu jawaban; ia menghasilkan <strong>distribusi peluang</strong> atas seluruh kosakata. Memilih satu kata dari distribusi itu adalah langkah terpisah yang disebut <em>sampling</em> (dibahas di bagian Inferensi).</p>
+<p>Setelah satu kata dipilih, kata itu ditempelkan ke teks, lalu model diminta menebak lagi. Begitu terus, satu keping demi satu keping. Sifat ini disebut <strong>autoregresif</strong>: setiap keluaran menjadi bagian dari masukan langkah berikutnya. Seluruh esai panjang, kode program, atau puisi yang Anda terima dari chatbot dihasilkan dengan cara ini, satu keping pada satu waktu.</p>
+<div class="admonition catatan">
+<p class="admonition-title">Kata atau token?</p>
+<p>Sebenarnya LLM tidak bekerja dengan "kata", melainkan dengan <strong>token</strong>, yaitu potongan teks yang bisa berupa kata utuh, bagian kata, tanda baca, atau spasi. Kata "mempertanggungjawabkan" mungkin dipecah menjadi beberapa token. Di bagian ini kita pakai "kata" demi kemudahan; detail token dibahas di bagian Data dan Tokenisasi.</p>
+</div>
+<h2 id="mengapa-large">Mengapa "large"?</h2>
+<p>Kata <em>large</em> merujuk terutama pada dua hal: <strong>jumlah parameter</strong> (angka-angka yang disetel selama pelatihan) dan <strong>jumlah data</strong> yang dipakai melatihnya. Tidak ada batas resmi kapan sebuah model bahasa disebut "large". Pada 2018, GPT-1 dengan ratusan juta parameter sudah dianggap besar; kini model dengan 7–8 miliar parameter sering disebut "kecil". Yang penting adalah temuan empiris bahwa <strong>memperbesar skala secara konsisten menurunkan kesalahan prediksi</strong> mengikuti pola yang bisa diprediksi (<em>scaling laws</em>), dan bahwa pada skala besar muncul kemampuan yang tidak tampak pada model kecil<sup id="fnref:23"><a class="footnote-ref" href="#fn:23">23</a></sup><sup id="fnref:17"><a class="footnote-ref" href="#fn:17">17</a></sup>.</p>
+<h2 id="sejarah-singkat-dari-menghitung-frekuensi-ke-transformer">Sejarah singkat: dari menghitung frekuensi ke Transformer</h2>
+<p>Memahami sejarahnya membantu memahami <em>mengapa</em> arsitektur LLM seperti sekarang. Setiap generasi menambal kelemahan generasi sebelumnya.</p>
+<h3 id="era-statistik-n-gram-1980-an2000-an">Era statistik: n-gram (1980-an–2000-an)</h3>
+<p>Model bahasa awal sangat sederhana: hitung seberapa sering sebuah kata muncul setelah dua atau tiga kata tertentu dalam kumpulan teks besar. Ini disebut <strong>model n-gram</strong>. Kalau "minum kopi setiap" diikuti "pagi" 500 kali dan "malam" 200 kali, maka peluang "pagi" lebih besar.</p>
+<p>Kelemahannya fatal: model n-gram hanya melihat beberapa kata terakhir, dan ia tidak tahu bahwa "kopi" dan "teh" itu mirip. Kalau frasa "minum teh setiap" belum pernah muncul di data, model tidak bisa meminjam pengetahuan dari "minum kopi setiap". Masalah ini disebut <strong>kutukan dimensi</strong> (<em>curse of dimensionality</em>): jumlah kombinasi kata tumbuh terlalu cepat untuk bisa dihitung semua<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
+<h3 id="kata-sebagai-titik-dalam-ruang-model-bahasa-neural-2003-dan-word2vec-2013">Kata sebagai titik dalam ruang: model bahasa neural (2003) dan word2vec (2013)</h3>
+<p>Pada 2003, Yoshua Bengio dan rekan-rekannya mengusulkan solusi yang menjadi benih seluruh LLM modern: wakili setiap kata sebagai <strong>vektor</strong>, yaitu deretan angka yang menunjukkan posisinya dalam "ruang makna" berdimensi banyak, lalu biarkan jaringan saraf mempelajari posisi itu sendiri<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup>. Kata-kata yang dipakai dalam konteks serupa ("kopi", "teh", "susu") akan berdekatan, sehingga pengetahuan tentang satu kata bisa "menular" ke kata yang mirip.</p>
+<p>Satu dekade kemudian, <strong>word2vec</strong> (Mikolov dkk., Google, 2013) menunjukkan bahwa representasi seperti itu bisa dilatih sangat efisien pada miliaran kata, dan bahwa arah-arah dalam ruang itu menangkap hubungan makna. Contoh terkenalnya: vektor "raja" dikurangi "pria" ditambah "wanita" menghasilkan titik yang dekat dengan "ratu"<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup>. Representasi vektor semacam ini disebut <strong>embedding</strong>, dan sampai hari ini merupakan lapisan pertama setiap LLM.</p>
+<h3 id="membaca-berurutan-rnn-dan-lstm">Membaca berurutan: RNN dan LSTM</h3>
+<p>Masalah berikutnya adalah konteks panjang. <strong>Recurrent Neural Network (RNN)</strong> membaca teks kata demi kata sambil membawa semacam "ingatan" yang diperbarui di setiap langkah. Variannya, <strong>LSTM</strong> (Hochreiter &amp; Schmidhuber, 1997), menambahkan "gerbang" yang mengatur apa yang diingat dan dilupakan, sehingga bisa menjaga informasi lebih lama<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>. Pada 2014, arsitektur <em>sequence-to-sequence</em> berbasis LSTM mencapai terobosan dalam penerjemahan mesin<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup>.</p>
+<p>Namun RNN punya dua kelemahan struktural. Pertama, ingatannya adalah satu "botol" berukuran tetap: seluruh isi kalimat panjang harus dijejalkan ke sana, sehingga informasi awal cenderung memudar. Kedua, karena membaca berurutan, pelatihannya <strong>tidak bisa diparalelkan</strong>: kata ke-100 baru bisa diproses setelah kata ke-99 selesai. Ini membuat RNN sulit dilatih pada data raksasa dengan GPU yang justru unggul dalam komputasi paralel.</p>
+<h3 id="perhatian-attention-2014">Perhatian (attention): 2014</h3>
+<p>Bahdanau, Cho, dan Bengio (2014) memperkenalkan mekanisme <strong>attention</strong> untuk penerjemahan: alih-alih mengandalkan satu botol ingatan, saat menghasilkan setiap kata terjemahan, model boleh "menoleh" ke semua kata di kalimat sumber dan menimbang mana yang paling relevan<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>. Ini seperti penerjemah manusia yang terus melirik ke teks aslinya, bukan menghafal seluruh kalimat lalu menutup buku.</p>
+<h3 id="transformer-attention-is-all-you-need-2017">Transformer: "Attention Is All You Need" (2017)</h3>
+<p>Delapan peneliti Google kemudian mengambil langkah radikal: <strong>buang RNN sama sekali, dan bangun model hanya dari attention</strong> (ditambah lapisan-lapisan sederhana). Arsitektur ini dinamai <strong>Transformer</strong><sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. Karena setiap kata bisa langsung "melihat" semua kata lain tanpa harus menunggu giliran, seluruh kalimat bisa diproses <strong>serentak</strong>. Pelatihan menjadi jauh lebih cepat di GPU, dan jarak antarkata tidak lagi menjadi hambatan. Transformer asli mencetak rekor penerjemahan Inggris–Jerman (28,4 BLEU) dengan biaya pelatihan jauh lebih kecil daripada pendahulunya<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. Menurut estimasi AI Index, biaya komputasi melatih Transformer asli hanya sekitar US$670<sup id="fnref:57"><a class="footnote-ref" href="#fn:57">57</a></sup>.</p>
+<h3 id="keluarga-gpt-dan-bert-20182020">Keluarga GPT dan BERT (2018–2020)</h3>
+<p>Transformer kemudian dipakai dengan dua cara:</p>
+<ul>
+<li><strong>BERT</strong> (Google, 2018) memakai bagian <em>encoder</em> Transformer dan dilatih menebak kata yang disembunyikan di tengah kalimat. Hebat untuk memahami dan mengklasifikasi teks, tetapi tidak dirancang untuk menulis panjang<sup id="fnref:15"><a class="footnote-ref" href="#fn:15">15</a></sup>.</li>
+<li><strong>GPT</strong> (<em>Generative Pre-trained Transformer</em>, OpenAI) memakai bagian <em>decoder</em> dan dilatih menebak kata berikutnya. GPT-1 (2018) menunjukkan bahwa pra-latih (<em>pre-training</em>) pada teks umum lalu penyesuaian (<em>fine-tuning</em>) pada tugas khusus sangat efektif<sup id="fnref:14"><a class="footnote-ref" href="#fn:14">14</a></sup>. GPT-2 (2019, 1,5 miliar parameter) menunjukkan bahwa model yang cukup besar bisa mengerjakan banyak tugas <strong>tanpa dilatih khusus</strong>, hanya dengan diberi teks pemicu yang tepat<sup id="fnref:16"><a class="footnote-ref" href="#fn:16">16</a></sup>. GPT-3 (2020, 175 miliar parameter) membuktikan kemampuan <em>few-shot learning</em>: diberi beberapa contoh di dalam prompt, model bisa mengerjakan tugas baru tanpa satu pun parameter diubah<sup id="fnref4:17"><a class="footnote-ref" href="#fn:17">17</a></sup>.</li>
+</ul>
+<p>Hampir semua LLM generatif modern (GPT, Claude, Gemini, Llama, DeepSeek, Qwen, Mistral) mewarisi resep GPT: <strong>Transformer decoder-only yang dilatih menebak token berikutnya</strong>, lalu dipoles dengan post-training.</p>
+<h3 id="chatgpt-dan-era-asisten-2022sekarang">ChatGPT dan era asisten (2022–sekarang)</h3>
+<p>Kemampuan GPT-3 sudah luar biasa, tetapi ia sulit dipakai orang awam: ia melanjutkan teks, bukan menjawab perintah. Terobosan yang membuat ChatGPT meledak bukanlah model yang jauh lebih besar, melainkan <strong>post-training</strong>: teknik InstructGPT (2022) yang memakai umpan balik manusia untuk mengajari model mengikuti instruksi. Hasilnya mengejutkan: model InstructGPT berukuran 1,3 miliar parameter lebih disukai penilai manusia daripada GPT-3 175 miliar yang belum dipoles<sup id="fnref:33"><a class="footnote-ref" href="#fn:33">33</a></sup>. Pelajaran ini akan kita bahas panjang di bagian Post-training.</p>
+<h1 id="jaringan-saraf-dan-cara-belajarnya">Jaringan Saraf dan Cara Belajarnya</h1>
+<p>Sebelum masuk ke Transformer, kita perlu memahami bahan bakunya: <strong>jaringan saraf tiruan</strong> (<em>artificial neural network</em>) dan algoritma yang membuatnya bisa belajar, <strong>backpropagation</strong>. Bagian ini adalah jantung dari pertanyaan "bagaimana mesin bisa belajar?"</p>
+<h2 id="neuron-tiruan-kenop-penjumlahan-dan-saklar">Neuron tiruan: kenop, penjumlahan, dan saklar</h2>
+<p>Satu <strong>neuron tiruan</strong> melakukan pekerjaan yang sangat sederhana:</p>
+<ol>
+<li>Menerima beberapa angka sebagai masukan.</li>
+<li>Mengalikan setiap masukan dengan sebuah <strong>bobot</strong> (<em>weight</em>), yang menunjukkan seberapa penting masukan itu.</li>
+<li>Menjumlahkan semuanya, ditambah satu angka penyesuai yang disebut <strong>bias</strong>.</li>
+<li>Melewatkan hasilnya ke sebuah <strong>fungsi aktivasi</strong>, semacam saklar lentur yang menentukan seberapa kuat neuron itu "menyala".</li>
+</ol>
+<p>Fungsi aktivasi ini penting karena ia <strong>tidak lurus</strong> (<em>non-linear</em>). Tanpa ketidaklurusan itu, menumpuk seribu lapisan neuron sama saja dengan satu lapisan, karena gabungan operasi lurus tetaplah operasi lurus. Dengan fungsi non-linear, tumpukan lapisan bisa meniru pola yang sangat rumit.</p>
+<p>Bobot dan bias inilah yang disebut <strong>parameter</strong>. Ketika orang berkata "model 70 miliar parameter", maksudnya ada 70 miliar kenop angka seperti ini yang nilainya disetel selama pelatihan. <strong>Seluruh "pengetahuan" LLM tersimpan dalam nilai-nilai kenop tersebut</strong>, bukan dalam bentuk kalimat atau tabel fakta.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Analogi: mixer audio raksasa</p>
+<p>Bayangkan meja <em>mixer</em> di studio rekaman dengan puluhan miliar kenop. Suara masuk di satu sisi, keluar di sisi lain. Pada awalnya semua kenop diputar acak, sehingga keluarannya berisik tidak karuan. Pelatihan adalah proses memutar kenop-kenop itu sedikit demi sedikit, jutaan kali, sampai keluarannya terdengar benar. Tidak ada satu kenop pun yang "berisi" lagu tertentu; lagu itu muncul dari <strong>kombinasi</strong> semua kenop.</p>
+</div>
+<h2 id="lapisan-dan-kedalaman">Lapisan dan kedalaman</h2>
+<p>Neuron disusun dalam <strong>lapisan</strong> (<em>layer</em>). Keluaran satu lapisan menjadi masukan lapisan berikutnya. Jaringan dengan banyak lapisan disebut <strong>deep neural network</strong>, dan bidang yang mempelajarinya disebut <strong>deep learning</strong>.</p>
+<p>Mengapa kedalaman penting? Karena setiap lapisan bisa membangun konsep di atas konsep dari lapisan sebelumnya. Pada jaringan pengenal gambar, lapisan awal mendeteksi garis dan tepi, lapisan tengah mendeteksi bentuk (mata, roda), lapisan akhir mendeteksi objek utuh (wajah, mobil). Pada LLM, pola serupa terjadi: lapisan awal cenderung menangani ejaan dan tata bahasa lokal, lapisan tengah menangani makna dan hubungan, lapisan akhir menyiapkan tebakan kata berikutnya. Pembagian ini tidak serapi itu dalam kenyataan, tetapi kecenderungannya terlihat dalam riset interpretabilitas<sup id="fnref:50"><a class="footnote-ref" href="#fn:50">50</a></sup>.</p>
+<p>Dalam praktik, lapisan-lapisan ini dihitung sebagai <strong>perkalian matriks</strong>: tabel angka besar dikalikan dengan tabel angka besar lainnya. Inilah alasan GPU, yang awalnya dirancang untuk grafis game, menjadi mesin utama AI: GPU sangat cepat melakukan jutaan perkalian dan penjumlahan secara paralel.</p>
+<h2 id="belajar-mengurangi-kesalahan">Belajar = mengurangi kesalahan</h2>
+<p>Jaringan saraf "belajar" dengan cara yang sangat mekanis. Untuk LLM, satu langkah belajar kira-kira seperti ini:</p>
+<ol>
+<li><strong>Umpan maju (<em>forward pass</em>)</strong>: berikan potongan teks, misalnya "Ibu kota Jepang adalah", ke model. Model menghitung, lapisan demi lapisan, lalu mengeluarkan distribusi peluang untuk token berikutnya.</li>
+<li><strong>Hitung kesalahan (<em>loss</em>)</strong>: bandingkan tebakan model dengan jawaban sebenarnya di data ("Tokyo"). Kalau model hanya memberi peluang 2% pada "Tokyo", kesalahannya besar. Kalau 90%, kesalahannya kecil. Ukuran yang dipakai untuk LLM disebut <strong>cross-entropy loss</strong>; intuisinya adalah "seberapa terkejut model melihat jawaban yang benar". Semakin terkejut, semakin besar hukumannya.</li>
+<li><strong>Cari tahu siapa yang salah (<em>backpropagation</em>)</strong>: hitung, untuk <strong>setiap</strong> dari miliaran parameter, ke arah mana dan seberapa kuat parameter itu harus diubah agar kesalahan mengecil.</li>
+<li><strong>Perbaiki (<em>gradient descent</em>)</strong>: geser setiap parameter sedikit ke arah yang mengurangi kesalahan.</li>
+<li>Ulangi dengan potongan teks berikutnya. Jutaan kali.</li>
+</ol>
+<p>Langkah 3 dan 4 adalah inti dari seluruh cerita, jadi mari kita bedah.</p>
+<h2 id="gradient-descent-menuruni-bukit-dalam-kabut">Gradient descent: menuruni bukit dalam kabut</h2>
+<p>Bayangkan semua kemungkinan pengaturan kenop sebagai sebuah lanskap pegunungan raksasa. Setiap titik di lanskap mewakili satu pengaturan parameter, dan ketinggiannya adalah besar kesalahan (<em>loss</em>) model pada pengaturan itu. Tujuan pelatihan adalah menemukan lembah yang serendah mungkin.</p>
+<p>Masalahnya, lanskap ini punya miliaran dimensi (satu dimensi per parameter), dan kita berdiri di tengah kabut tebal: kita tidak bisa melihat di mana lembah terdalam. Yang bisa kita rasakan hanyalah <strong>kemiringan tanah di bawah kaki</strong>. Maka strateginya: rasakan ke arah mana tanah paling menurun, ambil satu langkah kecil ke arah itu, rasakan lagi, melangkah lagi.</p>
+<ul>
+<li><strong>Gradien</strong> (<em>gradient</em>) adalah "kemiringan tanah" itu: untuk setiap parameter, ia mengatakan "kalau kenop ini diputar sedikit ke kanan, kesalahan naik atau turun, dan seberapa cepat".</li>
+<li><strong>Gradient descent</strong> adalah strategi melangkah menurun mengikuti gradien.</li>
+<li><strong>Learning rate</strong> adalah panjang langkah. Terlalu panjang, kita bisa melompati lembah atau bahkan terlempar ke lereng seberang (pelatihan menjadi tidak stabil, loss meledak). Terlalu pendek, kita butuh waktu tak berujung untuk sampai.</li>
+</ul>
+<p>Dalam praktik, gradien tidak dihitung dari seluruh data sekaligus (terlalu mahal), melainkan dari sekelompok kecil contoh yang diambil acak, disebut <strong>batch</strong> atau <em>mini-batch</em>. Karena itu metodenya disebut <strong>stochastic gradient descent (SGD)</strong>: arah langkahnya sedikit "berisik", tetapi rata-rata benar, dan justru keberisikan itu sering membantu model tidak terjebak di cekungan kecil.</p>
+<h2 id="backpropagation-rantai-tanggung-jawab-dari-belakang-ke-depan">Backpropagation: rantai tanggung jawab dari belakang ke depan</h2>
+<p>Gradient descent butuh gradien untuk <strong>setiap</strong> parameter. Bagaimana menghitungnya secara efisien untuk ratusan miliar parameter? Di sinilah <strong>backpropagation</strong> (<em>backward propagation of errors</em>, perambatan balik kesalahan) masuk.</p>
+<h3 id="masalah-yang-dipecahkan">Masalah yang dipecahkan</h3>
+<p>Cara naif untuk mengetahui pengaruh satu kenop terhadap kesalahan adalah: putar kenop itu sedikit, jalankan ulang seluruh model, lihat apakah kesalahan naik atau turun. Untuk 100 miliar kenop, itu berarti menjalankan model 100 miliar kali <strong>untuk satu langkah belajar saja</strong>. Mustahil.</p>
+<p>Backpropagation memecahkan masalah ini dengan cerdas: <strong>semua gradien dihitung dengan biaya kira-kira hanya dua sampai tiga kali biaya satu kali umpan maju.</strong> Inilah yang membuat pelatihan jaringan saraf raksasa mungkin dilakukan.</p>
+<h3 id="cara-kerjanya-tanpa-rumus">Cara kerjanya (tanpa rumus)</h3>
+<p>Kuncinya adalah <strong>aturan rantai</strong> (<em>chain rule</em>) dari kalkulus, yang intinya berkata: kalau A memengaruhi B, dan B memengaruhi C, maka pengaruh A terhadap C adalah pengaruh A terhadap B dikali pengaruh B terhadap C.</p>
+<p>Jaringan saraf adalah rantai panjang operasi: masukan → lapisan 1 → lapisan 2 → ... → lapisan terakhir → loss. Backpropagation berjalan <strong>mundur</strong> di rantai itu:</p>
+<ol>
+<li>Mulai dari ujung: seberapa besar loss berubah jika keluaran lapisan terakhir berubah? Ini mudah dihitung.</li>
+<li>Mundur satu lapisan: dengan mengetahui "sinyal kesalahan" di keluaran lapisan terakhir, hitung seberapa besar setiap bobot di lapisan itu bertanggung jawab, <strong>dan</strong> seberapa besar setiap masukan lapisan itu (yang merupakan keluaran lapisan sebelumnya) bertanggung jawab.</li>
+<li>Teruskan sinyal kesalahan itu ke lapisan sebelumnya, dan ulangi.</li>
+<li>Sampai di lapisan pertama, setiap parameter sudah punya gradiennya.</li>
+</ol>
+<p>Karena setiap lapisan memakai ulang hasil perhitungan lapisan sesudahnya, tidak ada kerja yang diulang. Selama umpan maju, nilai-nilai antara (<em>activations</em>) disimpan di memori justru supaya bisa dipakai lagi saat perambatan balik. Inilah sebabnya pelatihan memakan memori jauh lebih banyak daripada sekadar menjalankan model.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Analogi: menyalahkan secara adil di pabrik</p>
+<p>Bayangkan pabrik roti dengan 50 stasiun berjajar. Di ujung jalur, pemeriksa mutu menemukan roti terlalu asin. Ia tidak menyuruh semua stasiun mengulang dari awal; ia mengirim catatan mundur ke stasiun ke-50: "hasilmu terlalu asin sekian persen". Stasiun 50 mengecek: sebagian karena takaran garamnya sendiri (itu yang ia perbaiki), sebagian karena adonan dari stasiun 49 memang sudah asin. Ia lalu mengirim catatan yang <strong>sudah disesuaikan</strong> ke stasiun 49, dan seterusnya sampai stasiun pertama. Dalam satu kali perjalanan mundur, setiap stasiun tahu persis seberapa besar andilnya dan harus berubah ke arah mana. Itulah backpropagation.</p>
+</div>
+<h3 id="siapa-penemunya">Siapa penemunya?</h3>
+<p>Makalah Rumelhart, Hinton, dan Williams di <em>Nature</em> (1986) biasanya dianggap tonggak yang mempopulerkan backpropagation. Mereka menunjukkan bahwa dengan metode ini, unit-unit "tersembunyi" di tengah jaringan belajar merepresentasikan fitur-fitur penting dari tugas secara mandiri<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>. Namun teknik matematis intinya, <em>reverse-mode automatic differentiation</em>, sudah dipublikasikan oleh Seppo Linnainmaa pada 1970, dan Paul Werbos mengusulkan penerapannya pada jaringan saraf pada 1970-an. Sejarah penemuannya masih sering diperdebatkan<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>. Geoffrey Hinton kemudian dianugerahi Nobel Fisika 2024 (bersama John Hopfield) atas kontribusi fondasional pada jaringan saraf tiruan.</p>
+<p>Hari ini, tidak ada peneliti yang menulis backpropagation secara manual. <em>Library</em> seperti PyTorch dan JAX melakukan <strong>diferensiasi otomatis</strong>: programmer cukup menulis umpan maju, dan komputer menghitung semua gradien sendiri.</p>
+<h2 id="optimizer-cara-melangkah-yang-lebih-cerdas">Optimizer: cara melangkah yang lebih cerdas</h2>
+<p>Gradient descent polos punya kelemahan: semua parameter melangkah dengan aturan yang sama, padahal sebagian parameter butuh langkah besar dan sebagian lain butuh langkah halus. Maka dikembangkan <strong>optimizer</strong> yang lebih cerdas. Hampir semua LLM dilatih dengan <strong>Adam</strong> (Kingma &amp; Ba, 2014) atau variannya <strong>AdamW</strong><sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup><sup id="fnref:11"><a class="footnote-ref" href="#fn:11">11</a></sup>.</p>
+<p>Dalam bahasa mudah, Adam menambahkan dua kebiasaan:</p>
+<ul>
+<li><strong>Momentum</strong>: ia mengingat arah langkah-langkah sebelumnya, seperti bola yang menggelinding menuruni bukit dan tidak langsung berbelok karena satu kerikil. Ini meredam keberisikan gradien.</li>
+<li><strong>Langkah adaptif per parameter</strong>: parameter yang gradiennya selalu besar dan liar diberi langkah lebih hati-hati; parameter yang gradiennya kecil dan jarang diberi langkah lebih berani.</li>
+</ul>
+<p>AdamW menambahkan <strong>weight decay</strong> yang "dipisahkan": dorongan kecil agar semua bobot cenderung mengecil, semacam pajak atas kerumitan, sehingga model tidak bergantung berlebihan pada beberapa bobot ekstrem<sup id="fnref2:11"><a class="footnote-ref" href="#fn:11">11</a></sup>. Konsekuensi praktisnya: Adam menyimpan dua angka tambahan untuk <strong>setiap</strong> parameter. Untuk model 100 miliar parameter, itu berarti ratusan miliar angka tambahan yang harus ada di memori selama pelatihan.</p>
+<p>Selain itu, learning rate hampir tidak pernah tetap. Resep umumnya adalah <strong>warmup</strong> (mulai sangat kecil, naik bertahap di ribuan langkah awal agar model yang masih acak tidak "kaget"), lalu <strong>decay</strong> (turun perlahan menjelang akhir, agar model bisa "mengendap" di dasar lembah).</p>
+<h2 id="generalisasi-overfitting-dan-mengapa-data-harus-beragam">Generalisasi, overfitting, dan mengapa data harus beragam</h2>
+<p>Tujuan pelatihan bukan menghafal data, melainkan <strong>generalisasi</strong>: bekerja baik pada teks yang belum pernah dilihat. Model yang terlalu pas dengan data latih sampai menghafal keanehan-keanehannya disebut <strong>overfitting</strong>, seperti murid yang menghafal kunci jawaban tahun lalu tetapi gagal menghadapi soal baru.</p>
+<p>Untuk mendeteksinya, sebagian data disisihkan sebagai <strong>data validasi</strong> yang tidak pernah dipakai untuk belajar. Selama pelatihan, peneliti memantau loss pada data validasi. Menariknya, LLM besar yang dilatih pada data sangat beragam biasanya <strong>hanya melihat sebagian besar datanya sekali atau beberapa kali saja</strong> (satu putaran penuh atas data disebut satu <strong>epoch</strong>), sehingga overfitting klasik lebih jarang menjadi masalah utama dibandingkan pada model kecil. Yang tetap terjadi adalah <strong>hafalan</strong> parsial: teks yang muncul berulang kali di internet (lisensi perangkat lunak, kutipan terkenal, soal ujian populer) bisa terekam hampir kata per kata. Itulah salah satu alasan <strong>deduplikasi</strong> data sangat penting (dibahas di bagian berikut).</p>
+<h2 id="stabilitas-pada-jaringan-sangat-dalam-residual-dan-normalisasi">Stabilitas pada jaringan sangat dalam: residual dan normalisasi</h2>
+<p>Satu masalah klasik jaringan dalam adalah <strong>vanishing/exploding gradient</strong>: ketika sinyal kesalahan dirambatkan mundur melewati puluhan lapisan, ia bisa menyusut hampir nol (lapisan awal tidak belajar) atau membengkak tak terkendali. Dua penemuan penting menjinakkannya, dan keduanya dipakai di setiap Transformer:</p>
+<ul>
+<li><strong>Koneksi residual</strong> (<em>residual/skip connection</em>, He dkk., 2015): setiap lapisan tidak mengganti masukannya, melainkan <strong>menambahkan</strong> koreksi di atasnya<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>. Ini menciptakan "jalan tol" tempat informasi dan gradien bisa mengalir lurus dari ujung ke ujung tanpa terkikis. Dalam LLM, jalur ini disebut <strong>residual stream</strong>, semacam papan tulis bersama yang dibaca dan ditulisi setiap lapisan secara bergantian.</li>
+<li><strong>Normalisasi lapisan</strong> (<em>layer normalization</em>, dan varian ringannya <em>RMSNorm</em>): menyetel ulang skala angka di setiap lapisan agar tetap berada di rentang yang wajar, seperti pengatur volume otomatis yang mencegah suara terlalu pelan atau pecah.</li>
+</ul>
+<h1 id="data-dan-tokenisasi-bahan-baku-llm">Data dan Tokenisasi: Bahan Baku LLM</h1>
+<p>Ada pepatah lama di dunia komputer: <em>garbage in, garbage out</em>. Untuk LLM, pepatah itu berlaku dalam skala raksasa. Laporan teknis Llama 3 dari Meta secara eksplisit menyebut <strong>data</strong> sebagai salah satu dari tiga tuas utama peningkatan kualitas (dua lainnya adalah skala dan pengelolaan kerumitan), dan sebagian besar peningkatan Llama 3 dibanding Llama 2 berasal dari data yang lebih banyak dan lebih bersih, bukan dari arsitektur baru<sup id="fnref:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</p>
+<h2 id="dari-mana-datanya">Dari mana datanya?</h2>
+<p>Korpus pretraining LLM modern biasanya merupakan campuran dari:</p>
+<ul>
+<li><strong>Halaman web</strong>, terutama dari <strong>Common Crawl</strong>, organisasi nirlaba yang sejak 2008 merayapi web dan menerbitkan arsip berukuran petabyte secara berkala. Ini porsi terbesar.</li>
+<li><strong>Kode program</strong> dari repositori publik. Kode ternyata tidak hanya membuat model pandai memprogram, tetapi juga dipercaya membantu penalaran terstruktur.</li>
+<li><strong>Buku, artikel ilmiah, ensiklopedia</strong> (misalnya Wikipedia, arXiv), yang kualitas bahasanya tinggi dan padat pengetahuan.</li>
+<li><strong>Data matematika</strong>, forum tanya-jawab, dan teks multibahasa.</li>
+<li>Semakin banyak, <strong>data sintetis</strong>: teks yang dihasilkan oleh model lain, lalu disaring (dibahas di bagian Perdebatan).</li>
+</ul>
+<p>Untuk memberi gambaran skala: dataset terbuka <strong>FineWeb</strong> dari Hugging Face memproses 96 arsip Common Crawl (2013–2024) dan menghasilkan sekitar 15 triliun token teks bahasa Inggris yang sudah dibersihkan<sup id="fnref:25"><a class="footnote-ref" href="#fn:25">25</a></sup>. Llama 3 dilatih pada sekitar 15,6 triliun token<sup id="fnref2:18"><a class="footnote-ref" href="#fn:18">18</a></sup>; DeepSeek-V3 pada 14,8 triliun token<sup id="fnref:20"><a class="footnote-ref" href="#fn:20">20</a></sup>.</p>
+<div class="admonition catatan">
+<p class="admonition-title">Seberapa besar 15 triliun token?</p>
+<p>Satu token rata-rata kira-kira tiga perempat kata bahasa Inggris. Jadi 15 triliun token setara sekitar 11 triliun kata. Kalau seseorang membaca 250 kata per menit selama 8 jam sehari tanpa libur, ia butuh sekitar <strong>250.000 tahun</strong> untuk membaca semuanya. Karpathy menggambarkan FineWeb sebagai sekitar 44 terabyte teks, cukup muat di satu <em>hard disk</em> besar, karena teks sangat hemat ruang dibanding video<sup id="fnref4:60"><a class="footnote-ref" href="#fn:60">60</a></sup>.</p>
+</div>
+<h2 id="membersihkan-internet">Membersihkan internet</h2>
+<p>Web mentah sebagian besar adalah sampah dari sudut pandang pelatihan: menu navigasi, iklan, halaman duplikat, spam, teks hasil mesin, konten berbahaya. <em>Pipeline</em> pembersihan umumnya meliputi tahap-tahap berikut<sup id="fnref2:25"><a class="footnote-ref" href="#fn:25">25</a></sup><sup id="fnref3:18"><a class="footnote-ref" href="#fn:18">18</a></sup>:</p>
+<ol>
+<li><strong>Ekstraksi teks</strong>: membuang kode HTML, menu, dan <em>boilerplate</em>, lalu mengambil isi utama halaman.</li>
+<li><strong>Penyaringan URL</strong>: memblokir domain spam, situs dewasa, dan sumber berbahaya.</li>
+<li><strong>Identifikasi bahasa</strong>: mengelompokkan teks per bahasa. Bahasa dengan data sedikit (termasuk bahasa daerah) mendapat porsi kecil, dan ini salah satu sebab kemampuan LLM tidak merata antarbahasa.</li>
+<li><strong>Filter kualitas heuristik</strong>: aturan sederhana seperti membuang halaman yang terlalu pendek, terlalu banyak simbol, terlalu banyak baris berulang, atau rasio kata aneh.</li>
+<li><strong>Deduplikasi</strong>: menghapus dokumen yang identik atau hampir identik. Teknik seperti <strong>MinHash</strong> bisa mendeteksi kemiripan dokumen dalam skala miliaran. Tanpa deduplikasi, model membuang komputasi mempelajari hal yang sama berkali-kali dan cenderung menghafal teks yang berulang.</li>
+<li><strong>Penghapusan data pribadi (PII)</strong>: menyamarkan alamat email, nomor telepon, dan sejenisnya.</li>
+<li><strong>Filter kualitas berbasis model</strong>: tren terbaru adalah memakai LLM untuk menilai halaman. Contohnya <strong>FineWeb-Edu</strong>: model Llama 3 70B diminta menilai "nilai edukatif" ratusan ribu halaman, penilaian itu dipakai melatih pengklasifikasi kecil, lalu pengklasifikasi itu menyaring seluruh korpus. Hasilnya, subset 1,3 triliun token yang menghasilkan model lebih baik pada tolok ukur pengetahuan dan penalaran dibanding korpus penuh yang jauh lebih besar<sup id="fnref4:25"><a class="footnote-ref" href="#fn:25">25</a></sup>.</li>
+<li><strong>Dekontaminasi</strong>: membuang teks yang mengandung soal-soal tolok ukur (benchmark) agar hasil evaluasi tidak "bocor".</li>
+</ol>
+<h2 id="resep-campuran-data-data-mix">Resep campuran data (<em>data mix</em>)</h2>
+<p>Setelah bersih, data tidak dicampur begitu saja. Tim pelatih menentukan <strong>proporsi</strong>: berapa persen web umum, kode, matematika, multibahasa, dan seterusnya. Proporsi ini sangat memengaruhi watak model dan termasuk rahasia dapur paling dijaga. Laporan Llama 3 menyebut campuran akhirnya kira-kira 50% pengetahuan umum, 25% matematika dan penalaran, 17% kode, dan 8% multibahasa, yang ditentukan lewat eksperimen pada model-model kecil<sup id="fnref4:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</p>
+<p>Praktik umum lain adalah <strong>annealing</strong>: di bagian akhir pretraining, porsi data berkualitas sangat tinggi (misalnya matematika dan kode pilihan) dinaikkan sementara learning rate diturunkan, seperti "menutup semester dengan materi terbaik"<sup id="fnref5:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</p>
+<h2 id="tokenisasi-memotong-teks-menjadi-keping-bernomor">Tokenisasi: memotong teks menjadi keping bernomor</h2>
+<p>Jaringan saraf hanya bisa mengolah angka. Maka teks harus diubah menjadi deretan angka. Langkah ini disebut <strong>tokenisasi</strong>, dan dilakukan oleh program terpisah bernama <strong>tokenizer</strong> yang disiapkan sebelum pretraining dan tidak berubah sesudahnya.</p>
+<h3 id="mengapa-tidak-per-huruf-atau-per-kata">Mengapa tidak per huruf atau per kata?</h3>
+<ul>
+<li><strong>Per huruf</strong>: kosakatanya kecil, tetapi urutannya menjadi sangat panjang. Kalimat 100 kata menjadi ratusan langkah, dan model harus bekerja keras sekadar merangkai huruf menjadi kata.</li>
+<li><strong>Per kata</strong>: urutan pendek, tetapi kosakatanya meledak (setiap bentuk kata, nama, salah ketik, istilah baru butuh nomor sendiri), dan kata yang tidak ada di kamus tidak bisa diproses sama sekali.</li>
+</ul>
+<p>Jalan tengahnya adalah <strong>subword</strong>: keping-keping di antara huruf dan kata. Kata umum menjadi satu token utuh; kata langka dipecah menjadi beberapa keping yang sering muncul.</p>
+<h3 id="byte-pair-encoding-bpe">Byte Pair Encoding (BPE)</h3>
+<p>Algoritma yang paling luas dipakai adalah <strong>Byte Pair Encoding (BPE)</strong>, yang diadaptasi untuk bahasa oleh Sennrich dkk. (2016) dari algoritma kompresi data<sup id="fnref:12"><a class="footnote-ref" href="#fn:12">12</a></sup>. Cara kerjanya sederhana:</p>
+<ol>
+<li>Mulai dengan kosakata berisi semua karakter (atau semua 256 nilai <em>byte</em>, sehingga teks apa pun, termasuk emoji dan aksara non-Latin, pasti bisa direpresentasikan).</li>
+<li>Hitung pasangan simbol bersebelahan yang paling sering muncul di korpus, misalnya "a" + "n".</li>
+<li>Gabungkan pasangan itu menjadi simbol baru "an", tambahkan ke kosakata.</li>
+<li>Ulangi puluhan ribu kali: "an" + "g" → "ang", "m" + "e" → "me", "me" + "ng" → "meng", dan seterusnya.</li>
+</ol>
+<p>Proses berhenti ketika kosakata mencapai ukuran yang diinginkan. Ukuran kosakata LLM modern umumnya puluhan ribu hingga lebih dari 100 ribu token; Llama 3 memakai 128 ribu token<sup id="fnref6:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</p>
+<h3 id="konsekuensi-tokenisasi-yang-sering-tidak-disadari">Konsekuensi tokenisasi yang sering tidak disadari</h3>
+<p>Tokenisasi menjelaskan beberapa keanehan LLM:</p>
+<ul>
+<li><strong>Kesulitan mengeja dan menghitung huruf.</strong> Model melihat "stroberi" sebagai satu atau dua token, bukan delapan huruf. Pertanyaan "ada berapa huruf r di kata stroberi?" menuntut model mengetahui ejaan dari dalam token, sesuatu yang tidak ia "lihat" secara langsung.</li>
+<li><strong>Bahasa yang "mahal".</strong> Karena tokenizer dilatih pada korpus yang didominasi bahasa Inggris, kata-kata bahasa Inggris cenderung jadi satu token, sedangkan kata-kata bahasa Indonesia atau bahasa lain lebih sering dipecah. Artinya teks yang sama panjang memakan lebih banyak token, sehingga lebih mahal (API dibayar per token) dan lebih cepat memenuhi batas konteks.</li>
+<li><strong>Angka dan aritmetika.</strong> Angka panjang bisa dipecah secara tidak konsisten (misalnya "12345" menjadi "123" + "45"), sehingga aritmetika menjadi lebih sulit. Banyak tokenizer modern memotong angka per digit atau per tiga digit agar lebih teratur.</li>
+</ul>
+<h2 id="embedding-memberi-setiap-token-koordinat-makna">Embedding: memberi setiap token koordinat makna</h2>
+<p>Setelah tokenisasi, setiap token hanyalah nomor, misalnya "kopi" = 48.213. Nomor itu tidak bermakna; 48.213 tidak "dekat" dengan 48.214. Maka langkah pertama di dalam model adalah <strong>tabel embedding</strong>: tabel raksasa yang memetakan setiap nomor token ke sebuah vektor, deretan ribuan angka (misalnya 4.096 atau 16.384 angka, tergantung ukuran model).</p>
+<p>Vektor-vektor ini adalah parameter yang ikut dilatih. Pada awalnya acak; setelah pelatihan, token-token yang bermakna mirip memiliki vektor yang berdekatan, persis seperti ide Bengio (2003) dan word2vec (2013)<sup id="fnref3:4"><a class="footnote-ref" href="#fn:4">4</a></sup><sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup>. Bedanya, dalam Transformer, vektor ini hanyalah titik awal: lapisan-lapisan berikutnya akan terus memperkaya vektor itu dengan konteks, sehingga "bisa" dalam "bisa ular" dan "bisa" dalam "saya bisa" akhirnya punya representasi yang sangat berbeda.</p>
+<h1 id="arsitektur-transformer-mesin-di-balik-llm">Arsitektur Transformer: Mesin di Balik LLM</h1>
+<p>Sekarang kita masuk ke "otak" LLM. Hampir semua LLM generatif memakai <strong>Transformer decoder-only</strong>. Strukturnya, dari bawah ke atas:</p>
+<ol>
+<li><strong>Tokenizer</strong> mengubah teks menjadi deretan ID token.</li>
+<li><strong>Embedding</strong> mengubah setiap ID menjadi vektor.</li>
+<li><strong>Tumpukan blok Transformer</strong> (puluhan hingga lebih dari seratus blok yang identik strukturnya). Setiap blok berisi:<ul>
+<li><strong>Self-attention</strong>: token-token "saling bertukar informasi".</li>
+<li><strong>Feed-forward network (MLP)</strong>: setiap token "berpikir sendiri" mengolah informasi yang terkumpul.</li>
+<li>Di sekeliling keduanya: <strong>normalisasi</strong> dan <strong>koneksi residual</strong>.</li>
+</ul>
+</li>
+<li><strong>Lapisan keluaran (<em>unembedding</em>)</strong> mengubah vektor token terakhir menjadi skor untuk setiap token di kosakata.</li>
+<li><strong>Softmax</strong> mengubah skor menjadi distribusi peluang.</li>
+</ol>
+<p>Mari kita bedah bagian-bagian terpentingnya.</p>
+<h2 id="self-attention-setiap-kata-bertanya-setiap-kata-menawarkan">Self-attention: setiap kata bertanya, setiap kata menawarkan</h2>
+<p>Masalah yang dipecahkan attention adalah <strong>konteks</strong>. Arti sebuah kata bergantung pada kata-kata lain. Dalam kalimat "Andi menaruh gelas di atas meja karena <strong>ia</strong> haus", kata "ia" merujuk pada Andi. Dalam "Andi menaruh gelas di atas meja karena <strong>ia</strong> licin", "ia" lebih masuk akal merujuk pada meja. Model harus bisa, untuk setiap kata, mencari kata-kata lain yang relevan dan menyerap informasinya.</p>
+<p>Self-attention melakukannya dengan memberi setiap token tiga vektor turunan, yang dihasilkan dengan mengalikan vektor token dengan tiga matriks parameter berbeda:</p>
+<ul>
+<li><strong>Query (Q)</strong>: "apa yang sedang saya cari?"</li>
+<li><strong>Key (K)</strong>: "apa yang saya tawarkan / siapa saya?"</li>
+<li><strong>Value (V)</strong>: "informasi apa yang akan saya berikan jika dipilih?"</li>
+</ul>
+<p>Lalu untuk setiap token:</p>
+<ol>
+<li><strong>Query</strong>-nya dibandingkan dengan <strong>Key</strong> semua token lain (dengan operasi perkalian titik yang mengukur kecocokan).</li>
+<li>Skor kecocokan diubah menjadi bobot perhatian yang jumlahnya 100% (lewat softmax).</li>
+<li>Token itu mengambil <strong>rata-rata tertimbang</strong> dari <strong>Value</strong> semua token, sesuai bobot perhatian.</li>
+</ol>
+<p>Hasilnya, vektor "ia" diperkaya dengan informasi dari "Andi" (atau "meja"), tergantung konteks.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Analogi: pesta dan papan nama</p>
+<p>Bayangkan setiap kata adalah tamu di sebuah pesta. Setiap tamu memakai <strong>papan nama</strong> yang menjelaskan dirinya (Key), membawa <strong>pertanyaan</strong> di kepalanya (Query), dan menyimpan <strong>cerita</strong> yang siap dibagikan (Value). Kata "ia" berkeliling dengan pertanyaan "siapa pelaku di kalimat ini yang bisa merasa haus?". Ia membaca papan nama semua tamu; papan "Andi: orang, pelaku" sangat cocok, "meja: benda" tidak. Maka "ia" mendengarkan cerita Andi dengan saksama dan cerita tamu lain sambil lalu. Setelah pesta, "ia" pulang dengan pemahaman baru tentang dirinya.</p>
+</div>
+<h3 id="multi-head-attention">Multi-head attention</h3>
+<p>Satu jenis pertanyaan tidak cukup. Sebuah kata mungkin perlu tahu sekaligus: siapa subjeknya, kata kerja apa yang terkait, apakah kalimatnya negatif, bahasa apa yang dipakai, dan seterusnya. Maka setiap lapisan attention punya <strong>banyak kepala (<em>heads</em>)</strong>, masing-masing dengan matriks Q, K, V sendiri, yang berjalan paralel. Transformer asli memakai 8 kepala<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup>; model besar memakai puluhan hingga lebih dari seratus. Riset interpretabilitas menemukan bahwa kepala-kepala berbeda memang cenderung berspesialisasi, misalnya ada yang melacak hubungan tata bahasa, ada yang menyalin pola dari bagian teks sebelumnya.</p>
+<h3 id="causal-mask-tidak-boleh-mengintip-masa-depan">Causal mask: tidak boleh mengintip masa depan</h3>
+<p>Dalam LLM, setiap token hanya boleh memperhatikan token <strong>sebelumnya</strong>, tidak pernah sesudahnya. Ini dipaksakan dengan <strong>causal mask</strong>, yang menutup semua posisi di masa depan. Alasannya: model dilatih menebak token berikutnya; kalau boleh mengintip, ia akan "menyontek" dan tidak belajar apa-apa.</p>
+<p>Keuntungan besarnya: dalam satu kali umpan maju pada satu dokumen sepanjang 8.000 token, model sebenarnya mengerjakan <strong>8.000 soal tebak-kata sekaligus</strong> (tebak token ke-2 dari token ke-1, tebak ke-3 dari ke-1 dan ke-2, dan seterusnya), semuanya paralel. Inilah salah satu rahasia efisiensi pretraining Transformer dibanding RNN.</p>
+<h3 id="harga-attention-kuadratik">Harga attention: kuadratik</h3>
+<p>Karena setiap token membandingkan diri dengan semua token sebelumnya, biaya attention tumbuh secara <strong>kuadratik</strong> terhadap panjang teks: dua kali lebih panjang berarti sekitar empat kali lebih mahal. Ini alasan utama panjang konteks sempat menjadi hambatan besar. Banyak inovasi rekayasa berusaha mengatasinya, misalnya <strong>FlashAttention</strong> (Dao dkk., 2022), yang menghitung attention yang <strong>persis sama</strong> tetapi menata ulang urutan baca-tulis memori GPU sehingga jauh lebih cepat dan hemat memori<sup id="fnref:32"><a class="footnote-ref" href="#fn:32">32</a></sup>, serta <strong>Grouped-Query Attention (GQA)</strong> yang membuat beberapa kepala query berbagi key dan value sehingga memori saat inferensi berkurang drastis<sup id="fnref:22"><a class="footnote-ref" href="#fn:22">22</a></sup>.</p>
+<h2 id="posisi-memberi-tahu-urutan-kata">Posisi: memberi tahu urutan kata</h2>
+<p>Attention sendiri tidak peduli urutan; ia memperlakukan token seperti sekantong kata. Padahal "anjing menggigit orang" dan "orang menggigit anjing" jelas berbeda. Maka informasi <strong>posisi</strong> harus disuntikkan. Transformer asli menambahkan pola gelombang sinus ke setiap embedding<sup id="fnref4:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. Kebanyakan LLM modern memakai <strong>RoPE</strong> (<em>Rotary Position Embedding</em>, Su dkk., 2021), yang "memutar" vektor query dan key dengan sudut yang bergantung pada posisinya, sehingga kecocokan antar dua token secara alami bergantung pada <strong>jarak relatif</strong> keduanya<sup id="fnref:13"><a class="footnote-ref" href="#fn:13">13</a></sup>. Salah satu keuntungan RoPE adalah memudahkan perpanjangan konteks setelah pelatihan.</p>
+<h2 id="feed-forward-network-tempat-fakta-banyak-tersimpan">Feed-forward network: tempat "fakta" banyak tersimpan</h2>
+<p>Setelah attention mengumpulkan informasi dari token lain, setiap token melewati <strong>feed-forward network (FFN)</strong> atau <strong>MLP</strong>: dua lapisan neuron biasa dengan fungsi aktivasi di tengahnya, diterapkan pada setiap token secara terpisah. Lapisan tengahnya biasanya sekitar tiga sampai empat kali lebih lebar daripada vektor token, dan bagian inilah yang menyumbang sekitar dua pertiga parameter model.</p>
+<p>Jika attention adalah "rapat koordinasi" antarkata, FFN adalah "waktu berpikir pribadi" setiap kata. Riset interpretabilitas menunjukkan bahwa banyak asosiasi faktual (misalnya "Menara Eiffel → Paris") tampaknya tersimpan terutama di lapisan-lapisan FFN, meskipun penyimpanan ini tersebar dan tidak serapi entri kamus.</p>
+<h2 id="menumpuk-blok-kedalaman-dan-residual-stream">Menumpuk blok: kedalaman dan residual stream</h2>
+<p>Satu blok (attention + FFN) diulang berkali-kali. GPT-3 175B memakai 96 blok<sup id="fnref2:17"><a class="footnote-ref" href="#fn:17">17</a></sup>; Llama 3 405B memakai 126 blok<sup id="fnref7:18"><a class="footnote-ref" href="#fn:18">18</a></sup>. Karena koneksi residual, setiap blok tidak menulis ulang vektor token, melainkan <strong>menambahkan</strong> sesuatu ke dalamnya. Vektor setiap token berjalan melewati semua blok seperti dokumen yang diedarkan ke banyak meja, dan setiap meja menambahkan catatan.</p>
+<p>Di ujung tumpukan, vektor token <strong>terakhir</strong> dikalikan dengan matriks <em>unembedding</em>, menghasilkan satu skor (<em>logit</em>) untuk setiap token di kosakata, misalnya 128.000 skor. <strong>Softmax</strong> mengubah skor-skor itu menjadi peluang yang jumlahnya 100%. Itulah tebakan model untuk token berikutnya.</p>
+<h2 id="mixture-of-experts-moe-model-besar-yang-hemat">Mixture of Experts (MoE): model besar yang hemat</h2>
+<p>Model "padat" (<em>dense</em>) menjalankan <strong>semua</strong> parameternya untuk setiap token. Semakin besar model, semakin mahal setiap token. <strong>Mixture of Experts (MoE)</strong> mengakali ini: lapisan FFN diganti dengan banyak FFN kecil yang disebut <strong>expert</strong>, ditambah sebuah <strong>router</strong> yang, untuk setiap token, memilih hanya beberapa expert untuk dijalankan<sup id="fnref:21"><a class="footnote-ref" href="#fn:21">21</a></sup>.</p>
+<ul>
+<li><strong>Mixtral 8x7B</strong> (2024) punya 8 expert per lapisan dan memilih 2 untuk setiap token: total 46,7 miliar parameter, tetapi hanya sekitar 13 miliar yang aktif per token<sup id="fnref3:21"><a class="footnote-ref" href="#fn:21">21</a></sup>.</li>
+<li><strong>DeepSeek-V3</strong> (2024) punya 671 miliar parameter total, tetapi hanya 37 miliar aktif per token<sup id="fnref6:20"><a class="footnote-ref" href="#fn:20">20</a></sup>.</li>
+</ul>
+<p>Analoginya: rumah sakit besar dengan ratusan dokter spesialis. Pasien tidak diperiksa oleh semua dokter; petugas triase (router) mengirimnya ke dua atau tiga spesialis yang relevan. Rumah sakitnya "berpengetahuan" sangat luas, tetapi biaya per pasien tetap terkendali. MoE kini menjadi pilihan umum untuk model-model besar karena memberikan kapasitas pengetahuan besar dengan biaya komputasi per token yang lebih kecil. Tantangannya adalah menjaga agar beban terbagi merata (tidak semua token berebut ke expert yang sama) dan kebutuhan memori tetap besar karena semua expert harus tersimpan.</p>
+<h2 id="berapa-banyak-parameter-dan-di-mana">Berapa banyak parameter, dan di mana?</h2>
+<table>
+<thead>
+<tr>
+<th>Komponen</th>
+<th>Fungsi</th>
+<th>Porsi parameter (kira-kira, model dense)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedding &amp; unembedding</td>
+<td>Menerjemahkan token ↔ vektor</td>
+<td>Kecil pada model besar (beberapa persen)</td>
+</tr>
+<tr>
+<td>Attention (Q, K, V, output)</td>
+<td>Pertukaran informasi antartoken</td>
+<td>± sepertiga</td>
+</tr>
+<tr>
+<td>Feed-forward / MLP</td>
+<td>Pengolahan per token, banyak asosiasi tersimpan</td>
+<td>± dua pertiga</td>
+</tr>
+<tr>
+<td>Normalisasi</td>
+<td>Menjaga skala angka</td>
+<td>Sangat kecil</td>
+</tr>
+</tbody>
+</table>
+<p>Angka ini perkiraan umum dan bervariasi antar-desain; pada model MoE, porsi FFN (para expert) jauh lebih besar lagi.</p>
+<h1 id="pretraining-membaca-internet-dan-menebak-kata-berikutnya">Pretraining: Membaca Internet dan Menebak Kata Berikutnya</h1>
+<p>Pretraining adalah tahap paling mahal, paling lama, dan paling menentukan. Di sinilah model memperoleh hampir seluruh pengetahuan dan kemampuan dasarnya. Karpathy menyebut hasil tahap ini sebagai semacam "kompresi internet yang <em>lossy</em>" ke dalam parameter model<sup id="fnref2:60"><a class="footnote-ref" href="#fn:60">60</a></sup>.</p>
+<h2 id="tujuannya-sederhana-next-token-prediction">Tujuannya sederhana: next-token prediction</h2>
+<p>Tujuan pretraining adalah <strong>menebak token berikutnya</strong> di seluruh korpus. Tidak ada label buatan manusia, tidak ada "jawaban benar" yang disiapkan khusus; teks itu sendiri adalah soal sekaligus kunci jawabannya. Karena itu pendekatan ini disebut <strong>self-supervised learning</strong>. Inilah yang memungkinkan pelatihan pada triliunan token: tidak butuh anotator manusia sama sekali.</p>
+<h2 id="satu-langkah-pelatihan-dari-awal-sampai-akhir">Satu langkah pelatihan, dari awal sampai akhir</h2>
+<p>Menggabungkan semua yang sudah kita bahas, satu <strong>langkah pelatihan</strong> (<em>training step</em>) berjalan seperti ini:</p>
+<ol>
+<li><strong>Ambil batch</strong>: ambil secara acak ribuan potongan teks dari korpus, masing-masing sepanjang panjang konteks (misalnya 8.192 token). Satu batch model besar bisa berisi belasan juta token.</li>
+<li><strong>Umpan maju</strong>: alirkan semua token melewati embedding dan seluruh blok Transformer. Untuk <strong>setiap posisi</strong> di setiap potongan, model mengeluarkan distribusi peluang token berikutnya.</li>
+<li><strong>Hitung loss</strong>: bandingkan setiap tebakan dengan token yang sebenarnya muncul; rata-ratakan tingkat "keterkejutan" (cross-entropy) di seluruh posisi.</li>
+<li><strong>Backpropagation</strong>: rambatkan kesalahan mundur melewati semua blok, sehingga setiap parameter (termasuk tabel embedding) mendapatkan gradiennya.</li>
+<li><strong>Pembaruan optimizer</strong>: AdamW menggeser setiap parameter sedikit, dengan learning rate sesuai jadwal.</li>
+<li><strong>Ulangi</strong>. Sebuah pretraining besar terdiri atas ratusan ribu hingga jutaan langkah seperti ini.</li>
+</ol>
+<p>Di awal, loss sangat tinggi; model menebak hampir secara acak dan keluarannya adalah campuran token tak bermakna. Setelah ratusan langkah, ia belajar token-token yang sering muncul. Setelah ribuan langkah, ia mulai merangkai kata yang benar ejaannya. Kemudian tata bahasa, lalu koherensi paragraf, lalu fakta, gaya, dan pola penalaran. Grafik loss yang turun perlahan selama berminggu-minggu adalah "detak jantung" yang dipantau terus oleh tim pelatih.</p>
+<div class="admonition praktik">
+<p class="admonition-title">Mengapa menebak kata membuat model 'pintar'?</p>
+<p>Pikirkan teks seperti: "Setelah menambahkan 27 dan 58, hasilnya adalah ...". Untuk menurunkan loss pada ribuan contoh semacam ini, cara paling efisien bagi model bukan menghafal setiap pasangan angka, melainkan membangun mekanisme internal yang meniru penjumlahan. Demikian pula untuk menebak kalimat berikutnya dalam cerita detektif, akan sangat membantu jika model melacak siapa melakukan apa. Tekanan untuk memprediksi dengan tepat pada data yang sangat beragam mendorong model membentuk representasi yang merangkum struktur dunia di balik teks. Seberapa jauh ini bisa disebut "pemahaman" adalah perdebatan terbuka (lihat bagian Perdebatan).</p>
+</div>
+<h2 id="hukum-penskalaan-scaling-laws">Hukum penskalaan (<em>scaling laws</em>)</h2>
+<p>Salah satu penemuan paling berpengaruh dalam sejarah LLM adalah bahwa kinerja model <strong>bisa diprediksi</strong> dari skalanya.</p>
+<h3 id="kaplan-dkk-2020">Kaplan dkk. (2020)</h3>
+<p>Tim OpenAI yang dipimpin Jared Kaplan menemukan bahwa loss model bahasa turun mengikuti <strong>hukum pangkat</strong> (<em>power law</em>) yang mulus terhadap tiga faktor: jumlah parameter, jumlah data, dan jumlah komputasi, dengan tren yang konsisten di rentang lebih dari tujuh orde besaran<sup id="fnref2:23"><a class="footnote-ref" href="#fn:23">23</a></sup>. Detail arsitektur seperti lebar atau kedalaman jaringan ternyata jauh kurang penting dalam rentang yang wajar. Artinya, sebelum membakar ratusan juta dolar untuk model besar, tim bisa melatih puluhan model kecil, menarik garis tren, dan memprediksi hasil model besar dengan cukup akurat. Ini mengubah pengembangan LLM dari seni menjadi sesuatu yang lebih mirip teknik.</p>
+<h3 id="chinchilla-2022-data-sama-pentingnya-dengan-ukuran">Chinchilla (2022): data sama pentingnya dengan ukuran</h3>
+<p>Kaplan menyarankan bahwa dengan anggaran komputasi tertentu, lebih baik memperbesar model dan relatif menghemat data. Dua tahun kemudian, Hoffmann dkk. dari DeepMind mengoreksinya: untuk hasil optimal, <strong>ukuran model dan jumlah token harus diperbesar dengan laju yang kira-kira sama</strong>. Aturan praktisnya sering diringkas sebagai sekitar <strong>20 token per parameter</strong><sup id="fnref:24"><a class="footnote-ref" href="#fn:24">24</a></sup>. Mereka membuktikannya dengan melatih <strong>Chinchilla</strong> (70 miliar parameter, 1,4 triliun token) dengan anggaran komputasi yang sama seperti <strong>Gopher</strong> (280 miliar parameter, sekitar 300 miliar token). Chinchilla yang empat kali lebih kecil mengalahkan Gopher, GPT-3, dan model-model yang lebih besar lainnya di banyak tugas<sup id="fnref2:24"><a class="footnote-ref" href="#fn:24">24</a></sup>. GPT-3, dengan sekitar 1,7 token per parameter, ternyata "kurang makan data".</p>
+<h3 id="setelah-chinchilla-sengaja-overtraining">Setelah Chinchilla: sengaja "overtraining"</h3>
+<p>Resep Chinchilla mengoptimalkan <strong>biaya pelatihan</strong>. Tetapi model yang sudah jadi akan dijalankan miliaran kali untuk melayani pengguna, dan model kecil jauh lebih murah dijalankan. Maka praktik sekarang adalah melatih model yang relatif kecil dengan data <strong>jauh melebihi</strong> rasio Chinchilla. Model Llama 3 8B, misalnya, dilatih dengan lebih dari 15 triliun token, ratusan kali lebih banyak dari 20 token per parameter<sup id="fnref8:18"><a class="footnote-ref" href="#fn:18">18</a></sup>. Hasilnya model kecil yang sangat kuat, dengan harga pelatihan sedikit lebih mahal dari "optimal".</p>
+<h2 id="infrastruktur-pabrik-komputasi">Infrastruktur: pabrik komputasi</h2>
+<p>Pretraining model terdepan adalah salah satu proyek komputasi terbesar yang pernah dilakukan manusia.</p>
+<h3 id="skala-perangkat-keras">Skala perangkat keras</h3>
+<p>Llama 3 405B dilatih memakai hingga sekitar 16.000 GPU NVIDIA H100 secara bersamaan<sup id="fnref9:18"><a class="footnote-ref" href="#fn:18">18</a></sup>, dengan total 30,84 juta jam-GPU untuk model 405B saja, dan 39,3 juta jam-GPU untuk seluruh keluarga Llama 3.1<sup id="fnref:19"><a class="footnote-ref" href="#fn:19">19</a></sup>. DeepSeek-V3 melaporkan kebutuhan 2,788 juta jam-GPU H800 untuk pelatihan penuhnya, atau sekitar 180 ribu jam-GPU per triliun token, setara 3,7 hari pada kluster 2.048 GPU<sup id="fnref2:20"><a class="footnote-ref" href="#fn:20">20</a></sup>. Menurut Epoch AI, komputasi untuk melatih model-model terdepan tumbuh sekitar 4–5 kali lipat per tahun dari 2010 hingga 2024, terutama karena peningkatan belanja, bukan hanya perangkat keras yang lebih baik<sup id="fnref:28"><a class="footnote-ref" href="#fn:28">28</a></sup>.</p>
+<h3 id="paralelisme-membagi-model-ke-ribuan-gpu">Paralelisme: membagi model ke ribuan GPU</h3>
+<p>Model 400 miliar parameter, beserta gradien dan status optimizer-nya, membutuhkan beberapa terabyte memori, jauh melebihi kapasitas satu GPU (puluhan hingga ratusan gigabyte). Maka pekerjaan dibagi dengan beberapa strategi sekaligus<sup id="fnref:29"><a class="footnote-ref" href="#fn:29">29</a></sup><sup id="fnref:30"><a class="footnote-ref" href="#fn:30">30</a></sup>:</p>
+<table>
+<thead>
+<tr>
+<th>Strategi</th>
+<th>Apa yang dibagi</th>
+<th>Analogi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Data parallelism</strong></td>
+<td>Setiap kelompok GPU memegang salinan model, mengerjakan batch berbeda, lalu gradiennya dirata-ratakan</td>
+<td>Banyak tim mengerjakan soal berbeda dengan buku yang sama, lalu menyatukan catatan koreksi</td>
+</tr>
+<tr>
+<td><strong>Tensor parallelism</strong></td>
+<td>Setiap perkalian matriks besar dipotong ke beberapa GPU</td>
+<td>Satu halaman buku disobek menjadi beberapa bagian dan dibaca bersamaan</td>
+</tr>
+<tr>
+<td><strong>Pipeline parallelism</strong></td>
+<td>Lapisan-lapisan dibagi: GPU grup 1 memegang blok 1–30, grup 2 blok 31–60, dst.</td>
+<td>Jalur perakitan pabrik</td>
+</tr>
+<tr>
+<td><strong>ZeRO / FSDP</strong></td>
+<td>Status optimizer, gradien, dan parameter dipecah (<em>sharded</em>) di antara GPU data-parallel</td>
+<td>Tidak semua tim menyimpan seluruh buku; masing-masing menyimpan beberapa bab dan meminjamkannya saat perlu</td>
+</tr>
+<tr>
+<td><strong>Expert parallelism</strong> (MoE)</td>
+<td>Expert-expert berbeda ditempatkan di GPU berbeda</td>
+<td>Dokter spesialis di gedung berbeda</td>
+</tr>
+</tbody>
+</table>
+<p>Kombinasi strategi ini sering disebut <strong>paralelisme 3D atau 4D</strong>. Mendesainnya agar ribuan GPU tidak saling menunggu adalah salah satu keahlian rekayasa paling langka di industri.</p>
+<h3 id="presisi-campuran">Presisi campuran</h3>
+<p>Angka di dalam komputer bisa disimpan dengan presisi tinggi (32 bit) atau rendah (16 atau 8 bit). Presisi rendah lebih cepat dan hemat memori, tetapi rawan galat pembulatan. <strong>Mixed precision training</strong> memakai presisi rendah untuk sebagian besar perhitungan sambil menyimpan salinan "induk" bobot dalam presisi tinggi<sup id="fnref:31"><a class="footnote-ref" href="#fn:31">31</a></sup>. Format <strong>BF16</strong> kini standar, dan DeepSeek-V3 bahkan melaporkan pelatihan skala besar dengan format <strong>FP8</strong> untuk banyak operasinya<sup id="fnref3:20"><a class="footnote-ref" href="#fn:20">20</a></sup>.</p>
+<h3 id="hal-hal-yang-bisa-dan-pasti-salah">Hal-hal yang bisa (dan pasti) salah</h3>
+<p>Pada skala ribuan GPU selama berminggu-minggu, kegagalan adalah hal rutin. Laporan Llama 3 mencatat 466 gangguan kerja selama periode pretraining 54 hari, sebagian besar akibat masalah perangkat keras seperti GPU atau memori yang rusak<sup id="fnref10:18"><a class="footnote-ref" href="#fn:18">18</a></sup>. Karena itu pelatihan dirancang dengan:</p>
+<ul>
+<li><strong>Checkpoint</strong> berkala: seluruh keadaan model disimpan secara rutin, sehingga saat ada kegagalan, pelatihan bisa dilanjutkan dari titik terakhir.</li>
+<li><strong>Pemantauan loss spike</strong>: kadang loss tiba-tiba melonjak (akibat data buruk atau ketidakstabilan numerik). Tim bisa mundur ke checkpoint sebelumnya, melewati batch bermasalah, atau menurunkan learning rate.</li>
+</ul>
+<h3 id="biaya">Biaya</h3>
+<p>Biaya pretraining sulit diketahui karena laboratorium jarang mengungkapkannya. AI Index 2025 mengestimasi biaya komputasi pelatihan GPT-4 sekitar US$78 juta dan Gemini Ultra sekitar US$192 juta<sup id="fnref2:57"><a class="footnote-ref" href="#fn:57">57</a></sup>. DeepSeek menghitung bahwa, dengan asumsi harga sewa US$2 per jam-GPU, pelatihan akhir DeepSeek-V3 hanya bernilai sekitar US$5,6 juta, tetapi mereka sendiri menegaskan angka itu <strong>tidak mencakup</strong> biaya riset, eksperimen sebelumnya, serta pembelian dan pengelolaan kluster<sup id="fnref4:20"><a class="footnote-ref" href="#fn:20">20</a></sup>. Angka ini sering dikutip keliru sebagai "biaya membuat DeepSeek".</p>
+<h2 id="hasilnya-base-model">Hasilnya: base model</h2>
+<p>Pretraining menghasilkan <strong>base model</strong> (disebut juga <em>foundation model</em> atau <em>pretrained model</em>). Sifat-sifatnya:</p>
+<ul>
+<li><strong>Berpengetahuan luas</strong>: ia mengenal banyak fakta, bahasa, gaya, kode.</li>
+<li><strong>Pandai melanjutkan teks</strong>: beri awal artikel berita, ia menulis sisanya dengan gaya berita. Beri awal kode, ia melanjutkan kodenya.</li>
+<li><strong>Tidak "tahu" bahwa ia asisten.</strong> Tanyakan "Apa ibu kota Jepang?" dan ia mungkin melanjutkan dengan "Apa ibu kota Korea? Apa ibu kota Cina?", karena di internet, pertanyaan kuis sering muncul berderet.</li>
+<li><strong>Meniru apa saja</strong>, termasuk hal buruk yang ada di internet: kebencian, informasi salah, gaya kasar.</li>
+<li><strong>Bisa dipandu dengan contoh.</strong> Dengan <em>few-shot prompting</em>, yaitu menaruh beberapa contoh tanya-jawab di awal teks, base model bisa diarahkan untuk menjawab, karena kini kelanjutan yang paling mungkin adalah jawaban<sup id="fnref5:17"><a class="footnote-ref" href="#fn:17">17</a></sup>.</li>
+</ul>
+<p>Karpathy menyebut base model sebagai "simulator dokumen internet": ia bisa memerankan penulis dokumen apa pun, tetapi tidak punya kepribadian atau tujuan sendiri<sup id="fnref3:60"><a class="footnote-ref" href="#fn:60">60</a></sup>. Tugas post-training adalah memilih dan menguatkan satu peran tertentu dari sekian banyak kemungkinan itu: <strong>asisten yang membantu, jujur, dan aman</strong>.</p>
+<h3 id="pelatihan-lanjutan-setelah-pretraining-utama">Pelatihan lanjutan setelah pretraining utama</h3>
+<p>Sebelum masuk post-training, banyak model melewati tahap tambahan yang masih bersifat pretraining:</p>
+<ul>
+<li><strong>Perpanjangan konteks</strong> (<em>long-context training</em>): model dilatih dulu dengan konteks pendek (misalnya 8 ribu token) karena lebih murah, lalu dilatih lanjut dengan dokumen panjang agar bisa menangani konteks 128 ribu token atau lebih<sup id="fnref12:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</li>
+<li><strong>Continued pretraining</strong> pada domain tertentu (misalnya kode, kedokteran, atau bahasa tertentu) untuk menambah pengetahuan khusus.</li>
+</ul>
+<h1 id="post-training-dari-pembaca-internet-menjadi-asisten">Post-training: Dari Pembaca Internet Menjadi Asisten</h1>
+<p>Jika pretraining menghasilkan "otak" yang berpengetahuan, <strong>post-training</strong> membentuk "watak" dan "keterampilan"-nya. Tahap ini jauh lebih murah dalam komputasi dibanding pretraining (biasanya hanya sebagian kecil dari totalnya), tetapi dampaknya pada pengalaman pengguna sangat besar. Temuan InstructGPT tetap menjadi ilustrasi paling tajam: model 1,3 miliar parameter yang sudah dipoles lebih disukai manusia daripada GPT-3 mentah yang 100 kali lebih besar<sup id="fnref2:33"><a class="footnote-ref" href="#fn:33">33</a></sup>.</p>
+<p>Resep post-training berkembang pesat. Secara historis dan konseptual, ada tiga lapis utama:</p>
+<ol>
+<li><strong>Supervised Fine-Tuning (SFT)</strong>: belajar dari contoh jawaban yang baik.</li>
+<li><strong>Preference tuning</strong>: belajar dari perbandingan jawaban mana yang lebih disukai (RLHF, DPO, RLAIF/Constitutional AI).</li>
+<li><strong>Reinforcement learning dengan hadiah terverifikasi</strong>: berlatih memecahkan soal yang jawabannya bisa dicek, yang melahirkan <em>reasoning model</em>.</li>
+</ol>
+<p>Dalam praktik modern, ketiga lapis ini sering dijalankan berulang-ulang dalam beberapa putaran, dicampur dengan pelatihan keamanan dan penggunaan alat.</p>
+<h2 id="tahap-1-supervised-fine-tuning-sft">Tahap 1: Supervised Fine-Tuning (SFT)</h2>
+<h3 id="apa-yang-dilakukan">Apa yang dilakukan</h3>
+<p>SFT, disebut juga <em>instruction tuning</em>, melanjutkan pelatihan base model dengan mekanisme yang <strong>persis sama</strong> seperti pretraining (tebak token berikutnya, backpropagation, gradient descent), tetapi pada <strong>data yang sangat berbeda</strong>: ribuan hingga jutaan contoh percakapan berformat "pertanyaan/instruksi → jawaban teladan".</p>
+<p>Contoh data SFT:</p>
+<table>
+<thead>
+<tr>
+<th>Instruksi pengguna</th>
+<th>Jawaban teladan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jelaskan fotosintesis untuk anak SD</td>
+<td>Tumbuhan itu seperti koki kecil. Mereka memakai sinar matahari, air, dan udara untuk membuat makanannya sendiri...</td>
+</tr>
+<tr>
+<td>Tulis fungsi Python untuk membalik string</td>
+<td>Berikut fungsinya, beserta penjelasan singkat...</td>
+</tr>
+<tr>
+<td>Bagaimana cara membuat bahan peledak?</td>
+<td>(Penolakan yang sopan, disertai penjelasan dan, jika relevan, alternatif yang aman)</td>
+</tr>
+</tbody>
+</table>
+<p>Model dilatih agar ketika melihat bagian instruksi, ia menghasilkan bagian jawaban. Biasanya loss hanya dihitung pada bagian jawaban, karena kita ingin model belajar <strong>menjawab</strong>, bukan belajar meniru pertanyaan.</p>
+<h3 id="format-percakapan-dan-token-khusus">Format percakapan dan token khusus</h3>
+<p>Agar model bisa membedakan siapa yang berbicara, percakapan dibungkus dalam <strong>template obrolan</strong> dengan <strong>token khusus</strong> yang menandai awal dan akhir giliran, misalnya penanda "pesan sistem", "pengguna", dan "asisten". Saat Anda mengetik di aplikasi chat, sistem diam-diam membungkus pesan Anda dengan penanda ini, lalu meminta model melanjutkan teks setelah penanda "asisten". Model berhenti menulis saat ia menghasilkan token "akhir giliran". Jadi, bahkan chatbot tercanggih pun secara mekanis tetap <strong>melanjutkan dokumen</strong>; hanya saja dokumennya kini berbentuk transkrip percakapan, dan model sudah dilatih untuk memerankan pihak asisten.</p>
+<h3 id="dari-mana-data-sft">Dari mana data SFT?</h3>
+<p>InstructGPT memakai sekitar 13 ribu contoh yang ditulis oleh pelabel manusia terlatih<sup id="fnref3:33"><a class="footnote-ref" href="#fn:33">33</a></sup>. Sekarang, data SFT sering berjumlah ratusan ribu hingga jutaan contoh, dan semakin banyak yang <strong>dihasilkan atau disunting oleh model lain</strong> lalu disaring secara otomatis dan manual. Pelajaran penting dari berbagai laporan teknis: <strong>kualitas dan keragaman</strong> data SFT jauh lebih menentukan daripada jumlahnya.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Bahasa mudah: SFT adalah magang dengan contoh</p>
+<p>Base model seperti lulusan baru yang sudah membaca semua buku tetapi belum pernah bekerja. SFT adalah masa magang di mana ia diperlihatkan ribuan contoh "beginilah cara karyawan yang baik membalas email pelanggan". Ia tidak diberi pengetahuan baru yang banyak; ia belajar <strong>format, nada, dan kebiasaan</strong> kerja. Karena itu, sebagian peneliti menyebut SFT terutama "membuka" kemampuan yang sudah ada sejak pretraining.</p>
+</div>
+<h3 id="fine-tuning-hemat-lora">Fine-tuning hemat: LoRA</h3>
+<p>Melatih ulang seluruh parameter model raksasa itu mahal. <strong>LoRA</strong> (<em>Low-Rank Adaptation</em>, Hu dkk., 2021) membekukan bobot asli dan hanya melatih "tambalan" kecil yang disisipkan di setiap lapisan. Pada GPT-3 175B, LoRA mengurangi jumlah parameter yang dilatih hingga 10.000 kali dan kebutuhan memori GPU hingga 3 kali, dengan kualitas setara atau lebih baik daripada fine-tuning penuh<sup id="fnref:40"><a class="footnote-ref" href="#fn:40">40</a></sup>. LoRA dan turunannya membuat perusahaan kecil, peneliti, dan bahkan hobiis bisa menyesuaikan model terbuka dengan satu atau beberapa GPU.</p>
+<h2 id="tahap-2-belajar-dari-preferensi-rlhf-dpo-rlaif">Tahap 2: Belajar dari preferensi (RLHF, DPO, RLAIF)</h2>
+<h3 id="mengapa-sft-saja-tidak-cukup">Mengapa SFT saja tidak cukup</h3>
+<p>SFT punya batasan mendasar:</p>
+<ul>
+<li><strong>Menulis jawaban sempurna itu sulit dan mahal</strong>, sedangkan <strong>menilai mana yang lebih baik dari dua jawaban</strong> jauh lebih mudah. Seorang juri lomba masak tidak perlu bisa memasak lebih enak dari peserta untuk bisa menilai masakan mana yang lebih lezat.</li>
+<li>SFT hanya mengajarkan meniru. Ia tidak memberi tahu model <strong>seberapa buruk</strong> jawaban yang salah, atau mana dari dua jawaban yang sama-sama lumayan yang lebih disukai.</li>
+<li>Banyak kualitas yang diinginkan (membantu, jujur, tidak bertele-tele, aman) sulit didefinisikan dengan contoh saja, tetapi mudah dikenali saat dibandingkan.</li>
+</ul>
+<h3 id="rlhf-klasik-tiga-langkah-instructgpt">RLHF klasik: tiga langkah InstructGPT</h3>
+<p><strong>Reinforcement Learning from Human Feedback (RLHF)</strong>, sebagaimana dipopulerkan InstructGPT (Ouyang dkk., 2022), berjalan dalam tiga langkah<sup id="fnref4:33"><a class="footnote-ref" href="#fn:33">33</a></sup>:</p>
+<ol>
+<li><strong>SFT</strong> seperti di atas, sebagai titik awal.</li>
+<li><strong>Melatih reward model.</strong> Untuk satu prompt, model menghasilkan beberapa jawaban. Pelabel manusia <strong>mengurutkan</strong> jawaban-jawaban itu dari terbaik ke terburuk. Data perbandingan ini dipakai melatih jaringan saraf terpisah, <strong>reward model</strong>, yang belajar memberi skor angka pada sebuah jawaban, memprediksi seberapa besar manusia akan menyukainya. InstructGPT memakai sekitar 33 ribu prompt untuk tahap ini<sup id="fnref6:33"><a class="footnote-ref" href="#fn:33">33</a></sup>.</li>
+<li><strong>Optimasi dengan reinforcement learning.</strong> Model bahasa (dalam istilah RL disebut <em>policy</em>) menghasilkan jawaban untuk prompt-prompt baru, reward model memberi skor, lalu algoritma RL bernama <strong>PPO</strong> (<em>Proximal Policy Optimization</em>)<sup id="fnref:34"><a class="footnote-ref" href="#fn:34">34</a></sup> menyetel parameter model agar jawaban berskor tinggi lebih sering muncul.</li>
+</ol>
+<p>Satu komponen penting: <strong>penalti KL</strong>. Model diberi hukuman jika terlalu menyimpang dari model SFT awal. Tanpanya, model cenderung menemukan "celah" di reward model.</p>
+<h3 id="reward-hacking-ketika-murid-mengakali-penilai">Reward hacking: ketika murid mengakali penilai</h3>
+<p>Reward model hanyalah tiruan selera manusia, dan tiruan itu tidak sempurna. Jika model dioptimalkan terlalu keras terhadapnya, ia akan menemukan cara mendapat skor tinggi tanpa benar-benar menjadi lebih baik, misalnya menulis jawaban lebih panjang, memakai nada sangat yakin, atau menyanjung pengguna. Fenomena ini disebut <strong>reward hacking</strong> atau <em>overoptimization</em>, dan Gao dkk. (2022) menunjukkan bahwa setelah titik tertentu, menaikkan skor reward model justru menurunkan kualitas yang sebenarnya<sup id="fnref:42"><a class="footnote-ref" href="#fn:42">42</a></sup>. Ini adalah versi AI dari <strong>Hukum Goodhart</strong>: "ketika sebuah ukuran dijadikan target, ia berhenti menjadi ukuran yang baik".</p>
+<p>Salah satu gejala nyata adalah <strong>sycophancy</strong> (sikap menjilat): kecenderungan model membenarkan pendapat pengguna meskipun salah. Riset Anthropic (Sharma dkk., 2023) menemukan bahwa manusia penilai dan reward model sendiri kadang lebih menyukai jawaban yang meyakinkan dan sejalan dengan pandangan pengguna dibanding jawaban yang benar, sehingga RLHF bisa tanpa sengaja memperkuat kecenderungan ini<sup id="fnref:43"><a class="footnote-ref" href="#fn:43">43</a></sup>.</p>
+<h3 id="dpo-rlhf-tanpa-rl">DPO: RLHF tanpa RL</h3>
+<p>RLHF dengan PPO rumit dan rewel: harus menjalankan beberapa model sekaligus (policy, reward model, model referensi, dan model penilai nilai), dan pelatihannya mudah tidak stabil. <strong>Direct Preference Optimization (DPO)</strong> (Rafailov dkk., 2023) menunjukkan bahwa secara matematis, tujuan yang sama bisa dicapai <strong>langsung</strong> dari data pasangan "jawaban disukai vs tidak disukai", tanpa melatih reward model terpisah dan tanpa loop RL<sup id="fnref:35"><a class="footnote-ref" href="#fn:35">35</a></sup>. Model cukup dilatih untuk menaikkan peluang jawaban yang disukai dan menurunkan peluang jawaban yang tidak disukai, relatif terhadap model awal. Judul makalahnya merangkum wawasan itu: "model bahasa Anda diam-diam adalah reward model". DPO dan variannya menjadi sangat populer, terutama di komunitas model terbuka, karena jauh lebih sederhana.</p>
+<h3 id="rlaif-dan-constitutional-ai-umpan-balik-dari-ai">RLAIF dan Constitutional AI: umpan balik dari AI</h3>
+<p>Mengumpulkan jutaan penilaian manusia mahal, lambat, dan membebani para pelabel secara psikologis (terutama untuk konten berbahaya). <strong>Constitutional AI</strong> (Anthropic, 2022) menggantikan sebagian penilaian manusia dengan penilaian AI yang dipandu oleh daftar prinsip tertulis, sebuah "konstitusi"<sup id="fnref:36"><a class="footnote-ref" href="#fn:36">36</a></sup>:</p>
+<ul>
+<li><strong>Fase terbimbing</strong>: model menghasilkan jawaban, lalu diminta mengkritik jawabannya sendiri berdasarkan prinsip-prinsip itu dan merevisinya. Model dilatih pada versi yang sudah direvisi.</li>
+<li><strong>Fase RL</strong>: model menghasilkan pasangan jawaban, dan sebuah model AI menilai mana yang lebih sesuai dengan konstitusi. Penilaian ini melatih <em>preference model</em>, yang lalu dipakai untuk RL. Metode umumnya disebut <strong>RLAIF</strong> (<em>RL from AI Feedback</em>).</li>
+</ul>
+<p>Hasilnya adalah asisten yang tidak berbahaya tetapi juga tidak menghindar secara berlebihan: ia menjelaskan keberatannya alih-alih sekadar menolak<sup id="fnref2:36"><a class="footnote-ref" href="#fn:36">36</a></sup>. Pendekatan umpan balik AI semacam ini sekarang dipakai secara luas di industri dalam berbagai bentuk.</p>
+<h2 id="tahap-3-reinforcement-learning-untuk-penalaran">Tahap 3: Reinforcement learning untuk penalaran</h2>
+<h3 id="chain-of-thought-berpikir-di-atas-kertas">Chain-of-thought: berpikir di atas kertas</h3>
+<p>Pada 2022, Wei dkk. menunjukkan bahwa model besar menjawab soal matematika dan logika jauh lebih baik jika diminta menuliskan <strong>langkah-langkah penalarannya</strong> terlebih dahulu, sebuah teknik yang disebut <strong>chain-of-thought (CoT)</strong><sup id="fnref:38"><a class="footnote-ref" href="#fn:38">38</a></sup>. Intuisinya penting untuk memahami LLM: setiap token dihasilkan dengan jumlah komputasi yang kurang lebih tetap. Soal yang sulit tidak bisa dipecahkan dalam "satu tarikan napas" (satu token jawaban). Dengan menulis langkah-langkah antara, model <strong>menyebar komputasinya ke banyak token</strong>, dan setiap langkah yang tertulis menjadi "catatan" yang bisa dibaca di langkah berikutnya lewat attention. Menulis adalah cara LLM berpikir.</p>
+<h3 id="dari-prompting-ke-pelatihan-reasoning-model">Dari prompting ke pelatihan: reasoning model</h3>
+<p>Langkah berikutnya adalah <strong>melatih</strong> model agar terbiasa berpikir panjang dan efektif sebelum menjawab. OpenAI memperkenalkan <strong>o1</strong> pada September 2024, model yang dilatih dengan RL berskala besar untuk menghasilkan rantai penalaran panjang sebelum memberi jawaban. OpenAI melaporkan bahwa kinerjanya terus meningkat baik dengan lebih banyak komputasi RL saat pelatihan maupun dengan lebih banyak waktu "berpikir" saat menjawab<sup id="fnref:39"><a class="footnote-ref" href="#fn:39">39</a></sup>. Detail metodenya tidak dipublikasikan.</p>
+<p>Gambaran yang lebih terbuka datang dari <strong>DeepSeek-R1</strong> (Januari 2025; versi peer-review terbit di <em>Nature</em> September 2025)<sup id="fnref:37"><a class="footnote-ref" href="#fn:37">37</a></sup>. Resepnya, disederhanakan:</p>
+<ol>
+<li>Ambil base model yang kuat (DeepSeek-V3).</li>
+<li>Kumpulkan banyak soal yang <strong>jawabannya bisa diperiksa secara otomatis</strong>: soal matematika dengan jawaban akhir pasti, soal pemrograman yang bisa diuji dengan <em>test case</em>, soal sains, teka-teki logika.</li>
+<li>Untuk setiap soal, biarkan model menghasilkan <strong>sekelompok</strong> jawaban (misalnya 16 upaya), masing-masing dengan proses berpikirnya sendiri.</li>
+<li>Beri hadiah (<em>reward</em>) berdasarkan <strong>kebenaran jawaban akhir</strong> (dan kepatuhan format), tanpa menilai langkah-langkahnya.</li>
+<li>Perkuat upaya yang lebih baik dari rata-rata kelompoknya, lemahkan yang lebih buruk. Algoritma ini disebut <strong>GRPO</strong> (<em>Group Relative Policy Optimization</em>); ia tidak butuh model penilai terpisah karena "patokannya" adalah rata-rata skor kelompok itu sendiri<sup id="fnref6:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</li>
+<li>Ulangi ribuan kali.</li>
+</ol>
+<p>Temuan paling mencolok: pada varian <strong>DeepSeek-R1-Zero</strong>, yang dilatih dengan RL murni tanpa contoh penalaran buatan manusia, model secara spontan mulai menulis rantai berpikir yang makin panjang, <strong>memeriksa ulang</strong> pekerjaannya, mencoba pendekatan alternatif, dan mengoreksi diri, termasuk yang oleh penulisnya dijuluki "momen aha"<sup id="fnref2:37"><a class="footnote-ref" href="#fn:37">37</a></sup>. Tidak ada yang mengajarkan strategi itu secara eksplisit; strategi itu muncul karena terbukti menaikkan peluang mendapat hadiah. Versi akhir DeepSeek-R1 menggabungkan RL dengan sedikit data SFT awal dan beberapa putaran tambahan untuk memperbaiki keterbacaan dan perilaku umum.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Bahasa mudah: dari meniru guru ke latihan soal</p>
+<p>SFT seperti belajar dengan membaca contoh jawaban di buku. RLHF seperti mendapat komentar guru tentang jawaban mana yang lebih baik. RL dengan hadiah terverifikasi seperti mengerjakan ribuan soal latihan yang punya kunci jawaban di belakang buku: tidak ada yang mengajari <strong>cara</strong> mengerjakannya, tetapi siswa perlahan menemukan kebiasaan yang berhasil, misalnya menulis coretan, mengecek ulang, mencoba cara lain saat buntu. Karpathy menekankan bahwa di tahap inilah model bisa menemukan strategi yang <strong>tidak ada</strong> dalam data manusia, mirip AlphaGo yang menemukan langkah-langkah Go yang tak terpikirkan oleh pemain manusia<sup id="fnref5:60"><a class="footnote-ref" href="#fn:60">60</a></sup>.</p>
+</div>
+<h3 id="mengapa-ini-penting-dimensi-skala-baru">Mengapa ini penting: dimensi skala baru</h3>
+<p>Reasoning model membuka dimensi penskalaan kedua. Selain memperbesar model dan data saat pelatihan (<em>train-time compute</em>), kinerja juga bisa ditingkatkan dengan memberi model lebih banyak waktu berpikir saat menjawab (<em>test-time compute</em> atau <em>inference-time scaling</em>)<sup id="fnref2:39"><a class="footnote-ref" href="#fn:39">39</a></sup>. Konsekuensinya, jawaban soal sulit menjadi lebih lambat dan lebih mahal, tetapi jauh lebih akurat. Keterbatasannya, RL semacam ini paling efektif pada domain yang hasilnya <strong>bisa diverifikasi</strong> (matematika, kode, sains). Untuk tugas terbuka seperti menulis esai atau memberi nasihat, "kunci jawaban" tidak ada, sehingga masih bergantung pada reward model yang rentan diakali.</p>
+<h2 id="pelatihan-keamanan-kepribadian-dan-penggunaan-alat">Pelatihan keamanan, kepribadian, dan penggunaan alat</h2>
+<p>Selain kemampuan, post-training juga membentuk:</p>
+<ul>
+<li><strong>Perilaku keamanan</strong>: menolak permintaan yang benar-benar berbahaya (misalnya instruksi senjata biologis), tetapi tidak menolak berlebihan untuk permintaan wajar. Keseimbangan ini sulit; model yang terlalu hati-hati menjengkelkan, model yang terlalu longgar berbahaya.</li>
+<li><strong>Kejujuran dan kalibrasi</strong>: mengakui ketidaktahuan, tidak mengarang sumber, menyatakan tingkat keyakinan.</li>
+<li><strong>Kepribadian dan gaya</strong>: nada, panjang jawaban, format. Perbedaan "rasa" antar-chatbot sebagian besar berasal dari sini.</li>
+<li><strong>Penggunaan alat</strong> (<em>tool use</em>): model dilatih menghasilkan token khusus yang berarti "panggil kalkulator / mesin pencari / jalankan kode", lalu hasilnya disisipkan kembali ke konteks. Toolformer (2023) menunjukkan model bahkan bisa belajar sendiri kapan alat berguna<sup id="fnref:44"><a class="footnote-ref" href="#fn:44">44</a></sup>. Kemampuan ini adalah fondasi <strong>agen AI</strong> yang bisa menjelajah web, menulis dan menjalankan program, atau mengoperasikan komputer.</li>
+</ul>
+<h2 id="distilasi-guru-besar-murid-kecil">Distilasi: guru besar, murid kecil</h2>
+<p>Satu teknik yang melintasi pretraining dan post-training adalah <strong>distilasi pengetahuan</strong> (<em>knowledge distillation</em>, Hinton dkk., 2015): model kecil ("murid") dilatih untuk meniru keluaran model besar ("guru")<sup id="fnref:41"><a class="footnote-ref" href="#fn:41">41</a></sup>. Murid tidak hanya belajar dari jawaban akhir guru, tetapi bisa juga dari distribusi peluang lengkapnya, yang membawa lebih banyak informasi ("jawaban A 70%, B 25%" lebih informatif daripada sekadar "A"). DeepSeek, misalnya, merilis beberapa model kecil yang didistilasi dari R1 dan mewarisi sebagian kemampuan penalarannya<sup id="fnref3:37"><a class="footnote-ref" href="#fn:37">37</a></sup>. Banyak model kecil yang sangat kuat saat ini adalah hasil distilasi dari model yang jauh lebih besar.</p>
+<h2 id="ringkasan-post-training">Ringkasan post-training</h2>
+<table>
+<thead>
+<tr>
+<th>Metode</th>
+<th>Data yang dibutuhkan</th>
+<th>Apa yang diajarkan</th>
+<th>Kelebihan</th>
+<th>Kelemahan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SFT</td>
+<td>Contoh instruksi → jawaban teladan</td>
+<td>Format, nada, mengikuti instruksi</td>
+<td>Sederhana, stabil</td>
+<td>Hanya meniru; mahal membuat jawaban sempurna</td>
+</tr>
+<tr>
+<td>RLHF (reward model + PPO)</td>
+<td>Peringkat/perbandingan jawaban oleh manusia</td>
+<td>Selera manusia yang sulit didefinisikan</td>
+<td>Kuat, fleksibel</td>
+<td>Rumit, tidak stabil, rawan reward hacking</td>
+</tr>
+<tr>
+<td>DPO</td>
+<td>Pasangan jawaban disukai/tidak</td>
+<td>Sama seperti RLHF</td>
+<td>Jauh lebih sederhana</td>
+<td>Kurang bisa "menjelajah" jawaban baru</td>
+</tr>
+<tr>
+<td>Constitutional AI / RLAIF</td>
+<td>Prinsip tertulis + penilaian AI</td>
+<td>Keamanan &amp; nilai</td>
+<td>Murah, skalabel, transparan prinsipnya</td>
+<td>Bergantung pada kualitas penilai AI</td>
+</tr>
+<tr>
+<td>RL hadiah terverifikasi (misal GRPO)</td>
+<td>Soal dengan jawaban yang bisa dicek</td>
+<td>Penalaran, strategi pemecahan masalah</td>
+<td>Bisa melampaui contoh manusia</td>
+<td>Terbatas pada domain yang bisa diverifikasi</td>
+</tr>
+</tbody>
+</table>
+<h1 id="evaluasi-bagaimana-tahu-modelnya-bagus">Evaluasi: Bagaimana Tahu Modelnya Bagus?</h1>
+<p>Membuat model tanpa mengukurnya seperti memasak tanpa mencicipi. Evaluasi dilakukan di sepanjang proses, bukan hanya di akhir.</p>
+<h2 id="jenis-jenis-evaluasi">Jenis-jenis evaluasi</h2>
+<ul>
+<li><strong>Loss / perplexity</strong> pada data validasi: ukuran paling mentah selama pretraining. Turunnya loss adalah tanda model belajar, tetapi tidak langsung menjawab "apakah model berguna?".</li>
+<li><strong>Benchmark otomatis</strong>: kumpulan soal standar dengan jawaban pasti, misalnya soal pengetahuan pilihan ganda lintas bidang, matematika kompetisi, pemrograman (misalnya memperbaiki <em>issue</em> nyata di repositori GitHub), sains tingkat doktoral. Stanford AI Index 2026 mencatat bahwa pada tolok ukur SWE-bench Verified, skor melonjak dari sekitar 60% menjadi mendekati 100% hanya dalam setahun, dan model terdepan kini menyamai atau melampaui patokan manusia pada soal sains tingkat doktoral dan matematika kompetisi<sup id="fnref3:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+<li><strong>Evaluasi preferensi manusia</strong>: manusia membandingkan jawaban dua model secara buta. Platform seperti LMArena (dulu Chatbot Arena) mengumpulkan jutaan penilaian semacam ini dan menyusun peringkat mirip sistem skor catur.</li>
+<li><strong>Evaluasi keamanan dan <em>red-teaming</em></strong>: tim khusus (manusia dan AI) mencoba memancing model melakukan hal berbahaya: memberi instruksi senjata, membantu serangan siber, membocorkan data, atau lolos dari batasan (<em>jailbreak</em>). Laboratorium besar juga menguji "kemampuan berbahaya" sebelum rilis.</li>
+</ul>
+<h2 id="masalah-masalah-evaluasi">Masalah-masalah evaluasi</h2>
+<ul>
+<li><strong>Kontaminasi data</strong>: soal benchmark yang sudah beredar di internet bisa ikut masuk data pretraining, sehingga model "hafal" soalnya. Skor tinggi belum tentu berarti kemampuan umum.</li>
+<li><strong>Benchmark cepat jenuh</strong>: begitu sebuah tolok ukur dianggap penting, semua lab mengoptimalkan diri untuknya, dan skornya mendekati 100% dalam beberapa tahun. Komunitas terus membuat tolok ukur baru yang lebih sulit.</li>
+<li><strong>Kemampuan yang tidak merata</strong>: AI Index 2026 menyoroti bahwa model yang bisa menang olimpiade matematika masih kesulitan dengan tugas yang tampak sepele, misalnya membaca jam analog<sup id="fnref4:58"><a class="footnote-ref" href="#fn:58">58</a></sup>. Kemampuan LLM sering disebut <strong>"bergerigi"</strong> (<em>jagged</em>): luar biasa di satu hal, mengejutkan lemahnya di hal lain.</li>
+</ul>
+<h1 id="inferensi-apa-yang-terjadi-saat-anda-bertanya">Inferensi: Apa yang Terjadi Saat Anda Bertanya</h1>
+<p>Setelah dilatih, parameter model <strong>dibekukan</strong>. Menjalankan model untuk menghasilkan jawaban disebut <strong>inferensi</strong>. Penting dicatat: saat Anda mengobrol dengan chatbot, <strong>model tidak sedang belajar</strong>. Tidak ada backpropagation, tidak ada parameter yang berubah. Semua yang "diingat" model tentang percakapan Anda hanyalah teks percakapan itu sendiri yang terus dikirim ulang sebagai konteks.</p>
+<h2 id="langkah-demi-langkah">Langkah demi langkah</h2>
+<ol>
+<li><strong>Susun prompt lengkap</strong>: sistem menggabungkan pesan sistem (instruksi tersembunyi dari penyedia layanan atau pengembang aplikasi), riwayat percakapan, dokumen lampiran, hasil pencarian, dan pesan terbaru Anda, lalu membungkusnya dengan template obrolan.</li>
+<li><strong>Tokenisasi</strong> seluruh teks itu.</li>
+<li><strong>Prefill</strong>: seluruh token prompt diproses sekaligus secara paralel lewat semua lapisan. Tahap ini menentukan berapa lama sebelum kata pertama muncul.</li>
+<li><strong>Decode</strong>: model menghasilkan satu token, menambahkannya ke urutan, lalu menghitung token berikutnya. Satu per satu, sampai muncul token "akhir giliran" atau batas panjang tercapai. Inilah sebabnya jawaban tampak "diketik" di layar: token dikirim begitu dihasilkan (<em>streaming</em>).</li>
+<li><strong>Detokenisasi</strong>: token diubah kembali menjadi teks.</li>
+</ol>
+<h2 id="sampling-memilih-dari-distribusi-peluang">Sampling: memilih dari distribusi peluang</h2>
+<p>Di setiap langkah, model mengeluarkan distribusi peluang atas seluruh kosakata. Cara memilih satu token darinya disebut <strong>strategi decoding</strong> atau <strong>sampling</strong>:</p>
+<ul>
+<li><strong>Greedy</strong>: selalu pilih token berpeluang tertinggi. Deterministik, tetapi cenderung menghasilkan teks datar, repetitif, bahkan berputar-putar<sup id="fnref:45"><a class="footnote-ref" href="#fn:45">45</a></sup>.</li>
+<li><strong>Temperature</strong>: "kenop kreativitas". Temperatur rendah mempertajam distribusi (pilihan lebih aman dan konsisten); temperatur tinggi meratakan distribusi (pilihan lebih beragam, tetapi lebih rawan ngawur).</li>
+<li><strong>Top-k dan top-p (<em>nucleus sampling</em>)</strong>: hanya ambil sampel dari sekelompok token teratas, misalnya token-token yang peluang kumulatifnya mencapai 90%, sehingga token-token absurd di "ekor" distribusi tidak pernah terpilih<sup id="fnref2:45"><a class="footnote-ref" href="#fn:45">45</a></sup>.</li>
+</ul>
+<p>Karena ada unsur acak, pertanyaan yang sama bisa menghasilkan jawaban berbeda. Ini bukan <em>bug</em>; ini sifat bawaan.</p>
+<h2 id="kv-cache-tidak-menghitung-ulang-yang-sudah-lewat">KV cache: tidak menghitung ulang yang sudah lewat</h2>
+<p>Saat menghasilkan token ke-501, model memerlukan key dan value dari 500 token sebelumnya. Menghitung ulang semuanya di setiap langkah sangat boros. Maka key dan value yang sudah dihitung disimpan di memori GPU, disebut <strong>KV cache</strong>. Masalahnya, KV cache untuk konteks panjang dan ribuan pengguna sekaligus bisa sangat besar, sering kali lebih besar dari modelnya sendiri. Banyak inovasi inferensi berpusat pada pengelolaan memori ini, misalnya <strong>PagedAttention</strong> pada sistem vLLM yang meminjam ide memori virtual dari sistem operasi untuk mengurangi pemborosan memori<sup id="fnref:46"><a class="footnote-ref" href="#fn:46">46</a></sup>, serta GQA dan varian attention lain yang memperkecil ukuran cache<sup id="fnref2:22"><a class="footnote-ref" href="#fn:22">22</a></sup><sup id="fnref5:20"><a class="footnote-ref" href="#fn:20">20</a></sup>.</p>
+<h2 id="jendela-konteks-context-window">Jendela konteks (<em>context window</em>)</h2>
+<p><strong>Jendela konteks</strong> adalah jumlah maksimum token yang bisa "dilihat" model sekaligus: prompt, riwayat, lampiran, dan jawaban. Ini adalah <strong>memori kerja</strong> model. Apa pun di luar jendela konteks, bagi model, tidak ada. Jendela konteks model terdepan tumbuh dari 2.048 token (GPT-3, 2020)<sup id="fnref3:17"><a class="footnote-ref" href="#fn:17">17</a></sup> menjadi ratusan ribu hingga sekitar satu juta token pada banyak model tahun 2025–2026.</p>
+<p>Namun konteks panjang tidak berarti model memakai semuanya dengan sama baik. Riset "Lost in the Middle" (2023) menemukan bahwa model cenderung paling baik memanfaatkan informasi di <strong>awal dan akhir</strong> konteks, dan lebih sering melewatkan informasi di tengah<sup id="fnref:49"><a class="footnote-ref" href="#fn:49">49</a></sup>. Model-model baru banyak memperbaiki hal ini, tetapi prinsipnya tetap berlaku: konteks yang ringkas dan relevan biasanya menghasilkan jawaban lebih baik.</p>
+<h2 id="membuat-inferensi-lebih-murah-dan-cepat">Membuat inferensi lebih murah dan cepat</h2>
+<ul>
+<li><strong>Kuantisasi</strong> (<em>quantization</em>): menyimpan bobot dengan presisi lebih rendah (misalnya 8 atau 4 bit, bukan 16 bit). Model menjadi dua sampai empat kali lebih kecil dan lebih cepat, dengan penurunan kualitas yang biasanya kecil. Inilah yang memungkinkan model terbuka dijalankan di laptop atau bahkan ponsel.</li>
+<li><strong>Batching</strong>: melayani banyak pengguna sekaligus dalam satu perhitungan agar GPU tidak menganggur.</li>
+<li><strong>Speculative decoding</strong>: model kecil yang cepat "menebak" beberapa token ke depan, lalu model besar memeriksa semuanya sekaligus dalam satu langkah. Token yang disetujui diterima, yang salah dibuang. Hasilnya identik dengan model besar, tetapi lebih cepat<sup id="fnref:47"><a class="footnote-ref" href="#fn:47">47</a></sup>.</li>
+<li><strong>Distilasi dan MoE</strong>, yang sudah dibahas, juga pada dasarnya adalah strategi menekan biaya inferensi.</li>
+</ul>
+<h2 id="memperluas-kemampuan-saat-inferensi-rag-alat-dan-agen">Memperluas kemampuan saat inferensi: RAG, alat, dan agen</h2>
+<p>Karena pengetahuan model beku pada saat pelatihan (ada <strong>batas pengetahuan</strong> atau <em>knowledge cutoff</em>), dan karena model bisa keliru mengingat fakta, sistem LLM modern sering dilengkapi:</p>
+<ul>
+<li><strong>RAG</strong> (<em>Retrieval-Augmented Generation</em>): sebelum menjawab, sistem mencari dokumen relevan (dari web atau basis data internal perusahaan) dan menyisipkannya ke konteks, sehingga model menjawab berdasarkan teks yang ada di depannya, bukan hanya dari ingatan parameter<sup id="fnref:48"><a class="footnote-ref" href="#fn:48">48</a></sup>.</li>
+<li><strong>Pemanggilan alat</strong>: kalkulator, penerjemah kode, pencarian web, API lain.</li>
+<li><strong>Agen</strong>: model yang menjalankan loop "rencanakan → bertindak (panggil alat) → amati hasil → rencanakan lagi" untuk menyelesaikan tugas bertahap, misalnya menulis perangkat lunak, meriset topik, atau mengisi formulir. Asisten pemrograman yang bisa membaca seluruh repositori, menjalankan tes, dan memperbaiki kode sendiri adalah contoh agen yang kini banyak dipakai.</li>
+</ul>
+<div class="admonition praktik">
+<p class="admonition-title">Implikasi praktis bagi pengguna</p>
+<ul>
+<li>Model tidak mengingat percakapan lain kecuali aplikasi sengaja menyimpan dan menyisipkan "memori" ke konteks.</li>
+<li>Menyertakan dokumen sumber di prompt biasanya menghasilkan jawaban lebih akurat daripada mengandalkan ingatan model.</li>
+<li>Untuk soal rumit, meminta model menjelaskan langkah demi langkah (atau memakai mode "berpikir") memberi model lebih banyak ruang komputasi.</li>
+<li>Untuk fakta penting, angka, kutipan, dan rujukan: selalu verifikasi.</li>
+</ul>
+</div>
+<h1 id="resep-lengkap-membangun-llm-dari-nol">Resep Lengkap: Membangun LLM dari Nol</h1>
+<p>Bagian ini merangkai semua tahap menjadi satu alur utuh, seolah-olah kita adalah tim yang ditugasi membuat LLM baru. Tujuannya menunjukkan bagaimana setiap keputusan saling terkait.</p>
+<h2 id="langkah-0-tentukan-tujuan-dan-anggaran">Langkah 0: Tentukan tujuan dan anggaran</h2>
+<p>Semuanya berawal dari pertanyaan: model ini untuk apa, dan berapa anggaran komputasinya? Model kecil untuk ponsel, model menengah untuk perusahaan, atau model terdepan? Dengan hukum penskalaan<sup id="fnref3:23"><a class="footnote-ref" href="#fn:23">23</a></sup><sup id="fnref3:24"><a class="footnote-ref" href="#fn:24">24</a></sup>, tim memperkirakan kombinasi ukuran model dan jumlah token yang masuk akal untuk anggaran itu, sambil mempertimbangkan biaya inferensi di masa depan (yang mendorong model lebih kecil dengan data lebih banyak).</p>
+<h2 id="langkah-1-bangun-korpus-data">Langkah 1: Bangun korpus data</h2>
+<p>Kumpulkan teks web, kode, buku, makalah, data matematika, dan multibahasa. Bersihkan: ekstraksi teks, filter bahasa, filter kualitas heuristik dan berbasis model, deduplikasi, hapus data pribadi, dekontaminasi benchmark. Tentukan proporsi campuran lewat eksperimen pada model kecil. Hasilnya belasan triliun token siap latih<sup id="fnref3:25"><a class="footnote-ref" href="#fn:25">25</a></sup><sup id="fnref11:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</p>
+<h2 id="langkah-2-latih-tokenizer">Langkah 2: Latih tokenizer</h2>
+<p>Jalankan BPE pada sampel korpus untuk menghasilkan kosakata puluhan hingga lebih dari seratus ribu token, dengan perhatian khusus pada angka, kode, dan bahasa non-Inggris<sup id="fnref2:12"><a class="footnote-ref" href="#fn:12">12</a></sup>. Setelah ditetapkan, tokenizer tidak bisa diubah tanpa melatih ulang model.</p>
+<h2 id="langkah-3-rancang-arsitektur">Langkah 3: Rancang arsitektur</h2>
+<p>Pilih Transformer decoder-only: berapa blok, seberapa lebar vektor, berapa kepala attention, dense atau MoE, jenis attention (misalnya GQA), posisi (RoPE), jenis normalisasi dan aktivasi, panjang konteks awal<sup id="fnref5:1"><a class="footnote-ref" href="#fn:1">1</a></sup><sup id="fnref2:13"><a class="footnote-ref" href="#fn:13">13</a></sup><sup id="fnref2:21"><a class="footnote-ref" href="#fn:21">21</a></sup><sup id="fnref3:22"><a class="footnote-ref" href="#fn:22">22</a></sup>. Sebagian besar pilihan ini diuji terlebih dahulu pada model kecil.</p>
+<h2 id="langkah-4-siapkan-infrastruktur">Langkah 4: Siapkan infrastruktur</h2>
+<p>Sewa atau bangun kluster ribuan GPU dengan jaringan berkecepatan sangat tinggi. Siapkan kerangka pelatihan terdistribusi (paralelisme data, tensor, pipeline, ZeRO/FSDP), presisi campuran, checkpointing otomatis, dan sistem pemantauan<sup id="fnref2:29"><a class="footnote-ref" href="#fn:29">29</a></sup><sup id="fnref2:30"><a class="footnote-ref" href="#fn:30">30</a></sup><sup id="fnref2:31"><a class="footnote-ref" href="#fn:31">31</a></sup>.</p>
+<h2 id="langkah-5-pretraining">Langkah 5: Pretraining</h2>
+<p>Inisialisasi semua parameter secara acak. Jalankan loop: ambil batch → umpan maju → hitung loss → backpropagation → pembaruan AdamW, dengan jadwal learning rate warmup lalu decay<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup><sup id="fnref2:10"><a class="footnote-ref" href="#fn:10">10</a></sup><sup id="fnref3:11"><a class="footnote-ref" href="#fn:11">11</a></sup>. Pantau loss dan benchmark kecil secara berkala. Tangani kegagalan perangkat keras dan loss spike. Di akhir, lakukan annealing dengan data berkualitas tinggi, lalu perpanjang konteks. Proses ini berlangsung berminggu-minggu hingga berbulan-bulan dan menghasilkan base model.</p>
+<h2 id="langkah-6-post-training">Langkah 6: Post-training</h2>
+<p>Mulai dengan SFT pada data instruksi berkualitas. Lanjutkan dengan preference tuning (RLHF, DPO, atau RLAIF) untuk membantu, jujur, dan aman. Tambahkan RL dengan hadiah terverifikasi untuk matematika, kode, dan penalaran. Latih penggunaan alat dan perilaku agen. Ulangi beberapa putaran, sering kali memakai model hasil putaran sebelumnya untuk membuat data putaran berikutnya<sup id="fnref5:33"><a class="footnote-ref" href="#fn:33">33</a></sup><sup id="fnref2:35"><a class="footnote-ref" href="#fn:35">35</a></sup><sup id="fnref3:36"><a class="footnote-ref" href="#fn:36">36</a></sup><sup id="fnref4:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</p>
+<h2 id="langkah-7-evaluasi-dan-red-teaming">Langkah 7: Evaluasi dan red-teaming</h2>
+<p>Uji dengan benchmark kemampuan, preferensi manusia, evaluasi keamanan, dan red-teaming. Perbaiki kelemahan yang ditemukan dengan data dan pelatihan tambahan.</p>
+<h2 id="langkah-8-optimasi-dan-penerapan">Langkah 8: Optimasi dan penerapan</h2>
+<p>Kuantisasi, siapkan sistem penyajian (KV cache, batching, speculative decoding), tambahkan lapisan pengaman di luar model (filter masukan/keluaran), sediakan API dan aplikasi, lalu pantau penggunaan nyata. Umpan balik pengguna (misalnya tombol jempol naik/turun) menjadi bahan untuk versi berikutnya.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Siapa yang bisa melakukannya?</p>
+<p>Membuat model terdepan membutuhkan ratusan juta hingga miliaran dolar, ribuan GPU, dan tim ratusan orang. Namun <strong>prinsipnya</strong> bisa dipelajari dan dipraktikkan dalam skala kecil: proyek pendidikan seperti nanoGPT dan kuliah "Neural Networks: Zero to Hero" dari Andrej Karpathy menunjukkan cara melatih model mirip GPT-2 dari nol dengan kode beberapa ratus baris. Sementara itu, menyesuaikan model terbuka yang sudah ada dengan LoRA bisa dilakukan dengan satu GPU<sup id="fnref2:40"><a class="footnote-ref" href="#fn:40">40</a></sup>.</p>
+</div>
+<h1 id="batasan-dan-miskonsepsi">Batasan dan Miskonsepsi</h1>
+<p>Memahami cara kerja LLM langsung menjelaskan banyak kelemahannya. Kelemahan-kelemahan ini bukan kebetulan, melainkan konsekuensi dari desainnya.</p>
+<h2 id="halusinasi">Halusinasi</h2>
+<p><strong>Halusinasi</strong> adalah ketika model menghasilkan informasi yang terdengar meyakinkan tetapi salah: fakta keliru, kutipan palsu, rujukan yang tidak pernah ada. Mengapa ini terjadi?</p>
+<ul>
+<li><strong>Model dilatih untuk menghasilkan teks yang masuk akal, bukan teks yang benar.</strong> Selama pretraining, "benar" hanya berarti "sesuai dengan teks yang ada di data". Untuk fakta yang jarang muncul di data (misalnya tanggal lahir orang yang tidak terkenal), model tidak punya ingatan yang kuat, tetapi tetap harus menghasilkan token yang berbentuk tanggal.</li>
+<li><strong>Evaluasi dan pelatihan cenderung menghargai tebakan.</strong> Makalah OpenAI tahun 2025, "Why Language Models Hallucinate", berargumen bahwa sebagian besar tolok ukur menilai jawaban secara benar/salah: menjawab "tidak tahu" mendapat nol, sedangkan menebak punya peluang dapat nilai. Akibatnya, model dioptimalkan menjadi "peserta ujian yang pandai menebak"<sup id="fnref2:52"><a class="footnote-ref" href="#fn:52">52</a></sup>. Mereka mengusulkan agar sistem penilaian memberi ganjaran pada ketidakpastian yang jujur.</li>
+<li><strong>Pengetahuan tersimpan secara tersebar dan <em>lossy</em>.</strong> Model tidak punya "database" untuk dicek. Karpathy memakai analogi: pengetahuan dalam parameter itu seperti <strong>ingatan samar</strong> tentang sesuatu yang dibaca bulan lalu, sedangkan informasi di jendela konteks itu seperti <strong>memori kerja</strong>, catatan yang ada tepat di depan mata<sup id="fnref6:60"><a class="footnote-ref" href="#fn:60">60</a></sup>.</li>
+</ul>
+<p>Riset interpretabilitas Anthropic (2025) menemukan petunjuk menarik tentang mekanisme ini pada Claude: model tampaknya punya sirkuit bawaan untuk menolak menjawab ketika tidak mengenal sesuatu, dan halusinasi bisa terjadi ketika sirkuit "saya mengenal ini" salah menyala untuk hal yang sebenarnya tidak diketahui<sup id="fnref:51"><a class="footnote-ref" href="#fn:51">51</a></sup>.</p>
+<h2 id="miskonsepsi-umum">Miskonsepsi umum</h2>
+<table>
+<thead>
+<tr>
+<th>Miskonsepsi</th>
+<th>Kenyataan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"LLM mencari jawaban di internet."</td>
+<td>Model murni hanya memakai parameternya. Pencarian web adalah <strong>alat tambahan</strong> yang dipasang di sekitar model (RAG).</td>
+</tr>
+<tr>
+<td>"LLM menyimpan salinan teks yang dibacanya."</td>
+<td>Pengetahuan tersimpan dalam bentuk bobot yang tersebar. Namun teks yang sering berulang bisa terhafal hampir persis, sehingga hafalan tetap terjadi secara parsial.</td>
+</tr>
+<tr>
+<td>"LLM belajar dari percakapan saya."</td>
+<td>Saat inferensi, parameter tidak berubah. Percakapan bisa dipakai perusahaan sebagai data pelatihan versi berikutnya (tergantung kebijakan dan pengaturan privasi), tetapi itu proses terpisah.</td>
+</tr>
+<tr>
+<td>"LLM itu hanya autocomplete, jadi tidak mungkin bernalar."</td>
+<td>Tujuan pelatihannya memang menebak token, tetapi untuk menebak dengan baik model membangun mekanisme internal yang kompleks. Riset menunjukkan, misalnya, bahwa model merencanakan kata rima beberapa kata ke depan saat menulis puisi<sup id="fnref5:51"><a class="footnote-ref" href="#fn:51">51</a></sup>. Apakah itu "penalaran sejati" adalah perdebatan filosofis.</td>
+</tr>
+<tr>
+<td>"Semakin yakin nada jawabannya, semakin benar."</td>
+<td>Nada yakin sebagian adalah hasil gaya yang diperkuat post-training. Keyakinan verbal tidak selalu terkalibrasi dengan kebenaran.</td>
+</tr>
+<tr>
+<td>"Model tahu tanggal hari ini dan kejadian terbaru."</td>
+<td>Model hanya tahu hingga batas pengetahuannya, kecuali tanggal dan informasi baru disisipkan ke konteks.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="batasan-lain">Batasan lain</h2>
+<ul>
+<li><strong>Sycophancy</strong>: cenderung membenarkan pengguna<sup id="fnref3:43"><a class="footnote-ref" href="#fn:43">43</a></sup>.</li>
+<li><strong>Bias</strong>: model mewarisi bias dari data internet dan dari pilihan pelabel. Post-training mengurangi sebagian, tetapi tidak menghapus sepenuhnya.</li>
+<li><strong>Kemampuan tidak merata antarbahasa</strong>: bahasa dengan data sedikit mendapat kinerja lebih rendah dan biaya token lebih tinggi.</li>
+<li><strong>Kerentanan terhadap manipulasi prompt</strong>: <em>jailbreak</em> dan <em>prompt injection</em> (instruksi jahat yang disembunyikan dalam dokumen atau halaman web yang dibaca model), yang menjadi masalah serius untuk agen yang bisa bertindak.</li>
+<li><strong>Kotak hitam</strong>: kita tahu persis operasi matematis yang dijalankan model, tetapi belum sepenuhnya memahami <strong>apa</strong> yang direpresentasikan oleh miliaran parameternya. Bidang <strong>interpretabilitas mekanistik</strong> berusaha membongkarnya; Anthropic, misalnya, berhasil mengekstrak jutaan "fitur" yang dapat dipahami dari Claude 3 Sonnet, mulai dari konsep kota dan tokoh terkenal hingga konsep abstrak seperti kerentanan keamanan pada kode, dan menunjukkan bahwa menyetel fitur-fitur itu mengubah perilaku model<sup id="fnref3:50"><a class="footnote-ref" href="#fn:50">50</a></sup>.</li>
+</ul>
+<h1 id="data-angka-kunci">Data &amp; Angka Kunci</h1>
+<h2 id="skala-model-model-tonggak-hanya-yang-datanya-dipublikasikan">Skala model-model tonggak (hanya yang datanya dipublikasikan)</h2>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Tahun</th>
+<th>Parameter</th>
+<th>Token pretraining</th>
+<th>Catatan</th>
+<th>Sumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transformer (base/big)</td>
+<td>2017</td>
+<td>±65 juta / ±213 juta</td>
+<td>(data terjemahan WMT)</td>
+<td>Model penerjemah, bukan LLM generatif</td>
+<td><sup id="fnref8:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+</tr>
+<tr>
+<td>GPT-1</td>
+<td>2018</td>
+<td>±117 juta</td>
+<td>(BooksCorpus)</td>
+<td>Membuktikan resep pretraining + fine-tuning</td>
+<td><sup id="fnref3:14"><a class="footnote-ref" href="#fn:14">14</a></sup></td>
+</tr>
+<tr>
+<td>GPT-2</td>
+<td>2019</td>
+<td>1,5 miliar</td>
+<td>(WebText, ±40 GB teks)</td>
+<td>Kemampuan tanpa pelatihan khusus (<em>zero-shot</em>)</td>
+<td><sup id="fnref2:16"><a class="footnote-ref" href="#fn:16">16</a></sup></td>
+</tr>
+<tr>
+<td>GPT-3</td>
+<td>2020</td>
+<td>175 miliar</td>
+<td>±300 miliar</td>
+<td>Few-shot learning; konteks 2.048 token</td>
+<td><sup id="fnref8:17"><a class="footnote-ref" href="#fn:17">17</a></sup></td>
+</tr>
+<tr>
+<td>Chinchilla</td>
+<td>2022</td>
+<td>70 miliar</td>
+<td>1,4 triliun</td>
+<td>Membuktikan pentingnya data (±20 token/parameter)</td>
+<td><sup id="fnref5:24"><a class="footnote-ref" href="#fn:24">24</a></sup></td>
+</tr>
+<tr>
+<td>Llama 3.1 405B</td>
+<td>2024</td>
+<td>405 miliar (dense)</td>
+<td>±15,6 triliun</td>
+<td>±16 ribu GPU H100; 30,84 juta jam-GPU</td>
+<td><sup id="fnref16:18"><a class="footnote-ref" href="#fn:18">18</a></sup><sup id="fnref3:19"><a class="footnote-ref" href="#fn:19">19</a></sup></td>
+</tr>
+<tr>
+<td>Mixtral 8x7B</td>
+<td>2024</td>
+<td>46,7 miliar (±13 miliar aktif)</td>
+<td>tidak diungkap</td>
+<td>MoE, 2 dari 8 expert per token</td>
+<td><sup id="fnref4:21"><a class="footnote-ref" href="#fn:21">21</a></sup></td>
+</tr>
+<tr>
+<td>DeepSeek-V3</td>
+<td>2024</td>
+<td>671 miliar (37 miliar aktif)</td>
+<td>14,8 triliun</td>
+<td>MoE; 2,788 juta jam-GPU H800; pelatihan FP8</td>
+<td><sup id="fnref9:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+</tr>
+<tr>
+<td>DeepSeek-R1</td>
+<td>2025</td>
+<td>(berbasis V3)</td>
+<td>–</td>
+<td>Penalaran lewat RL (GRPO)</td>
+<td><sup id="fnref11:37"><a class="footnote-ref" href="#fn:37">37</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="tren-komputasi-biaya-dan-sumber-daya">Tren komputasi, biaya, dan sumber daya</h2>
+<table>
+<thead>
+<tr>
+<th>Indikator</th>
+<th>Angka</th>
+<th>Tahun data</th>
+<th>Sumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pertumbuhan komputasi pelatihan model terdepan</td>
+<td>±4–5× per tahun</td>
+<td>2010–2024</td>
+<td>Epoch AI<sup id="fnref6:28"><a class="footnote-ref" href="#fn:28">28</a></sup></td>
+</tr>
+<tr>
+<td>Biaya komputasi pelatihan Transformer asli</td>
+<td>±US$670</td>
+<td>2017 (estimasi)</td>
+<td>AI Index 2025<sup id="fnref5:57"><a class="footnote-ref" href="#fn:57">57</a></sup></td>
+</tr>
+<tr>
+<td>Biaya komputasi pelatihan GPT-4</td>
+<td>±US$78 juta</td>
+<td>2023 (estimasi)</td>
+<td>AI Index 2025<sup id="fnref6:57"><a class="footnote-ref" href="#fn:57">57</a></sup></td>
+</tr>
+<tr>
+<td>Biaya komputasi pelatihan Gemini Ultra</td>
+<td>±US$192 juta</td>
+<td>2023 (estimasi)</td>
+<td>AI Index 2025<sup id="fnref7:57"><a class="footnote-ref" href="#fn:57">57</a></sup></td>
+</tr>
+<tr>
+<td>Biaya "run akhir" DeepSeek-V3 (asumsi US$2/jam-GPU)</td>
+<td>±US$5,6 juta, di luar biaya riset &amp; perangkat</td>
+<td>2024</td>
+<td>DeepSeek<sup id="fnref10:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+</tr>
+<tr>
+<td>Emisi pelatihan Llama 3.1 (berbasis lokasi)</td>
+<td>±11.390 ton CO₂e (seluruh keluarga)</td>
+<td>2024</td>
+<td>Meta<sup id="fnref4:19"><a class="footnote-ref" href="#fn:19">19</a></sup></td>
+</tr>
+<tr>
+<td>Emisi pelatihan Grok 4 (estimasi)</td>
+<td>±72.816 ton CO₂e</td>
+<td>2025</td>
+<td>AI Index 2026<sup id="fnref15:58"><a class="footnote-ref" href="#fn:58">58</a></sup></td>
+</tr>
+<tr>
+<td>Kapasitas daya pusat data AI</td>
+<td>±29,6 GW</td>
+<td>2025</td>
+<td>AI Index 2026<sup id="fnref16:58"><a class="footnote-ref" href="#fn:58">58</a></sup></td>
+</tr>
+<tr>
+<td>Investasi AI korporasi global</td>
+<td>±US$581,7 miliar (naik 130%)</td>
+<td>2025</td>
+<td>AI Index 2026<sup id="fnref17:58"><a class="footnote-ref" href="#fn:58">58</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="data-dan-batasnya">Data dan batasnya</h2>
+<table>
+<thead>
+<tr>
+<th>Indikator</th>
+<th>Angka</th>
+<th>Sumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ukuran FineWeb (web Inggris yang dibersihkan)</td>
+<td>±15 triliun token dari 96 arsip Common Crawl</td>
+<td>Hugging Face 2024<sup id="fnref5:25"><a class="footnote-ref" href="#fn:25">25</a></sup></td>
+</tr>
+<tr>
+<td>FineWeb-Edu (subset edukatif)</td>
+<td>±1,3 triliun token</td>
+<td>Hugging Face 2024<sup id="fnref6:25"><a class="footnote-ref" href="#fn:25">25</a></sup></td>
+</tr>
+<tr>
+<td>Perkiraan stok teks publik buatan manusia</td>
+<td>±300 triliun token</td>
+<td>Villalobos dkk. 2024<sup id="fnref3:26"><a class="footnote-ref" href="#fn:26">26</a></sup></td>
+</tr>
+<tr>
+<td>Perkiraan kapan data publik "habis" terpakai</td>
+<td>antara 2026 dan 2032 jika tren berlanjut</td>
+<td>Villalobos dkk. 2024<sup id="fnref4:26"><a class="footnote-ref" href="#fn:26">26</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h2 id="post-training-angka-dari-instructgpt">Post-training: angka dari InstructGPT</h2>
+<table>
+<thead>
+<tr>
+<th>Komponen</th>
+<th>Angka</th>
+<th>Sumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Contoh SFT (ditulis pelabel)</td>
+<td>±13 ribu prompt</td>
+<td><sup id="fnref9:33"><a class="footnote-ref" href="#fn:33">33</a></sup></td>
+</tr>
+<tr>
+<td>Prompt untuk melatih reward model</td>
+<td>±33 ribu</td>
+<td><sup id="fnref10:33"><a class="footnote-ref" href="#fn:33">33</a></sup></td>
+</tr>
+<tr>
+<td>Hasil utama</td>
+<td>InstructGPT 1,3 miliar parameter lebih disukai daripada GPT-3 175 miliar</td>
+<td><sup id="fnref11:33"><a class="footnote-ref" href="#fn:33">33</a></sup></td>
+</tr>
+<tr>
+<td>LoRA pada GPT-3 175B</td>
+<td>parameter yang dilatih turun hingga 10.000×, memori GPU turun 3×</td>
+<td><sup id="fnref3:40"><a class="footnote-ref" href="#fn:40">40</a></sup></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition kritis">
+<p class="admonition-title">Membaca angka biaya dengan hati-hati</p>
+<p>Estimasi biaya pelatihan biasanya hanya menghitung <strong>komputasi untuk satu run pelatihan akhir</strong>, bukan gaji peneliti, ratusan eksperimen gagal, pengumpulan data, pelabelan manusia, atau pembelian kluster. Biaya total pengembangan model terdepan bisa berkali-kali lipat lebih besar. Sebaliknya, angka yang sangat kecil (seperti US$5,6 juta untuk DeepSeek-V3) sering dikutip tanpa catatan kaki penting ini.</p>
+</div>
+<h1 id="perdebatan-perspektif">Perdebatan &amp; Perspektif</h1>
+<h2 id="apakah-llm-memahami-burung-beo-stokastik-vs-model-dunia">Apakah LLM "memahami"? Burung beo stokastik vs model dunia</h2>
+<p>Ini perdebatan paling mendasar, dan belum selesai.</p>
+<p><strong>Pandangan skeptis.</strong> Makalah "On the Dangers of Stochastic Parrots" (Bender, Gebru, dkk., 2021) berargumen bahwa model bahasa hanya merangkai bentuk linguistik berdasarkan pola statistik, tanpa akses pada makna, karena yang mereka lihat hanyalah teks, bukan dunia yang dirujuk teks itu. Istilah <strong>"burung beo stokastik"</strong> menjadi slogan kubu ini. Makalah itu juga menyoroti biaya lingkungan, bias dalam data, dan bahaya teks yang tampak meyakinkan tanpa tanggung jawab<sup id="fnref:53"><a class="footnote-ref" href="#fn:53">53</a></sup>.</p>
+<p><strong>Pandangan sebaliknya.</strong> Sejumlah riset menunjukkan bahwa model yang dilatih hanya dengan prediksi token bisa membentuk <strong>representasi internal tentang dunia</strong>. Contoh terkenal adalah <strong>Othello-GPT</strong>: model kecil yang dilatih hanya dengan urutan langkah permainan Othello, tanpa diberi tahu aturan atau bentuk papan, ternyata menyimpan representasi keadaan papan di dalam aktivasinya, dan mengubah representasi itu mengubah langkah yang diprediksinya<sup id="fnref:54"><a class="footnote-ref" href="#fn:54">54</a></sup>. Riset interpretabilitas pada model besar menemukan fitur-fitur abstrak yang konsisten lintas bahasa dan modalitas<sup id="fnref2:50"><a class="footnote-ref" href="#fn:50">50</a></sup>, serta bukti perencanaan ke depan<sup id="fnref2:51"><a class="footnote-ref" href="#fn:51">51</a></sup>.</p>
+<p><strong>Posisi tengah.</strong> Banyak peneliti kini berpendapat bahwa pertanyaan "memahami atau tidak" terlalu biner. LLM jelas membentuk representasi yang lebih dari sekadar statistik permukaan, tetapi representasi itu bisa rapuh, tidak konsisten, dan berbeda dari pemahaman manusia yang terhubung dengan tubuh, indra, dan pengalaman. Kemampuan yang "bergerigi" (luar biasa di satu hal, gagal di hal sederhana) adalah bukti bahwa kecerdasan LLM bukan salinan kecerdasan manusia.</p>
+<h2 id="kemampuan-emergen-nyata-atau-ilusi-pengukuran">Kemampuan emergen: nyata atau ilusi pengukuran?</h2>
+<p>Wei dkk. (2022) mendokumentasikan <strong>kemampuan emergen</strong> (<em>emergent abilities</em>): kemampuan yang tampak tidak ada pada model kecil lalu tiba-tiba muncul setelah skala tertentu, misalnya aritmetika multi-digit atau chain-of-thought<sup id="fnref:55"><a class="footnote-ref" href="#fn:55">55</a></sup>. Ini memicu kekhawatiran bahwa kemampuan (termasuk yang berbahaya) bisa muncul tanpa peringatan.</p>
+<p>Schaeffer dkk. (2023) membantah sebagian klaim itu: menurut mereka, "lompatan" sering merupakan artefak dari <strong>cara mengukur</strong>. Jika skor dihitung dengan metrik semua-atau-tidak-sama-sekali (jawaban harus persis benar), peningkatan yang sebenarnya mulus terlihat seperti lompatan. Dengan metrik yang lebih halus, kurvanya menjadi landai<sup id="fnref:56"><a class="footnote-ref" href="#fn:56">56</a></sup>. Perdebatan ini penting untuk kebijakan: jika kemampuan tumbuh mulus, ia lebih mudah diprediksi dan diawasi.</p>
+<h2 id="apakah-penskalaan-akan-terus-berhasil">Apakah penskalaan akan terus berhasil?</h2>
+<ul>
+<li><strong>Kubu optimis</strong> menunjuk pada tren yang konsisten selama bertahun-tahun, lonjakan skor tolok ukur (AI Index 2026 menyebut kemampuan "berakselerasi, bukan mendatar")<sup id="fnref5:58"><a class="footnote-ref" href="#fn:58">58</a></sup>, dan dimensi skala baru berupa test-time compute dan RL<sup id="fnref3:39"><a class="footnote-ref" href="#fn:39">39</a></sup><sup id="fnref7:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</li>
+<li><strong>Kubu skeptis</strong> menunjuk pada biaya yang tumbuh eksponensial, keterbatasan listrik, hasil yang makin mahal per peningkatan, dan kelemahan yang belum hilang (halusinasi, penalaran yang rapuh di luar distribusi latihan). Sebagian berpendapat bahwa arsitektur atau paradigma baru dibutuhkan untuk mencapai kecerdasan setara manusia.</li>
+</ul>
+<h2 id="apakah-data-akan-habis-data-sintetis-dan-keruntuhan-model">Apakah data akan habis? Data sintetis dan "keruntuhan model"</h2>
+<p>Villalobos dkk. memperkirakan stok teks publik buatan manusia sekitar 300 triliun token, dan dengan tren saat ini, model akan dilatih dengan dataset sebesar seluruh stok itu antara 2026 dan 2032<sup id="fnref:26"><a class="footnote-ref" href="#fn:26">26</a></sup>. Jalan keluar yang dibahas meliputi data sintetis, data multimodal (video, audio), efisiensi data yang lebih baik, dan RL (yang menghasilkan datanya sendiri lewat latihan).</p>
+<p>Namun data sintetis punya risiko. Shumailov dkk. (<em>Nature</em>, 2024) menunjukkan bahwa melatih model secara berulang pada keluaran model generasi sebelumnya tanpa seleksi menyebabkan <strong>model collapse</strong>: variasi di "ekor" distribusi perlahan hilang, dan model makin seragam dan menyimpang<sup id="fnref:27"><a class="footnote-ref" href="#fn:27">27</a></sup>. Riset lanjutan menunjukkan bahwa risiko ini bisa dikurangi jika data sintetis <strong>dicampur</strong> dengan data asli dan <strong>disaring</strong> dengan cermat, dan dalam praktik, data sintetis yang dikurasi dengan baik sudah menjadi bagian penting pelatihan model modern.</p>
+<h2 id="model-terbuka-vs-tertutup">Model terbuka vs tertutup</h2>
+<ul>
+<li><strong>Model tertutup</strong> (<em>closed-weight</em>) hanya bisa diakses lewat API atau aplikasi. Pendukungnya berargumen bahwa ini memungkinkan kontrol keamanan dan mencegah penyalahgunaan.</li>
+<li><strong>Model terbuka</strong> (<em>open-weight</em>, misalnya Llama, DeepSeek, Qwen, Mistral) merilis parameternya sehingga siapa pun bisa menjalankan dan memodifikasinya. Pendukungnya berargumen bahwa ini mendorong riset, transparansi, kedaulatan teknologi, dan persaingan. Laporan teknis model terbuka (Llama 3, DeepSeek-V3/R1) adalah sumber utama pengetahuan publik tentang cara membuat LLM, termasuk dokumen ini.</li>
+<li>Pertanyaan keamanannya nyata: model terbuka tidak bisa "ditarik kembali" dan pengaman bawaannya bisa dilepas dengan fine-tuning. Perdebatan ini bersinggungan dengan geopolitik; AI Index 2026 mencatat bahwa model-model AS dan Tiongkok saling bergantian memimpin sejak awal 2025, dan per Maret 2026 selisih kinerja teratas hanya sekitar 2,7%<sup id="fnref6:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+</ul>
+<h2 id="etika-hak-cipta-dan-dampak-sosial">Etika, hak cipta, dan dampak sosial</h2>
+<ul>
+<li><strong>Hak cipta dan persetujuan</strong>: data pretraining mencakup karya berhak cipta yang dikumpulkan tanpa izin eksplisit. Sejumlah gugatan hukum dari penulis, penerbit, dan media sedang atau telah berjalan di berbagai negara, dan hasilnya akan menentukan aturan main pengumpulan data ke depan.</li>
+<li><strong>Energi dan lingkungan</strong>: kebutuhan listrik pusat data AI tumbuh pesat<sup id="fnref7:58"><a class="footnote-ref" href="#fn:58">58</a></sup><sup id="fnref3:28"><a class="footnote-ref" href="#fn:28">28</a></sup>.</li>
+<li><strong>Pekerjaan</strong>: AI Index 2026 mencatat penurunan hampir 20% lapangan kerja pengembang perangkat lunak usia 22–25 tahun sejak 2024 di bidang yang mengalami peningkatan produktivitas AI, meskipun hubungan sebab-akibatnya masih diperdebatkan<sup id="fnref8:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+<li><strong>Transparansi</strong>: seperti disebut di awal, keterbukaan laboratorium besar justru menurun<sup id="fnref9:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+</ul>
+<h1 id="kondisi-terkini-prospek">Kondisi Terkini &amp; Prospek</h1>
+<p><em>Keadaan per September 2026.</em></p>
+<h2 id="keadaan-saat-ini">Keadaan saat ini</h2>
+<ul>
+<li><strong>Resep dasar tetap sama.</strong> Hampir semua LLM terdepan masih berupa Transformer yang di-pretrain dengan prediksi token berikutnya, lalu di-post-train. Inovasinya lebih banyak di skala, data, efisiensi (MoE, attention yang lebih hemat, presisi rendah), dan post-training.</li>
+<li><strong>Post-training dan RL menjadi medan persaingan utama.</strong> Sejak o1 (2024) dan DeepSeek-R1 (2025), model-model terdepan dari berbagai laboratorium umumnya menawarkan mode "berpikir" yang memakai rantai penalaran panjang sebelum menjawab<sup id="fnref4:39"><a class="footnote-ref" href="#fn:39">39</a></sup><sup id="fnref8:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</li>
+<li><strong>Konteks panjang menjadi standar.</strong> Banyak model terdepan mendukung konteks ratusan ribu hingga sekitar satu juta token.</li>
+<li><strong>Dari chatbot ke agen.</strong> Penggunaan bergeser dari tanya-jawab ke agen yang mengerjakan tugas multi-langkah: menulis dan menguji kode, riset, dan mengoperasikan perangkat lunak. Lonjakan skor SWE-bench Verified menuju hampir 100% dalam setahun mencerminkan pergeseran ini<sup id="fnref10:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+<li><strong>Adopsi masif dan investasi raksasa.</strong> AI generatif mencapai 53% adopsi populasi dalam tiga tahun, dan investasi AI korporasi global mencapai sekitar US$581,7 miliar pada 2025<sup id="fnref11:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+<li><strong>Persaingan global yang ketat.</strong> Selisih kinerja model teratas AS dan Tiongkok menyempit hingga beberapa persen saja<sup id="fnref12:58"><a class="footnote-ref" href="#fn:58">58</a></sup>, didorong sebagian oleh model-model terbuka dari Tiongkok yang efisien.</li>
+</ul>
+<h2 id="tren-dan-pertanyaan-ke-depan">Tren dan pertanyaan ke depan</h2>
+<ol>
+<li><strong>Penskalaan RL.</strong> Seberapa jauh RL bisa diperluas dari domain yang terverifikasi (matematika, kode) ke tugas terbuka (riset, penulisan, keputusan bisnis)? Ini mungkin pertanyaan teknis terpenting beberapa tahun ke depan.</li>
+<li><strong>Data.</strong> Dengan data teks publik mendekati batas<sup id="fnref2:26"><a class="footnote-ref" href="#fn:26">26</a></sup>, sumber pertumbuhan akan bergeser ke data sintetis yang terkurasi, data multimodal, data interaksi agen, dan efisiensi belajar.</li>
+<li><strong>Efisiensi.</strong> Model kecil hasil distilasi dan kuantisasi yang berjalan di perangkat pribadi akan makin mampu, sementara model terbesar tetap di pusat data.</li>
+<li><strong>Interpretabilitas dan keamanan.</strong> Kemampuan membaca "pikiran" model (fitur, sirkuit) berkembang pesat<sup id="fnref4:50"><a class="footnote-ref" href="#fn:50">50</a></sup><sup id="fnref3:51"><a class="footnote-ref" href="#fn:51">51</a></sup>, dan akan menentukan seberapa besar kita bisa memercayai sistem yang semakin otonom.</li>
+<li><strong>Energi dan infrastruktur.</strong> Kebutuhan daya yang tumbuh cepat<sup id="fnref4:28"><a class="footnote-ref" href="#fn:28">28</a></sup><sup id="fnref13:58"><a class="footnote-ref" href="#fn:58">58</a></sup> menjadi kendala fisik dan politik yang nyata.</li>
+</ol>
+<div class="admonition catatan">
+<p class="admonition-title">Skenario, bukan ramalan</p>
+<p>Skenario optimis: RL dan agen membuat LLM menjadi rekan kerja riset dan rekayasa yang andal, dengan interpretabilitas yang cukup untuk mengawasinya. Skenario moderat: kemajuan berlanjut tetapi melambat karena biaya, data, dan energi, dan LLM menjadi infrastruktur seperti listrik atau internet, bukan kecerdasan super. Skenario pesimis: kelemahan mendasar (halusinasi, kerentanan manipulasi, reward hacking) terbukti sulit diatasi pada sistem yang makin otonom, sehingga adopsi tersendat dan regulasi mengetat. Bukti hingga September 2026 belum cukup untuk memastikan skenario mana yang akan terjadi.</p>
+</div>
+<h1 id="kronologi">Kronologi</h1>
+<table>
+<thead>
+<tr>
+<th>Tahun</th>
+<th>Peristiwa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1970</td>
+<td>Linnainmaa menerbitkan <em>reverse-mode automatic differentiation</em>, inti matematis backpropagation<sup id="fnref2:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+</tr>
+<tr>
+<td>1986</td>
+<td>Rumelhart, Hinton &amp; Williams mempopulerkan backpropagation untuk jaringan saraf (<em>Nature</em>)<sup id="fnref4:2"><a class="footnote-ref" href="#fn:2">2</a></sup></td>
+</tr>
+<tr>
+<td>1997</td>
+<td>LSTM (Hochreiter &amp; Schmidhuber)<sup id="fnref2:6"><a class="footnote-ref" href="#fn:6">6</a></sup></td>
+</tr>
+<tr>
+<td>2003</td>
+<td>Model bahasa neural dengan representasi kata terdistribusi (Bengio dkk.)<sup id="fnref4:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+</tr>
+<tr>
+<td>2013</td>
+<td>word2vec: embedding kata yang efisien (Mikolov dkk.)<sup id="fnref3:5"><a class="footnote-ref" href="#fn:5">5</a></sup></td>
+</tr>
+<tr>
+<td>2014</td>
+<td>Sequence-to-sequence (Sutskever dkk.)<sup id="fnref2:7"><a class="footnote-ref" href="#fn:7">7</a></sup>; mekanisme attention (Bahdanau dkk.)<sup id="fnref2:8"><a class="footnote-ref" href="#fn:8">8</a></sup>; optimizer Adam<sup id="fnref3:10"><a class="footnote-ref" href="#fn:10">10</a></sup></td>
+</tr>
+<tr>
+<td>2015</td>
+<td>Koneksi residual (ResNet)<sup id="fnref2:9"><a class="footnote-ref" href="#fn:9">9</a></sup>; distilasi pengetahuan (Hinton dkk.)<sup id="fnref2:41"><a class="footnote-ref" href="#fn:41">41</a></sup></td>
+</tr>
+<tr>
+<td>2016</td>
+<td>BPE untuk subword (Sennrich dkk.)<sup id="fnref3:12"><a class="footnote-ref" href="#fn:12">12</a></sup></td>
+</tr>
+<tr>
+<td>2017</td>
+<td><strong>Transformer: "Attention Is All You Need"</strong><sup id="fnref9:1"><a class="footnote-ref" href="#fn:1">1</a></sup>; PPO<sup id="fnref2:34"><a class="footnote-ref" href="#fn:34">34</a></sup></td>
+</tr>
+<tr>
+<td>2018</td>
+<td>GPT-1<sup id="fnref4:14"><a class="footnote-ref" href="#fn:14">14</a></sup> dan BERT<sup id="fnref2:15"><a class="footnote-ref" href="#fn:15">15</a></sup></td>
+</tr>
+<tr>
+<td>2019</td>
+<td>GPT-2 (1,5 miliar parameter)<sup id="fnref3:16"><a class="footnote-ref" href="#fn:16">16</a></sup></td>
+</tr>
+<tr>
+<td>2020</td>
+<td>Scaling laws (Kaplan dkk.)<sup id="fnref4:23"><a class="footnote-ref" href="#fn:23">23</a></sup>; GPT-3 (175 miliar parameter)<sup id="fnref9:17"><a class="footnote-ref" href="#fn:17">17</a></sup>; RAG<sup id="fnref2:48"><a class="footnote-ref" href="#fn:48">48</a></sup></td>
+</tr>
+<tr>
+<td>2021</td>
+<td>LoRA<sup id="fnref4:40"><a class="footnote-ref" href="#fn:40">40</a></sup>; RoPE<sup id="fnref3:13"><a class="footnote-ref" href="#fn:13">13</a></sup>; makalah "Stochastic Parrots"<sup id="fnref3:53"><a class="footnote-ref" href="#fn:53">53</a></sup></td>
+</tr>
+<tr>
+<td>2022</td>
+<td>Chinchilla<sup id="fnref6:24"><a class="footnote-ref" href="#fn:24">24</a></sup>; InstructGPT/RLHF<sup id="fnref12:33"><a class="footnote-ref" href="#fn:33">33</a></sup>; chain-of-thought<sup id="fnref2:38"><a class="footnote-ref" href="#fn:38">38</a></sup>; FlashAttention<sup id="fnref2:32"><a class="footnote-ref" href="#fn:32">32</a></sup>; Constitutional AI<sup id="fnref4:36"><a class="footnote-ref" href="#fn:36">36</a></sup>; <strong>ChatGPT dirilis 30 November</strong></td>
+</tr>
+<tr>
+<td>2023</td>
+<td>ChatGPT mencapai ±100 juta pengguna bulanan dalam dua bulan (estimasi)<sup id="fnref2:59"><a class="footnote-ref" href="#fn:59">59</a></sup>; DPO<sup id="fnref3:35"><a class="footnote-ref" href="#fn:35">35</a></sup></td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Mixtral (MoE terbuka)<sup id="fnref5:21"><a class="footnote-ref" href="#fn:21">21</a></sup>; Llama 3 (405 miliar parameter, ±15 triliun token)<sup id="fnref17:18"><a class="footnote-ref" href="#fn:18">18</a></sup>; FineWeb<sup id="fnref7:25"><a class="footnote-ref" href="#fn:25">25</a></sup>; Scaling Monosemanticity<sup id="fnref6:50"><a class="footnote-ref" href="#fn:50">50</a></sup>; OpenAI o1, model penalaran<sup id="fnref5:39"><a class="footnote-ref" href="#fn:39">39</a></sup>; DeepSeek-V3<sup id="fnref11:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+</tr>
+<tr>
+<td>2025</td>
+<td>DeepSeek-R1 (RL murni memunculkan penalaran; terbit di <em>Nature</em> September)<sup id="fnref12:37"><a class="footnote-ref" href="#fn:37">37</a></sup>; circuit tracing Anthropic<sup id="fnref6:51"><a class="footnote-ref" href="#fn:51">51</a></sup>; "Why Language Models Hallucinate"<sup id="fnref3:52"><a class="footnote-ref" href="#fn:52">52</a></sup></td>
+</tr>
+<tr>
+<td>2026</td>
+<td>AI Index 2026: adopsi AI generatif 53% populasi; selisih kinerja AS–Tiongkok ±2,7%<sup id="fnref18:58"><a class="footnote-ref" href="#fn:58">58</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h1 id="glosarium">Glosarium</h1>
+<p><strong>Activation (aktivasi)</strong>: nilai keluaran neuron atau lapisan saat model memproses masukan. Disimpan selama pelatihan untuk dipakai backpropagation.</p>
+<p><strong>Adam / AdamW</strong>: optimizer standar untuk LLM. Memakai momentum dan ukuran langkah adaptif per parameter; AdamW menambahkan weight decay yang dipisahkan.</p>
+<p><strong>Agen (agent)</strong>: sistem LLM yang menjalankan loop rencana–tindakan–pengamatan dengan memakai alat untuk menyelesaikan tugas multi-langkah.</p>
+<p><strong>Attention / self-attention</strong>: mekanisme yang memungkinkan setiap token menimbang dan menyerap informasi dari token-token lain berdasarkan kecocokan query dan key.</p>
+<p><strong>Autoregresif</strong>: menghasilkan keluaran satu token demi satu token, dengan setiap token baru menjadi bagian dari masukan langkah berikutnya.</p>
+<p><strong>Backpropagation</strong>: algoritma untuk menghitung gradien setiap parameter secara efisien dengan merambatkan sinyal kesalahan mundur dari keluaran ke masukan menggunakan aturan rantai.</p>
+<p><strong>Base model</strong>: model hasil pretraining, sebelum post-training. Pandai melanjutkan teks, tetapi belum berperilaku sebagai asisten.</p>
+<p><strong>Batch</strong>: sekumpulan contoh data yang diproses bersamaan dalam satu langkah pelatihan.</p>
+<p><strong>BPE (Byte Pair Encoding)</strong>: algoritma tokenisasi yang membangun kosakata dengan menggabungkan pasangan simbol yang paling sering muncul secara berulang.</p>
+<p><strong>Chain-of-thought (CoT)</strong>: rantai langkah penalaran yang ditulis model sebelum jawaban akhir.</p>
+<p><strong>Checkpoint</strong>: salinan keadaan model (parameter dan status optimizer) yang disimpan berkala selama pelatihan.</p>
+<p><strong>Context window (jendela konteks)</strong>: jumlah maksimum token yang dapat diproses model sekaligus; memori kerja model.</p>
+<p><strong>Cross-entropy loss</strong>: ukuran kesalahan standar untuk model bahasa; intuisinya, seberapa "terkejut" model melihat token yang benar.</p>
+<p><strong>Decoder-only</strong>: varian Transformer yang hanya memakai bagian decoder dengan causal mask; dipakai hampir semua LLM generatif.</p>
+<p><strong>Deduplikasi</strong>: penghapusan dokumen identik atau hampir identik dari data latih.</p>
+<p><strong>Distilasi</strong>: melatih model kecil (murid) untuk meniru keluaran model besar (guru).</p>
+<p><strong>DPO (Direct Preference Optimization)</strong>: metode preference tuning yang langsung mengoptimalkan model dari pasangan jawaban disukai/tidak disukai, tanpa reward model terpisah dan tanpa loop RL.</p>
+<p><strong>Embedding</strong>: representasi vektor dari token; koordinat dalam "ruang makna".</p>
+<p><strong>Epoch</strong>: satu putaran penuh atas seluruh data latih.</p>
+<p><strong>Feed-forward network (FFN / MLP)</strong>: bagian blok Transformer yang memproses setiap token secara terpisah; menyimpan sebagian besar parameter.</p>
+<p><strong>Fine-tuning</strong>: melanjutkan pelatihan model yang sudah ada pada data yang lebih spesifik.</p>
+<p><strong>Gradien</strong>: arah dan besar perubahan loss terhadap perubahan setiap parameter; "kemiringan tanah" dalam analogi menuruni bukit.</p>
+<p><strong>Gradient descent</strong>: metode optimasi yang menggeser parameter sedikit demi sedikit ke arah yang menurunkan loss.</p>
+<p><strong>GRPO (Group Relative Policy Optimization)</strong>: algoritma RL yang dipakai DeepSeek-R1; membandingkan beberapa jawaban untuk soal yang sama dan memperkuat yang lebih baik dari rata-rata kelompok.</p>
+<p><strong>Halusinasi</strong>: keluaran yang terdengar meyakinkan tetapi salah atau dikarang.</p>
+<p><strong>Inferensi</strong>: menjalankan model yang sudah dilatih untuk menghasilkan keluaran; parameter tidak berubah.</p>
+<p><strong>KV cache</strong>: penyimpanan key dan value dari token-token sebelumnya agar tidak dihitung ulang saat menghasilkan token baru.</p>
+<p><strong>Learning rate</strong>: besar langkah pembaruan parameter dalam gradient descent.</p>
+<p><strong>LoRA</strong>: teknik fine-tuning hemat yang membekukan bobot asli dan hanya melatih matriks tambahan berukuran kecil.</p>
+<p><strong>Loss</strong>: angka yang mengukur seberapa salah prediksi model; yang ingin diminimalkan dalam pelatihan.</p>
+<p><strong>Mixture of Experts (MoE)</strong>: arsitektur dengan banyak sub-jaringan (expert) dan router yang hanya mengaktifkan sebagian expert untuk setiap token.</p>
+<p><strong>Parameter</strong>: angka yang disetel selama pelatihan (bobot dan bias); tempat "pengetahuan" model tersimpan.</p>
+<p><strong>Post-training</strong>: semua pelatihan setelah pretraining (SFT, preference tuning, RL) yang membentuk model menjadi asisten.</p>
+<p><strong>PPO (Proximal Policy Optimization)</strong>: algoritma reinforcement learning yang dipakai dalam RLHF klasik.</p>
+<p><strong>Pretraining</strong>: tahap pelatihan utama pada korpus raksasa dengan tujuan menebak token berikutnya.</p>
+<p><strong>Prompt</strong>: teks masukan yang diberikan ke model.</p>
+<p><strong>Quantization (kuantisasi)</strong>: menyimpan bobot dengan presisi lebih rendah agar model lebih kecil dan cepat.</p>
+<p><strong>RAG (Retrieval-Augmented Generation)</strong>: menyisipkan dokumen hasil pencarian ke dalam konteks sebelum model menjawab.</p>
+<p><strong>Reasoning model</strong>: model yang dilatih (biasanya dengan RL) untuk menghasilkan penalaran panjang sebelum menjawab.</p>
+<p><strong>Residual connection</strong>: jalur yang menambahkan keluaran lapisan ke masukannya, menjaga aliran informasi dan gradien di jaringan dalam.</p>
+<p><strong>Reward hacking</strong>: model mengakali penilai (reward model) untuk mendapat skor tinggi tanpa benar-benar menjadi lebih baik.</p>
+<p><strong>Reward model</strong>: model yang dilatih memprediksi seberapa besar manusia menyukai sebuah jawaban.</p>
+<p><strong>RLHF (Reinforcement Learning from Human Feedback)</strong>: pelatihan dengan reinforcement learning memakai sinyal hadiah yang berasal dari preferensi manusia.</p>
+<p><strong>RLAIF / Constitutional AI</strong>: varian RLHF yang memakai penilaian AI yang dipandu prinsip tertulis sebagai pengganti sebagian penilaian manusia.</p>
+<p><strong>RoPE</strong>: metode pengodean posisi dengan "memutar" vektor query dan key sesuai posisinya.</p>
+<p><strong>Sampling / temperature / top-p</strong>: cara memilih token dari distribusi peluang; temperatur mengatur keacakan, top-p membatasi pilihan pada token-token teratas.</p>
+<p><strong>Scaling laws (hukum penskalaan)</strong>: hubungan empiris yang dapat diprediksi antara ukuran model, data, komputasi, dan kinerja.</p>
+<p><strong>Self-supervised learning</strong>: pembelajaran di mana label berasal dari data itu sendiri (misalnya token berikutnya), tanpa anotasi manusia.</p>
+<p><strong>SFT (Supervised Fine-Tuning)</strong>: fine-tuning pada contoh-contoh instruksi dan jawaban teladan.</p>
+<p><strong>Softmax</strong>: fungsi yang mengubah deretan skor menjadi distribusi peluang yang berjumlah 100%.</p>
+<p><strong>Sycophancy</strong>: kecenderungan model membenarkan atau menyanjung pengguna meskipun keliru.</p>
+<p><strong>Token / tokenizer</strong>: potongan teks yang menjadi unit dasar pemrosesan model / program yang memotong teks menjadi token.</p>
+<p><strong>Transformer</strong>: arsitektur jaringan saraf berbasis attention yang diperkenalkan pada 2017; fondasi semua LLM modern.</p>
+<h1 id="kesimpulan">Kesimpulan</h1>
+<p>Setelah membedah seluruh prosesnya, beberapa pelajaran besar muncul.</p>
+<p><strong>Pertama, kesederhanaan tujuan, kerumitan hasil.</strong> Seluruh LLM dibangun di atas satu tugas yang nyaris remeh, yaitu menebak token berikutnya, yang dikerjakan dengan satu algoritma belajar berusia puluhan tahun, yaitu backpropagation dengan gradient descent. Yang berubah adalah skala: data dari seluruh internet, miliaran parameter, dan komputasi yang tumbuh sekitar 4–5 kali lipat per tahun<sup id="fnref2:28"><a class="footnote-ref" href="#fn:28">28</a></sup>. Kemampuan yang kita lihat bukan diprogram satu per satu, tetapi <strong>tumbuh</strong> sebagai efek samping dari upaya menebak dengan sangat baik.</p>
+<p><strong>Kedua, Transformer menang karena cocok dengan perangkat keras.</strong> Attention bukan hanya ide yang elegan; ia memungkinkan seluruh teks diproses paralel di GPU. Banyak kemajuan LLM adalah hasil perkawinan antara ide algoritmik dan rekayasa sistem: paralelisme, presisi campuran, FlashAttention, MoE, KV cache. Membuat LLM adalah proyek rekayasa sebesar proyek sains.</p>
+<p><strong>Ketiga, pengetahuan dari pretraining, perilaku dari post-training.</strong> Pretraining menghasilkan "simulator internet" yang berpengetahuan tetapi tanpa arah. Post-training, lewat SFT, umpan balik preferensi, dan RL, memilih dan menajamkan satu persona: asisten yang membantu, jujur, dan aman. Sejak 2024–2025, RL dengan hadiah terverifikasi menunjukkan bahwa model juga bisa <strong>menemukan</strong> strategi penalaran sendiri, bukan hanya meniru manusia<sup id="fnref5:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</p>
+<p><strong>Keempat, kelemahan LLM adalah cermin cara kerjanya.</strong> Halusinasi muncul karena model dilatih menghasilkan teks yang masuk akal dan dinilai dengan cara yang menghargai tebakan<sup id="fnref:52"><a class="footnote-ref" href="#fn:52">52</a></sup>. Kesulitan mengeja muncul dari tokenisasi. Sycophancy muncul dari selera manusia yang ikut terekam dalam reward model<sup id="fnref2:43"><a class="footnote-ref" href="#fn:43">43</a></sup>. Batas pengetahuan muncul karena parameter dibekukan setelah pelatihan. Memahami mekanisme membuat kita bisa memakai LLM dengan lebih cerdas: menyediakan konteks, meminta langkah-langkah, dan memverifikasi hal penting.</p>
+<p><strong>Kelima, banyak pertanyaan besar masih terbuka.</strong> Apakah LLM "memahami"? Apakah penskalaan akan terus berhasil? Apakah data akan habis? Bisakah kita benar-benar melihat ke dalam kotak hitamnya? Tidak ada jawaban final hingga September 2026. Yang pasti, LLM bukan sihir dan bukan sekadar autocomplete. Ia adalah kompresi statistik yang sangat besar atas bahasa manusia, yang dilatih untuk berperilaku sebagai asisten, dengan kekuatan dan kelemahan yang bisa dijelaskan, dan karena itu bisa dipelajari, diperbaiki, dan diawasi.</p>
+<h1 id="bacaan-lanjutan">Bacaan Lanjutan</h1>
+<p><strong>Untuk memulai (tanpa matematika)</strong></p>
+<ul>
+<li><strong>Andrej Karpathy, "Deep Dive into LLMs like ChatGPT" (video YouTube, 2025)</strong>: kuliah 3,5 jam yang membahas seluruh pipeline dari data sampai RL untuk penonton umum. Paling dekat dengan cakupan dokumen ini<sup id="fnref7:60"><a class="footnote-ref" href="#fn:60">60</a></sup>.</li>
+<li><strong>3Blue1Brown, seri "Neural Networks" (YouTube)</strong>: animasi visual terbaik tentang jaringan saraf, gradient descent, backpropagation, dan attention.</li>
+<li><strong>Jay Alammar, "The Illustrated Transformer" (blog)</strong>: penjelasan bergambar tentang Transformer yang menjadi rujukan klasik.</li>
+</ul>
+<p><strong>Untuk yang ingin lebih teknis</strong></p>
+<ul>
+<li><strong>Andrej Karpathy, "Neural Networks: Zero to Hero" dan nanoGPT</strong>: membangun jaringan saraf, backpropagation, dan GPT kecil dari nol dengan kode.</li>
+<li><strong>Vaswani dkk., "Attention Is All You Need" (2017)</strong>: makalah asli Transformer, singkat dan relatif mudah dibaca<sup id="fnref6:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</li>
+<li><strong>Llama Team, "The Llama 3 Herd of Models" (2024)</strong>: laporan teknis paling lengkap dan terbuka tentang cara membuat LLM skala terdepan, dari data sampai post-training<sup id="fnref13:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</li>
+<li><strong>DeepSeek-AI, "DeepSeek-R1" (<em>Nature</em>, 2025)</strong>: pintu masuk terbaik untuk memahami RL dan model penalaran<sup id="fnref9:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</li>
+<li><strong>Ouyang dkk., "InstructGPT" (2022)</strong>: fondasi RLHF dan asal-usul ChatGPT<sup id="fnref7:33"><a class="footnote-ref" href="#fn:33">33</a></sup>.</li>
+<li><strong>Hoffmann dkk., "Chinchilla" (2022)</strong>: memahami hukum penskalaan dan keseimbangan model-data<sup id="fnref4:24"><a class="footnote-ref" href="#fn:24">24</a></sup>.</li>
+</ul>
+<p><strong>Untuk perspektif kritis dan interpretabilitas</strong></p>
+<ul>
+<li><strong>Anthropic, "Tracing the thoughts of a large language model" (2025)</strong> dan <strong>"Scaling Monosemanticity" (2024)</strong>: apa yang terjadi di dalam model, dengan visualisasi yang bisa diikuti<sup id="fnref4:51"><a class="footnote-ref" href="#fn:51">51</a></sup><sup id="fnref5:50"><a class="footnote-ref" href="#fn:50">50</a></sup>.</li>
+<li><strong>Bender, Gebru dkk., "Stochastic Parrots" (2021)</strong>: kritik paling berpengaruh terhadap LLM<sup id="fnref2:53"><a class="footnote-ref" href="#fn:53">53</a></sup>.</li>
+<li><strong>Stanford HAI, AI Index Report (terbit tahunan)</strong>: data terbaik tentang tren biaya, kemampuan, adopsi, dan kebijakan AI<sup id="fnref3:57"><a class="footnote-ref" href="#fn:57">57</a></sup><sup id="fnref14:58"><a class="footnote-ref" href="#fn:58">58</a></sup>.</li>
+<li><strong>Buku: Simon J.D. Prince, <em>Understanding Deep Learning</em> (MIT Press, 2023, tersedia gratis daring)</strong>: buku teks modern yang jelas bagi yang siap dengan sedikit matematika.</li>
+</ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>Vaswani, A. dkk., <em>Attention Is All You Need</em>, NeurIPS, 2017. <a href="https://arxiv.org/abs/1706.03762">https://arxiv.org/abs/1706.03762</a>&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>Rumelhart, D. E., Hinton, G. E. &amp; Williams, R. J., <em>Learning representations by back-propagating errors</em>, Nature 323, 1986. <a href="https://www.nature.com/articles/323533a0">https://www.nature.com/articles/323533a0</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>Schmidhuber, J., <em>Who Invented Backpropagation?</em>, IDSIA. <a href="https://people.idsia.ch/~juergen/who-invented-backpropagation.html">https://people.idsia.ch/~juergen/who-invented-backpropagation.html</a>&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>Bengio, Y. dkk., <em>A Neural Probabilistic Language Model</em>, JMLR 3, 2003. <a href="https://www.jmlr.org/papers/v3/bengio03a.html">https://www.jmlr.org/papers/v3/bengio03a.html</a>&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>Mikolov, T. dkk., <em>Efficient Estimation of Word Representations in Vector Space</em>, 2013. <a href="https://arxiv.org/abs/1301.3781">https://arxiv.org/abs/1301.3781</a>&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p>Hochreiter, S. &amp; Schmidhuber, J., <em>Long Short-Term Memory</em>, Neural Computation, 1997. <a href="https://www.bioinf.jku.at/publications/older/2604.pdf">https://www.bioinf.jku.at/publications/older/2604.pdf</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:7">
+<p>Sutskever, I., Vinyals, O. &amp; Le, Q. V., <em>Sequence to Sequence Learning with Neural Networks</em>, 2014. <a href="https://arxiv.org/abs/1409.3215">https://arxiv.org/abs/1409.3215</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+<li id="fn:8">
+<p>Bahdanau, D., Cho, K. &amp; Bengio, Y., <em>Neural Machine Translation by Jointly Learning to Align and Translate</em>, 2014. <a href="https://arxiv.org/abs/1409.0473">https://arxiv.org/abs/1409.0473</a>&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:9">
+<p>He, K. dkk., <em>Deep Residual Learning for Image Recognition</em>, 2015. <a href="https://arxiv.org/abs/1512.03385">https://arxiv.org/abs/1512.03385</a>&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+</li>
+<li id="fn:10">
+<p>Kingma, D. P. &amp; Ba, J., <em>Adam: A Method for Stochastic Optimization</em>, 2014. <a href="https://arxiv.org/abs/1412.6980">https://arxiv.org/abs/1412.6980</a>&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:10" title="Jump back to footnote 10 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+</li>
+<li id="fn:11">
+<p>Loshchilov, I. &amp; Hutter, F., <em>Decoupled Weight Decay Regularization</em>, 2017. <a href="https://arxiv.org/abs/1711.05101">https://arxiv.org/abs/1711.05101</a>&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 11 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:11" title="Jump back to footnote 11 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:11" title="Jump back to footnote 11 in the text">&#8617;</a></p>
+</li>
+<li id="fn:12">
+<p>Sennrich, R., Haddow, B. &amp; Birch, A., <em>Neural Machine Translation of Rare Words with Subword Units</em>, ACL, 2016. <a href="https://aclanthology.org/P16-1162/">https://aclanthology.org/P16-1162/</a>&#160;<a class="footnote-backref" href="#fnref:12" title="Jump back to footnote 12 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:12" title="Jump back to footnote 12 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:12" title="Jump back to footnote 12 in the text">&#8617;</a></p>
+</li>
+<li id="fn:13">
+<p>Su, J. dkk., <em>RoFormer: Enhanced Transformer with Rotary Position Embedding</em>, 2021. <a href="https://arxiv.org/abs/2104.09864">https://arxiv.org/abs/2104.09864</a>&#160;<a class="footnote-backref" href="#fnref:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:13" title="Jump back to footnote 13 in the text">&#8617;</a></p>
+</li>
+<li id="fn:14">
+<p>Radford, A. dkk., <em>Improving Language Understanding by Generative Pre-Training</em>, OpenAI, 2018. <a href="https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf">https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf</a>&#160;<a class="footnote-backref" href="#fnref:14" title="Jump back to footnote 14 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:14" title="Jump back to footnote 14 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:14" title="Jump back to footnote 14 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:14" title="Jump back to footnote 14 in the text">&#8617;</a></p>
+</li>
+<li id="fn:15">
+<p>Devlin, J. dkk., <em>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</em>, 2018. <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a>&#160;<a class="footnote-backref" href="#fnref:15" title="Jump back to footnote 15 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:15" title="Jump back to footnote 15 in the text">&#8617;</a></p>
+</li>
+<li id="fn:16">
+<p>Radford, A. dkk., <em>Language Models are Unsupervised Multitask Learners</em>, OpenAI, 2019. <a href="https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf">https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf</a>&#160;<a class="footnote-backref" href="#fnref:16" title="Jump back to footnote 16 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:16" title="Jump back to footnote 16 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:16" title="Jump back to footnote 16 in the text">&#8617;</a></p>
+</li>
+<li id="fn:17">
+<p>Brown, T. dkk., <em>Language Models are Few-Shot Learners</em>, NeurIPS, 2020. <a href="https://arxiv.org/abs/2005.14165">https://arxiv.org/abs/2005.14165</a>&#160;<a class="footnote-backref" href="#fnref:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:17" title="Jump back to footnote 17 in the text">&#8617;</a></p>
+</li>
+<li id="fn:18">
+<p>Llama Team, AI @ Meta, <em>The Llama 3 Herd of Models</em>, 2024. <a href="https://arxiv.org/abs/2407.21783">https://arxiv.org/abs/2407.21783</a>&#160;<a class="footnote-backref" href="#fnref:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref10:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref11:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref12:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref13:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref14:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref15:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref16:18" title="Jump back to footnote 18 in the text">&#8617;</a><a class="footnote-backref" href="#fnref17:18" title="Jump back to footnote 18 in the text">&#8617;</a></p>
+</li>
+<li id="fn:19">
+<p>Meta, <em>Llama 3.1 Model Card</em>, 2024. <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md">https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md</a>&#160;<a class="footnote-backref" href="#fnref:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:19" title="Jump back to footnote 19 in the text">&#8617;</a></p>
+</li>
+<li id="fn:20">
+<p>DeepSeek-AI, <em>DeepSeek-V3 Technical Report</em>, 2024. <a href="https://arxiv.org/abs/2412.19437">https://arxiv.org/abs/2412.19437</a>&#160;<a class="footnote-backref" href="#fnref:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref10:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref11:20" title="Jump back to footnote 20 in the text">&#8617;</a></p>
+</li>
+<li id="fn:21">
+<p>Jiang, A. Q. dkk., <em>Mixtral of Experts</em>, 2024. <a href="https://arxiv.org/abs/2401.04088">https://arxiv.org/abs/2401.04088</a>&#160;<a class="footnote-backref" href="#fnref:21" title="Jump back to footnote 21 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:21" title="Jump back to footnote 21 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:21" title="Jump back to footnote 21 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:21" title="Jump back to footnote 21 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:21" title="Jump back to footnote 21 in the text">&#8617;</a></p>
+</li>
+<li id="fn:22">
+<p>Ainslie, J. dkk., <em>GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints</em>, 2023. <a href="https://arxiv.org/abs/2305.13245">https://arxiv.org/abs/2305.13245</a>&#160;<a class="footnote-backref" href="#fnref:22" title="Jump back to footnote 22 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:22" title="Jump back to footnote 22 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:22" title="Jump back to footnote 22 in the text">&#8617;</a></p>
+</li>
+<li id="fn:23">
+<p>Kaplan, J. dkk., <em>Scaling Laws for Neural Language Models</em>, 2020. <a href="https://arxiv.org/abs/2001.08361">https://arxiv.org/abs/2001.08361</a>&#160;<a class="footnote-backref" href="#fnref:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:23" title="Jump back to footnote 23 in the text">&#8617;</a></p>
+</li>
+<li id="fn:24">
+<p>Hoffmann, J. dkk., <em>Training Compute-Optimal Large Language Models</em>, 2022. <a href="https://arxiv.org/abs/2203.15556">https://arxiv.org/abs/2203.15556</a>&#160;<a class="footnote-backref" href="#fnref:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:24" title="Jump back to footnote 24 in the text">&#8617;</a></p>
+</li>
+<li id="fn:25">
+<p>Penedo, G. dkk. (Hugging Face), <em>FineWeb: decanting the web for the finest text data at scale</em>, 2024. <a href="https://huggingface.co/spaces/HuggingFaceFW/blogpost-fineweb-v1">https://huggingface.co/spaces/HuggingFaceFW/blogpost-fineweb-v1</a>&#160;<a class="footnote-backref" href="#fnref:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:25" title="Jump back to footnote 25 in the text">&#8617;</a></p>
+</li>
+<li id="fn:26">
+<p>Villalobos, P. dkk., <em>Will we run out of data? Limits of LLM scaling based on human-generated data</em>, ICML, 2024. <a href="https://arxiv.org/abs/2211.04325">https://arxiv.org/abs/2211.04325</a>&#160;<a class="footnote-backref" href="#fnref:26" title="Jump back to footnote 26 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:26" title="Jump back to footnote 26 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:26" title="Jump back to footnote 26 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:26" title="Jump back to footnote 26 in the text">&#8617;</a></p>
+</li>
+<li id="fn:27">
+<p>Shumailov, I. dkk., <em>AI models collapse when trained on recursively generated data</em>, Nature 631, 2024. <a href="https://www.nature.com/articles/s41586-024-07566-y">https://www.nature.com/articles/s41586-024-07566-y</a>&#160;<a class="footnote-backref" href="#fnref:27" title="Jump back to footnote 27 in the text">&#8617;</a></p>
+</li>
+<li id="fn:28">
+<p>Epoch AI, <em>Training compute of frontier AI models grows by 4-5x per year</em>, 2024. <a href="https://epoch.ai/blog/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year">https://epoch.ai/blog/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year</a>&#160;<a class="footnote-backref" href="#fnref:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:28" title="Jump back to footnote 28 in the text">&#8617;</a></p>
+</li>
+<li id="fn:29">
+<p>Narayanan, D. dkk., <em>Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM</em>, SC, 2021. <a href="https://people.eecs.berkeley.edu/~matei/papers/2021/sc_megatron_lm.pdf">https://people.eecs.berkeley.edu/~matei/papers/2021/sc_megatron_lm.pdf</a>&#160;<a class="footnote-backref" href="#fnref:29" title="Jump back to footnote 29 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:29" title="Jump back to footnote 29 in the text">&#8617;</a></p>
+</li>
+<li id="fn:30">
+<p>Rajbhandari, S. dkk., <em>ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</em>, 2019. <a href="https://arxiv.org/abs/1910.02054">https://arxiv.org/abs/1910.02054</a>&#160;<a class="footnote-backref" href="#fnref:30" title="Jump back to footnote 30 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:30" title="Jump back to footnote 30 in the text">&#8617;</a></p>
+</li>
+<li id="fn:31">
+<p>Micikevicius, P. dkk., <em>Mixed Precision Training</em>, 2017. <a href="https://arxiv.org/abs/1710.03740">https://arxiv.org/abs/1710.03740</a>&#160;<a class="footnote-backref" href="#fnref:31" title="Jump back to footnote 31 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:31" title="Jump back to footnote 31 in the text">&#8617;</a></p>
+</li>
+<li id="fn:32">
+<p>Dao, T. dkk., <em>FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</em>, NeurIPS, 2022. <a href="https://arxiv.org/abs/2205.14135">https://arxiv.org/abs/2205.14135</a>&#160;<a class="footnote-backref" href="#fnref:32" title="Jump back to footnote 32 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:32" title="Jump back to footnote 32 in the text">&#8617;</a></p>
+</li>
+<li id="fn:33">
+<p>Ouyang, L. dkk., <em>Training language models to follow instructions with human feedback</em>, NeurIPS, 2022. <a href="https://arxiv.org/abs/2203.02155">https://arxiv.org/abs/2203.02155</a>&#160;<a class="footnote-backref" href="#fnref:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref10:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref11:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref12:33" title="Jump back to footnote 33 in the text">&#8617;</a></p>
+</li>
+<li id="fn:34">
+<p>Schulman, J. dkk., <em>Proximal Policy Optimization Algorithms</em>, 2017. <a href="https://arxiv.org/abs/1707.06347">https://arxiv.org/abs/1707.06347</a>&#160;<a class="footnote-backref" href="#fnref:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:34" title="Jump back to footnote 34 in the text">&#8617;</a></p>
+</li>
+<li id="fn:35">
+<p>Rafailov, R. dkk., <em>Direct Preference Optimization: Your Language Model is Secretly a Reward Model</em>, NeurIPS, 2023. <a href="https://arxiv.org/abs/2305.18290">https://arxiv.org/abs/2305.18290</a>&#160;<a class="footnote-backref" href="#fnref:35" title="Jump back to footnote 35 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:35" title="Jump back to footnote 35 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:35" title="Jump back to footnote 35 in the text">&#8617;</a></p>
+</li>
+<li id="fn:36">
+<p>Bai, Y. dkk. (Anthropic), <em>Constitutional AI: Harmlessness from AI Feedback</em>, 2022. <a href="https://arxiv.org/abs/2212.08073">https://arxiv.org/abs/2212.08073</a>&#160;<a class="footnote-backref" href="#fnref:36" title="Jump back to footnote 36 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:36" title="Jump back to footnote 36 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:36" title="Jump back to footnote 36 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:36" title="Jump back to footnote 36 in the text">&#8617;</a></p>
+</li>
+<li id="fn:37">
+<p>DeepSeek-AI, <em>DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning</em>, Nature 645, 2025. <a href="https://www.nature.com/articles/s41586-025-09422-z">https://www.nature.com/articles/s41586-025-09422-z</a>&#160;<a class="footnote-backref" href="#fnref:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref10:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref11:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref12:37" title="Jump back to footnote 37 in the text">&#8617;</a></p>
+</li>
+<li id="fn:38">
+<p>Wei, J. dkk., <em>Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</em>, 2022. <a href="https://arxiv.org/abs/2201.11903">https://arxiv.org/abs/2201.11903</a>&#160;<a class="footnote-backref" href="#fnref:38" title="Jump back to footnote 38 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:38" title="Jump back to footnote 38 in the text">&#8617;</a></p>
+</li>
+<li id="fn:39">
+<p>OpenAI, <em>Learning to Reason with LLMs</em>, 2024. <a href="https://openai.com/index/learning-to-reason-with-llms/">https://openai.com/index/learning-to-reason-with-llms/</a>&#160;<a class="footnote-backref" href="#fnref:39" title="Jump back to footnote 39 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:39" title="Jump back to footnote 39 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:39" title="Jump back to footnote 39 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:39" title="Jump back to footnote 39 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:39" title="Jump back to footnote 39 in the text">&#8617;</a></p>
+</li>
+<li id="fn:40">
+<p>Hu, E. J. dkk., <em>LoRA: Low-Rank Adaptation of Large Language Models</em>, 2021. <a href="https://arxiv.org/abs/2106.09685">https://arxiv.org/abs/2106.09685</a>&#160;<a class="footnote-backref" href="#fnref:40" title="Jump back to footnote 40 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:40" title="Jump back to footnote 40 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:40" title="Jump back to footnote 40 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:40" title="Jump back to footnote 40 in the text">&#8617;</a></p>
+</li>
+<li id="fn:41">
+<p>Hinton, G., Vinyals, O. &amp; Dean, J., <em>Distilling the Knowledge in a Neural Network</em>, 2015. <a href="https://arxiv.org/abs/1503.02531">https://arxiv.org/abs/1503.02531</a>&#160;<a class="footnote-backref" href="#fnref:41" title="Jump back to footnote 41 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:41" title="Jump back to footnote 41 in the text">&#8617;</a></p>
+</li>
+<li id="fn:42">
+<p>Gao, L., Schulman, J. &amp; Hilton, J., <em>Scaling Laws for Reward Model Overoptimization</em>, 2022. <a href="https://arxiv.org/abs/2210.10760">https://arxiv.org/abs/2210.10760</a>&#160;<a class="footnote-backref" href="#fnref:42" title="Jump back to footnote 42 in the text">&#8617;</a></p>
+</li>
+<li id="fn:43">
+<p>Sharma, M. dkk. (Anthropic), <em>Towards Understanding Sycophancy in Language Models</em>, 2023. <a href="https://arxiv.org/abs/2310.13548">https://arxiv.org/abs/2310.13548</a>&#160;<a class="footnote-backref" href="#fnref:43" title="Jump back to footnote 43 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:43" title="Jump back to footnote 43 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:43" title="Jump back to footnote 43 in the text">&#8617;</a></p>
+</li>
+<li id="fn:44">
+<p>Schick, T. dkk., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em>, 2023. <a href="https://arxiv.org/abs/2302.04761">https://arxiv.org/abs/2302.04761</a>&#160;<a class="footnote-backref" href="#fnref:44" title="Jump back to footnote 44 in the text">&#8617;</a></p>
+</li>
+<li id="fn:45">
+<p>Holtzman, A. dkk., <em>The Curious Case of Neural Text Degeneration</em>, 2019. <a href="https://arxiv.org/abs/1904.09751">https://arxiv.org/abs/1904.09751</a>&#160;<a class="footnote-backref" href="#fnref:45" title="Jump back to footnote 45 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:45" title="Jump back to footnote 45 in the text">&#8617;</a></p>
+</li>
+<li id="fn:46">
+<p>Kwon, W. dkk., <em>Efficient Memory Management for Large Language Model Serving with PagedAttention</em>, 2023. <a href="https://arxiv.org/abs/2309.06180">https://arxiv.org/abs/2309.06180</a>&#160;<a class="footnote-backref" href="#fnref:46" title="Jump back to footnote 46 in the text">&#8617;</a></p>
+</li>
+<li id="fn:47">
+<p>Leviathan, Y., Kalman, M. &amp; Matias, Y., <em>Fast Inference from Transformers via Speculative Decoding</em>, 2022. <a href="https://arxiv.org/abs/2211.17192">https://arxiv.org/abs/2211.17192</a>&#160;<a class="footnote-backref" href="#fnref:47" title="Jump back to footnote 47 in the text">&#8617;</a></p>
+</li>
+<li id="fn:48">
+<p>Lewis, P. dkk., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em>, 2020. <a href="https://arxiv.org/abs/2005.11401">https://arxiv.org/abs/2005.11401</a>&#160;<a class="footnote-backref" href="#fnref:48" title="Jump back to footnote 48 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:48" title="Jump back to footnote 48 in the text">&#8617;</a></p>
+</li>
+<li id="fn:49">
+<p>Liu, N. F. dkk., <em>Lost in the Middle: How Language Models Use Long Contexts</em>, 2023. <a href="https://arxiv.org/abs/2307.03172">https://arxiv.org/abs/2307.03172</a>&#160;<a class="footnote-backref" href="#fnref:49" title="Jump back to footnote 49 in the text">&#8617;</a></p>
+</li>
+<li id="fn:50">
+<p>Templeton, A. dkk. (Anthropic), <em>Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet</em>, 2024. <a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/">https://transformer-circuits.pub/2024/scaling-monosemanticity/</a>&#160;<a class="footnote-backref" href="#fnref:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:50" title="Jump back to footnote 50 in the text">&#8617;</a></p>
+</li>
+<li id="fn:51">
+<p>Anthropic, <em>Tracing the thoughts of a large language model</em>, 2025. <a href="https://www.anthropic.com/research/tracing-thoughts-language-model">https://www.anthropic.com/research/tracing-thoughts-language-model</a>&#160;<a class="footnote-backref" href="#fnref:51" title="Jump back to footnote 51 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:51" title="Jump back to footnote 51 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:51" title="Jump back to footnote 51 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:51" title="Jump back to footnote 51 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:51" title="Jump back to footnote 51 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:51" title="Jump back to footnote 51 in the text">&#8617;</a></p>
+</li>
+<li id="fn:52">
+<p>Kalai, A. T. dkk. (OpenAI), <em>Why Language Models Hallucinate</em>, 2025. <a href="https://arxiv.org/abs/2509.04664">https://arxiv.org/abs/2509.04664</a>&#160;<a class="footnote-backref" href="#fnref:52" title="Jump back to footnote 52 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:52" title="Jump back to footnote 52 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:52" title="Jump back to footnote 52 in the text">&#8617;</a></p>
+</li>
+<li id="fn:53">
+<p>Bender, E. M., Gebru, T. dkk., <em>On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?</em>, FAccT, 2021. <a href="https://dl.acm.org/doi/10.1145/3442188.3445922">https://dl.acm.org/doi/10.1145/3442188.3445922</a>&#160;<a class="footnote-backref" href="#fnref:53" title="Jump back to footnote 53 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:53" title="Jump back to footnote 53 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:53" title="Jump back to footnote 53 in the text">&#8617;</a></p>
+</li>
+<li id="fn:54">
+<p>Li, K. dkk., <em>Emergent World Representations: Exploring a Sequence Model Trained on a Synthetic Task</em>, 2022. <a href="https://arxiv.org/abs/2210.13382">https://arxiv.org/abs/2210.13382</a>&#160;<a class="footnote-backref" href="#fnref:54" title="Jump back to footnote 54 in the text">&#8617;</a></p>
+</li>
+<li id="fn:55">
+<p>Wei, J. dkk., <em>Emergent Abilities of Large Language Models</em>, 2022. <a href="https://arxiv.org/abs/2206.07682">https://arxiv.org/abs/2206.07682</a>&#160;<a class="footnote-backref" href="#fnref:55" title="Jump back to footnote 55 in the text">&#8617;</a></p>
+</li>
+<li id="fn:56">
+<p>Schaeffer, R., Miranda, B. &amp; Koyejo, S., <em>Are Emergent Abilities of Large Language Models a Mirage?</em>, 2023. <a href="https://arxiv.org/abs/2304.15004">https://arxiv.org/abs/2304.15004</a>&#160;<a class="footnote-backref" href="#fnref:56" title="Jump back to footnote 56 in the text">&#8617;</a></p>
+</li>
+<li id="fn:57">
+<p>Stanford HAI, <em>Artificial Intelligence Index Report 2025, Chapter 1: Research and Development</em>, 2025. <a href="https://hai.stanford.edu/assets/files/hai_ai-index-report-2025_chapter1_final.pdf">https://hai.stanford.edu/assets/files/hai_ai-index-report-2025_chapter1_final.pdf</a>&#160;<a class="footnote-backref" href="#fnref:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:57" title="Jump back to footnote 57 in the text">&#8617;</a></p>
+</li>
+<li id="fn:58">
+<p>Stanford HAI, <em>Inside the AI Index: 12 Takeaways from the 2026 Report</em>, 2026. <a href="https://hai.stanford.edu/news/inside-the-ai-index-12-takeaways-from-the-2026-report">https://hai.stanford.edu/news/inside-the-ai-index-12-takeaways-from-the-2026-report</a>&#160;<a class="footnote-backref" href="#fnref:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref10:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref11:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref12:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref13:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref14:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref15:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref16:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref17:58" title="Jump back to footnote 58 in the text">&#8617;</a><a class="footnote-backref" href="#fnref18:58" title="Jump back to footnote 58 in the text">&#8617;</a></p>
+</li>
+<li id="fn:59">
+<p>Reuters (via Yahoo Finance), <em>ChatGPT sets record for fastest-growing user base - analyst note</em>, Februari 2023. <a href="https://finance.yahoo.com/news/chatgpt-sets-record-fastest-growing-190911828.html">https://finance.yahoo.com/news/chatgpt-sets-record-fastest-growing-190911828.html</a>&#160;<a class="footnote-backref" href="#fnref:59" title="Jump back to footnote 59 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:59" title="Jump back to footnote 59 in the text">&#8617;</a></p>
+</li>
+<li id="fn:60">
+<p>Karpathy, A., <em>Deep Dive into LLMs like ChatGPT</em> (video, 2025), ringkasan oleh L. Wu. <a href="https://lawwu.github.io/posts/2025-02-24-karpathy-deep-dive-llms/index.html">https://lawwu.github.io/posts/2025-02-24-karpathy-deep-dive-llms/index.html</a>&#160;<a class="footnote-backref" href="#fnref:60" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:60" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:60" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:60" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:60" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:60" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:60" title="Jump back to footnote 60 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
