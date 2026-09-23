@@ -509,16 +509,23 @@ function lembarBrankas() {
   };
 }
 
-let timerTekan;
-const merek = $(".merek");
-merek.addEventListener("pointerdown", () => {
+// Tombol setelan: ketuk = setelan, tekan lama = brankas.
+let timerTekan, tekanLama = false;
+const tombolSetelan = $("#tombol-setelan");
+tombolSetelan.addEventListener("pointerdown", () => {
+  tekanLama = false;
   clearTimeout(timerTekan);
-  timerTekan = setTimeout(() => { navigator.vibrate?.(15); lembarBrankas(); }, 700);
+  timerTekan = setTimeout(() => { tekanLama = true; navigator.vibrate?.(15); lembarBrankas(); }, 700);
 });
-["pointerup", "pointerleave", "pointercancel"].forEach((ev) => merek.addEventListener(ev, () => clearTimeout(timerTekan)));
-merek.addEventListener("contextmenu", (e) => e.preventDefault());
-
-$("#tombol-setelan").addEventListener("click", () => lembarSetelan(true));
+["pointerup", "pointerleave", "pointercancel"].forEach((ev) => tombolSetelan.addEventListener(ev, () => clearTimeout(timerTekan)));
+tombolSetelan.addEventListener("contextmenu", (e) => e.preventDefault());
+// Di layar sentuh, melepas jari memicu klik pada latar lembar yang baru muncul di bawah jari
+// (dan menutupnya lagi). Batalkan klik bawaan itu setelah tekan lama.
+tombolSetelan.addEventListener("touchend", (e) => { if (tekanLama) e.preventDefault(); });
+tombolSetelan.addEventListener("click", () => {
+  if (tekanLama) { tekanLama = false; return; }
+  lembarSetelan(true);
+});
 $("#tombol-aa").addEventListener("click", () => lembarSetelan(false));
 $("#tombol-isi").addEventListener("click", lembarDaftarIsi);
 $("#tombol-kembali").addEventListener("click", () => {

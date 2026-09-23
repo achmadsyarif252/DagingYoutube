@@ -21,7 +21,7 @@ bukan ringkasan. Ada dua jalur:
 - **Dokumen pribadi (brankas)**: repo dan app publik, tapi dokumen bertanda `"pribadi": true` di
   `kerja/<kode>/info.json` dirender ke `pribadi/` (tidak di-commit) dan terbit hanya dalam bentuk
   terenkripsi di `output/aset/` (judul ikut terenkripsi; dibuka dengan sandi di app).
-  Di app, brankas sengaja tersembunyi: hanya dibuka dengan tekan lama judul "Rak Baca". Jangan
+  Di app, brankas sengaja tersembunyi: hanya dibuka dengan tekan lama tombol Setelan (⚙). Jangan
   menambah tombol/menu/teks yang menunjukkan ada brankas atau dokumen pribadi.
   `scripts/privasi.py sandi | daftar | <cari> pribadi | <cari> publik`. Jangan pernah menulis judul
   atau topik dokumen pribadi ke pesan commit, nama file publik, atau tempat lain yang ikut di-push.

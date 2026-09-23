@@ -1,5 +1,5 @@
 // Service worker: app bisa dibuka offline, dan dokumen yang pernah dibuka tersimpan di HP.
-const VERSI = "v4";
+const VERSI = "v5";
 const CANGKANG = `daging-cangkang-${VERSI}`;
 const DOKUMEN = "daging-dokumen";   // dipakai juga oleh app.js (tombol "simpan semua")
 
@@ -39,18 +39,20 @@ self.addEventListener("fetch", (e) => {
   } else if (url.pathname.includes("/vendor/")) {
     e.respondWith(simpananDulu(e.request, CANGKANG));
   } else {
-    e.respondWith(simpananSambilPerbarui(e, CANGKANG));
+    // app sendiri: selalu versi terbaru saat online, cache hanya untuk offline
+    e.respondWith(jaringanDulu(e.request, { ignoreSearch: true }));
   }
 });
 
-async function jaringanDulu(req) {
+async function jaringanDulu(req, opsiCocok) {
   const c = await caches.open(CANGKANG);
   try {
-    const res = await fetch(req, { cache: "no-store" });
+    // permintaan navigasi tidak boleh dibungkus ulang dengan opsi tambahan (TypeError)
+    const res = await fetch(req.mode === "navigate" ? req : new Request(req, { cache: "no-store" }));
     if (res.ok) c.put(req, res.clone());
     return res;
   } catch (err) {
-    return (await c.match(req)) || Response.error();
+    return (await c.match(req, opsiCocok)) || Response.error();
   }
 }
 
@@ -61,18 +63,4 @@ async function simpananDulu(req, nama) {
   const res = await fetch(req);
   if (res.ok) c.put(req, res.clone());
   return res;
-}
-
-async function simpananSambilPerbarui(e, nama) {
-  const c = await caches.open(nama);
-  const ada = await c.match(e.request, { ignoreSearch: true });
-  const segar = fetch(e.request).then((res) => {
-    if (res.ok) c.put(e.request, res.clone());
-    return res;
-  });
-  if (ada) {
-    e.waitUntil(segar.catch(() => {}));
-    return ada;
-  }
-  return segar;
 }
