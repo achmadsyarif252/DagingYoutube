@@ -442,7 +442,10 @@ function lembarSetelan(diRak) {
       <h3>Offline</h3>
       <button class="tombol-lebar" id="simpan-semua">Simpan semua dokumen ke perangkat</button>
       <p class="catatan-kecil" id="info-ruang">Dokumen yang pernah dibuka otomatis tersimpan dan bisa dibaca tanpa internet.</p>
-      ${!brankas ? "" : kunciBrankas ? `
+      ${!brankas ? `
+        <h3>Brankas</h3>
+        <p class="catatan-kecil">Brankas masih kosong. Dokumen yang dijadikan pribadi dari laptop akan muncul di sini
+        setelah dibuka dengan sandi.</p>` : kunciBrankas ? `
         <h3>Brankas</h3>
         <p class="catatan-kecil">Terbuka · ${dokPribadi.length} dokumen pribadi tampil di rak.</p>
         <button class="tombol-lebar" id="kunci-brankas">Kunci brankas</button>` : `

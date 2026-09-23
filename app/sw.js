@@ -1,5 +1,5 @@
 // Service worker: app bisa dibuka offline, dan dokumen yang pernah dibuka tersimpan di HP.
-const VERSI = "v2";
+const VERSI = "v3";
 const CANGKANG = `daging-cangkang-${VERSI}`;
 const DOKUMEN = "daging-dokumen";   // dipakai juga oleh app.js (tombol "simpan semua")
 
