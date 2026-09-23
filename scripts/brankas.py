@@ -1,9 +1,9 @@
 """Brankas: dokumen pribadi yang hanya bisa dibuka dengan sandi di app baca.
 
 Dokumen pribadi disimpan polos di pribadi/ (tidak di-commit). Yang terbit ke repo publik hanya:
-    output/rahasia/brankas.json   daftar dokumen pribadi, terenkripsi (judul pun tidak terbaca)
-    output/rahasia/<acak>-p.bin   PDF terenkripsi
-    output/rahasia/<acak>-b.bin   versi baca HTML (gzip) terenkripsi
+    output/aset/data.json   daftar dokumen pribadi, terenkripsi (judul pun tidak terbaca)
+    output/aset/<acak>-p.bin   PDF terenkripsi
+    output/aset/<acak>-b.bin   versi baca HTML (gzip) terenkripsi
 
 Kripto: PBKDF2-SHA256 (600.000 iterasi) -> kunci AES-256-GCM. Format .bin = iv(12 byte) + ciphertext.
 Harus cocok dengan app/app.js (fungsi brankas).
@@ -23,7 +23,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 ROOT = Path(__file__).resolve().parent.parent
 PRIBADI = ROOT / "pribadi"
-RAHASIA = ROOT / "output" / "rahasia"
+RAHASIA = ROOT / "output" / "aset"
 BERKAS_SANDI = PRIBADI / ".sandi"
 ITERASI = 600_000
 CEK = b"daging-brankas-v1"
@@ -52,15 +52,15 @@ unb64 = base64.b64decode
 
 
 def susun(meta_dari_nama):
-    """Enkripsi ulang isi pribadi/ ke output/rahasia/. Hanya menulis file yang benar-benar berubah."""
+    """Enkripsi ulang isi pribadi/ ke output/aset/. Hanya menulis file yang benar-benar berubah."""
     pdfs = sorted(PRIBADI.glob("*.pdf")) if PRIBADI.exists() else []
-    berkas_brankas = RAHASIA / "brankas.json"
+    berkas_brankas = RAHASIA / "data.json"
     if not pdfs:
         if RAHASIA.exists():
             for f in RAHASIA.iterdir():
                 f.unlink()
             RAHASIA.rmdir()
-            print("Brankas kosong: output/rahasia/ dihapus.")
+            print("Brankas kosong: output/aset/ dihapus.")
         return
     sandi = baca_sandi()
     if not sandi:
@@ -84,7 +84,7 @@ def susun(meta_dari_nama):
 
     RAHASIA.mkdir(parents=True, exist_ok=True)
     (PRIBADI / "baca").mkdir(parents=True, exist_ok=True)
-    entri, dipakai = [], {"brankas.json"}
+    entri, dipakai = [], {"data.json"}
     for pdf in pdfs:
         berkas_meta = PRIBADI / "baca" / f"{pdf.stem}.json"
         meta = json.loads(berkas_meta.read_text(encoding="utf-8")) if berkas_meta.exists() else meta_dari_nama(pdf)
@@ -110,8 +110,8 @@ def susun(meta_dari_nama):
         publik = {k: v for k, v in meta.items() if k not in ("acak", "sidik")}
         entri.append({
             "id": f"p-{a}", **publik,
-            "pdf": f"output/rahasia/{bin_pdf.name}",
-            "baca": f"output/rahasia/{bin_html.name}" if isi_html else None,
+            "pdf": f"output/aset/{bin_pdf.name}",
+            "baca": f"output/aset/{bin_html.name}" if isi_html else None,
             # v ikut berubah saat sandi diganti, supaya HP tidak memakai salinan lama dari cache
             "ukuran": len(isi_pdf), "v": sidik + salt.hex()[:6], "pribadi": True,
         })

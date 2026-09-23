@@ -12,7 +12,7 @@ const el = {
 let dokumen = [];          // publik + pribadi (bila brankas terbuka)
 let dokPublik = [];
 let dokPribadi = [];
-let brankas = null;        // output/rahasia/brankas.json (terenkripsi), null bila tidak ada
+let brankas = null;        // output/aset/data.json (terenkripsi), null bila tidak ada
 let kunciBrankas = null;   // CryptoKey AES-GCM, ada hanya saat brankas terbuka
 let saringan = "semua";
 let dokAktif = null;       // dokumen yang sedang dibaca
@@ -117,7 +117,7 @@ async function muatIndeks() {
     el.kosong.textContent = "Daftar dokumen belum bisa dimuat. Periksa koneksi, lalu buka ulang app.";
   }
   try {
-    const res = await fetch("output/rahasia/brankas.json");
+    const res = await fetch("output/aset/data.json");
     brankas = res.ok ? await res.json() : null;
   } catch { brankas = null; }
 
@@ -136,7 +136,7 @@ async function bersihkanSimpananLama() {
   const berlaku = new Set(dokumen.flatMap((d) => [d.pdf, d.baca].filter(Boolean).map((p) => new URL(urlDok(p, d), location.href).href)));
   const c = await caches.open(CACHE_DOKUMEN);
   for (const req of await c.keys()) {
-    if (!kunciBrankas && req.url.includes("/output/rahasia/")) continue;   // saat terkunci, daftarnya tak diketahui
+    if (!kunciBrankas && req.url.includes("/output/aset/")) continue;   // saat terkunci, daftarnya tak diketahui
     if (!berlaku.has(req.url)) c.delete(req);
   }
 }
@@ -441,20 +441,7 @@ function lembarSetelan(diRak) {
     ${diRak ? `
       <h3>Offline</h3>
       <button class="tombol-lebar" id="simpan-semua">Simpan semua dokumen ke perangkat</button>
-      <p class="catatan-kecil" id="info-ruang">Dokumen yang pernah dibuka otomatis tersimpan dan bisa dibaca tanpa internet.</p>
-      ${!brankas ? `
-        <h3>Brankas</h3>
-        <p class="catatan-kecil">Brankas masih kosong. Dokumen yang dijadikan pribadi dari laptop akan muncul di sini
-        setelah dibuka dengan sandi.</p>` : kunciBrankas ? `
-        <h3>Brankas</h3>
-        <p class="catatan-kecil">Terbuka · ${dokPribadi.length} dokumen pribadi tampil di rak.</p>
-        <button class="tombol-lebar" id="kunci-brankas">Kunci brankas</button>` : `
-        <h3>Brankas</h3>
-        <form id="form-brankas" class="form-brankas">
-          <input type="password" name="sandi" placeholder="Sandi brankas" autocomplete="current-password" required>
-          <button type="submit">Buka</button>
-        </form>
-        <p class="catatan-kecil" id="info-brankas">Dokumen pribadi hanya muncul setelah brankas dibuka. Sandi diingat di perangkat ini sampai dikunci lagi.</p>`}`
+      <p class="catatan-kecil" id="info-ruang">Dokumen yang pernah dibuka otomatis tersimpan dan bisa dibaca tanpa internet.</p>`
     : dokAktif ? `${tombolPdf(dokAktif, "tombol-lebar")}
       ${dokAktif.url ? `<a class="tombol-lebar" href="${esc(dokAktif.url)}" target="_blank" rel="noopener">Buka video di YouTube</a>` : ""}` : ""}
   `);
@@ -470,15 +457,39 @@ function lembarSetelan(diRak) {
       if (p != null && nama === "huruf") scrollTo(0, p * (document.documentElement.scrollHeight - innerHeight));
     }
     if (e.target.closest("#simpan-semua")) { tutupLembar(); simpanSemua(); }
-    if (e.target.closest("#kunci-brankas")) {
-      kunciKembali();
-      tutupLembar();
-      renderRak();
-      toast("Brankas dikunci.");
-    }
+  };
+  if (diRak && navigator.storage?.estimate) {
+    navigator.storage.estimate().then(({ usage }) => {
+      const i = $("#info-ruang");
+      if (i && usage) i.textContent += ` Terpakai sekitar ${(usage / 1048576).toFixed(1)} MB.`;
+    });
+  }
+}
+
+// Brankas sengaja tidak punya tombol: dibuka dengan menekan lama judul rak.
+function lembarBrankas() {
+  bukaLembar(!brankas ? `<h3>Brankas</h3><p class="catatan-kecil">Brankas kosong.</p>`
+    : kunciBrankas ? `
+      <h3>Brankas</h3>
+      <p class="catatan-kecil">Terbuka · ${dokPribadi.length} dokumen pribadi tampil di rak.</p>
+      <button class="tombol-lebar" id="kunci-brankas">Kunci brankas</button>` : `
+      <h3>Brankas</h3>
+      <form id="form-brankas" class="form-brankas">
+        <input type="password" name="sandi" placeholder="Sandi" autocomplete="current-password" required>
+        <button type="submit">Buka</button>
+      </form>
+      <p class="catatan-kecil" id="info-brankas">Sandi diingat di perangkat ini sampai dikunci lagi.</p>`);
+  el.lembarIsi.onclick = (e) => {
+    if (!e.target.closest("#kunci-brankas")) return;
+    kunciKembali();
+    tutupLembar();
+    renderRak();
+    toast("Brankas dikunci.");
   };
   const form = $("#form-brankas");
-  if (form) form.onsubmit = async (e) => {
+  if (!form) return;
+  form.sandi.focus();
+  form.onsubmit = async (e) => {
     e.preventDefault();
     const info = $("#info-brankas");
     const tombol = form.querySelector("button");
@@ -496,13 +507,16 @@ function lembarSetelan(diRak) {
       tombol.disabled = false;
     }
   };
-  if (diRak && navigator.storage?.estimate) {
-    navigator.storage.estimate().then(({ usage }) => {
-      const i = $("#info-ruang");
-      if (i && usage) i.textContent += ` Terpakai sekitar ${(usage / 1048576).toFixed(1)} MB.`;
-    });
-  }
 }
+
+let timerTekan;
+const merek = $(".merek");
+merek.addEventListener("pointerdown", () => {
+  clearTimeout(timerTekan);
+  timerTekan = setTimeout(() => { navigator.vibrate?.(15); lembarBrankas(); }, 700);
+});
+["pointerup", "pointerleave", "pointercancel"].forEach((ev) => merek.addEventListener(ev, () => clearTimeout(timerTekan)));
+merek.addEventListener("contextmenu", (e) => e.preventDefault());
 
 $("#tombol-setelan").addEventListener("click", () => lembarSetelan(true));
 $("#tombol-aa").addEventListener("click", () => lembarSetelan(false));
