@@ -29,8 +29,9 @@ def main():
 
     pesan = sys.argv[1] if len(sys.argv) > 1 else ""
     if not pesan:
+        # hanya PDF baru; nama PDF yang dihapus (mis. baru dijadikan pribadi) jangan masuk pesan commit
         baru = [baris[3:] for baris in git("status", "--porcelain").stdout.splitlines()
-                if baris.endswith(".pdf") or baris.endswith('.pdf"')]
+                if baris.startswith("A ") and baris.rstrip('"').endswith(".pdf")]
         pesan = "Dokumen: " + ", ".join(Path(b.strip('"')).stem for b in baru) if baru else "Perbarui dokumen"
     git("commit", "-m", pesan[:200])
     hasil = git("push", cek=False)

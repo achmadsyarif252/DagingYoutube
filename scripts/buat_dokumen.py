@@ -6,6 +6,8 @@ Pemakaian:
 Membaca  kerja/<video_id>/info.json dan kerja/<video_id>/dokumen.md
 Menulis  output/<tanggal>_<judul>.pdf
          output/baca/<tanggal>_<judul>.html dan .json (versi baca untuk app di HP)
+Kalau info.json berisi "pribadi": true, semuanya ditulis ke pribadi/ (tidak di-commit) dan hanya
+terbit ke app dalam bentuk terenkripsi (lihat scripts/brankas.py).
 
 Sintaks tambahan di dokumen.md:
     [[12:34]] atau [[1:02:03]]   -> link timestamp yang membuka video di detik itu
@@ -168,13 +170,16 @@ def buat_sampul(info: dict) -> str:
 </section>"""
 
 
-def tulis_versi_baca(info: dict, isi_html: str, nama: str, tanggal: str):
+def tulis_versi_baca(info: dict, isi_html: str, dasar: Path, nama: str, tanggal: str):
     """Potongan HTML + metadata yang dibaca app di HP (lihat app/ dan scripts/buat_indeks.py)."""
-    folder = ROOT / "output" / "baca"
+    folder = dasar / "baca"
     folder.mkdir(parents=True, exist_ok=True)
     (folder / f"{nama}.html").write_text(isi_html, encoding="utf-8")
     kunci = ["jenis", "judul", "subjudul", "channel", "url", "thumbnail", "durasi"]
     meta = {k: info[k] for k in kunci if info.get(k)}
+    lama = folder / f"{nama}.json"
+    if lama.exists():   # pertahankan id acak brankas bila dokumen dirender ulang
+        meta.update({k: v for k, v in json.loads(lama.read_text(encoding="utf-8")).items() if k in ("acak", "sidik")})
     meta.setdefault("jenis", "video")
     meta["kode"] = info["id"]
     meta["tanggal"] = tanggal
@@ -207,9 +212,10 @@ def main():
     (folder / "dokumen.html").write_text(halaman, encoding="utf-8")
 
     tanggal = datetime.date.today().isoformat()
-    keluaran = ROOT / "output" / f"{tanggal}_{slug(info.get('judul') or info['id'])}.pdf"
+    dasar = ROOT / ("pribadi" if info.get("pribadi") else "output")
+    keluaran = dasar / f"{tanggal}_{slug(info.get('judul') or info['id'])}.pdf"
     keluaran.parent.mkdir(exist_ok=True)
-    tulis_versi_baca(info, buat_sampul(info) + isi, keluaran.stem, tanggal)
+    tulis_versi_baca(info, buat_sampul(info) + isi, dasar, keluaran.stem, tanggal)
 
     kaki = (
         '<div style="width:100%;font-family:Segoe UI,Arial;font-size:7.5pt;color:#8a8f9c;'

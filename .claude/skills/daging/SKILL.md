@@ -29,6 +29,10 @@ Input: $ARGUMENTS (URL YouTube, boleh diikuti arahan tambahan seperti "fokus ke 
 6. **Render PDF**: `python scripts/buat_dokumen.py <video_id>` → `output/<tanggal>_<judul>.pdf`.
    Lalu **terbitkan** ke app baca di HP: `python scripts/terbitkan.py` (commit + push ke GitHub).
    Kalau push gagal, laporkan pesan errornya; PDF lokal tetap sudah jadi.
+   **Pribadi**: kalau pengguna meminta dokumen ini pribadi/rahasia, tambahkan `"pribadi": true` ke
+   `info.json` *sebelum* render (PDF lalu ada di `pribadi/`, terbit hanya terenkripsi). Pastikan sandi
+   brankas sudah diset (`pribadi/.sandi` ada); kalau belum, minta pengguna menjalankan
+   `python scripts/privasi.py sandi` di terminal biasa sebelum menerbitkan.
 
 7. **Laporkan** ke pengguna: path PDF, jumlah bagian, dan 3–5 hal paling menarik dari video (singkat).
 

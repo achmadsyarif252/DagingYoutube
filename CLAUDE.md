@@ -18,5 +18,10 @@ bukan ringkasan. Ada dua jalur:
 - `scripts/terbitkan.py`: susun indeks (`scripts/buat_indeks.py`), lalu commit + push ke GitHub.
   GitHub Actions (`.github/workflows/pages.yml`) menerbitkan app baca PWA (`app/`) beserta `output/`
   ke GitHub Pages. Kalau mengubah file di `app/`, naikkan `VERSI` di `app/sw.js`.
-- Dependensi: `python -m pip install yt-dlp youtube-transcript-api markdown playwright`
+- **Dokumen pribadi (brankas)**: repo dan app publik, tapi dokumen bertanda `"pribadi": true` di
+  `kerja/<kode>/info.json` dirender ke `pribadi/` (tidak di-commit) dan terbit hanya dalam bentuk
+  terenkripsi di `output/rahasia/` (judul ikut terenkripsi; dibuka dengan sandi di app).
+  `scripts/privasi.py sandi | daftar | <cari> pribadi | <cari> publik`. Jangan pernah menulis judul
+  atau topik dokumen pribadi ke pesan commit, nama file publik, atau tempat lain yang ikut di-push.
+- Dependensi: `python -m pip install yt-dlp youtube-transcript-api markdown playwright cryptography`
 - Revisi dilakukan dengan mengedit `dokumen.md`, lalu render ulang.

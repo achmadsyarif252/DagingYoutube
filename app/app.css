@@ -95,6 +95,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .kartu-kaki .selesai { color: var(--praktik); font-weight: 600; }
 .lencana { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--lembut); color: var(--redup); }
 .lencana.baru { background: var(--aksen-lembut); color: var(--aksen); font-weight: 700; }
+.lencana.pribadi { display: inline-flex; align-items: center; gap: 4px; background: var(--tinta); color: var(--kertas); font-weight: 600; }
+.lencana.pribadi svg { width: 11px; height: 11px; stroke-width: 2.4; }
 .offline-ikon { width: 15px; height: 15px; color: var(--praktik); }
 .kosong { text-align: center; color: var(--redup); padding: 40px 16px; line-height: 1.5; }
 
@@ -169,7 +171,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .naskah .footnote-backref { font-family: var(--sans); }
 
 .naskah .akhir { text-align: center; font-family: var(--sans); color: var(--redup); font-size: 14px; margin: 3em 0 0; }
-.naskah .akhir a { display: inline-block; margin-top: 10px; padding: 10px 16px; border: 1px solid var(--garis); border-radius: 10px; color: var(--tinta); }
+.naskah .akhir a, .naskah .akhir button { font: inherit; display: inline-block; margin-top: 10px; padding: 10px 16px; border: 1px solid var(--garis); border-radius: 10px; color: var(--tinta); }
 
 /* PDF (dokumen lama tanpa versi baca) */
 .halaman-pdf { background: var(--pdf-latar); padding: 12px 8px calc(env(safe-area-inset-bottom) + 40px); display: grid; gap: 10px; justify-items: center; min-height: 100vh; }
@@ -201,3 +203,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   position: fixed; z-index: 30; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); transform: translateX(-50%);
   background: var(--tinta); color: var(--kertas); padding: 10px 16px; border-radius: 12px; font-size: 14px; max-width: calc(100vw - 32px);
 }
+
+.form-brankas { display: flex; gap: 8px; }
+.form-brankas input {
+  flex: 1; min-width: 0; height: 46px; border-radius: 12px; border: 1px solid var(--garis); background: var(--kertas);
+  color: var(--tinta); padding: 0 14px; font: inherit; font-size: 16px;
+}
+.form-brankas button { height: 46px; padding: 0 18px; border-radius: 12px; background: var(--tinta); color: var(--kertas); font-weight: 600; }
+.form-brankas button:disabled { opacity: .5; }

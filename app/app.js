@@ -9,7 +9,11 @@ const el = {
   latar: $("#latar"), lembar: $("#lembar"), lembarIsi: $("#lembar-isi"), toast: $("#toast"),
 };
 
-let dokumen = [];
+let dokumen = [];          // publik + pribadi (bila brankas terbuka)
+let dokPublik = [];
+let dokPribadi = [];
+let brankas = null;        // output/rahasia/brankas.json (terenkripsi), null bila tidak ada
+let kunciBrankas = null;   // CryptoKey AES-GCM, ada hanya saat brankas terbuka
 let saringan = "semua";
 let dokAktif = null;       // dokumen yang sedang dibaca
 let tutupPembaca = null;   // fungsi bersih-bersih pembaca (PDF, observer)
@@ -38,7 +42,7 @@ function terapkanSetelan() {
 
 /* ---------- utilitas ---------- */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const urlDok = (path, d) => encodeURI(path) + "?v=" + d.ukuran;
+const urlDok = (path, d) => encodeURI(path) + "?v=" + (d.v || d.ukuran);
 const urlBaca = (d) => d.baca ? urlDok(d.baca, d) : urlDok(d.pdf, d);
 const fmtTanggal = (iso) => {
   if (!iso) return "";
@@ -55,16 +59,75 @@ function toast(teks, lama = 2600) {
   timerToast = setTimeout(() => (el.toast.hidden = true), lama);
 }
 
+/* ---------- brankas (dokumen pribadi terenkripsi; pasangan scripts/brankas.py) ---------- */
+const dariB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const keB64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const CEK_BRANKAS = "daging-brankas-v1";
+
+async function dekripsi(kunci, data) {
+  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.slice(0, 12) }, kunci, data.slice(12)));
+}
+
+async function pakaiKunci(mentah) {
+  const kunci = await crypto.subtle.importKey("raw", mentah, "AES-GCM", false, ["decrypt"]);
+  const cek = new TextDecoder().decode(await dekripsi(kunci, dariB64(brankas.cek)));
+  if (cek !== CEK_BRANKAS) throw new Error("sandi salah");
+  dokPribadi = JSON.parse(new TextDecoder().decode(await dekripsi(kunci, dariB64(brankas.entri))));
+  kunciBrankas = kunci;
+  gabungDokumen();
+}
+
+async function bukaBrankas(sandi) {
+  const bahan = await crypto.subtle.importKey("raw", new TextEncoder().encode(sandi), "PBKDF2", false, ["deriveBits"]);
+  const mentah = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: dariB64(brankas.salt), iterations: brankas.iterasi }, bahan, 256);
+  await pakaiKunci(mentah);   // melempar galat bila sandi salah
+  simpan("kunci", { salt: brankas.salt, k: keB64(mentah) });
+}
+
+function kunciKembali() {
+  kunciBrankas = null;
+  dokPribadi = [];
+  try { localStorage.removeItem("daging:kunci"); } catch {}
+  gabungDokumen();
+}
+
+function gabungDokumen() {
+  dokumen = [...dokPribadi, ...dokPublik].sort((a, b) => (b.tanggal || "").localeCompare(a.tanggal || ""));
+}
+
+// Ambil isi dokumen; dokumen pribadi didekripsi (HTML-nya juga di-gzip).
+async function ambilIsi(d, path, sebagai) {
+  const res = await fetch(urlDok(path, d));
+  if (!res.ok) throw new Error(res.status);
+  if (!d.pribadi) return sebagai === "teks" ? res.text() : new Uint8Array(await res.arrayBuffer());
+  const data = await dekripsi(kunciBrankas, new Uint8Array(await res.arrayBuffer()));
+  if (sebagai !== "teks") return data;
+  return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+}
+
 /* ---------- data ---------- */
 async function muatIndeks() {
   try {
     const res = await fetch("output/index.json");
     if (!res.ok) throw new Error(res.status);
-    dokumen = await res.json();
+    dokPublik = await res.json();
   } catch {
-    dokumen = [];
+    dokPublik = [];
     el.kosong.textContent = "Daftar dokumen belum bisa dimuat. Periksa koneksi, lalu buka ulang app.";
   }
+  try {
+    const res = await fetch("output/rahasia/brankas.json");
+    brankas = res.ok ? await res.json() : null;
+  } catch { brankas = null; }
+
+  const tersimpanKunci = baca("kunci", null);
+  if (brankas && tersimpanKunci?.salt === brankas.salt) {
+    try { await pakaiKunci(dariB64(tersimpanKunci.k)); } catch { kunciKembali(); }
+  } else if (tersimpanKunci) {
+    kunciKembali();   // sandi brankas diganti di laptop: minta sandi baru
+  }
+  gabungDokumen();
   bersihkanSimpananLama();
 }
 
@@ -72,8 +135,27 @@ async function bersihkanSimpananLama() {
   if (!("caches" in window) || !dokumen.length) return;
   const berlaku = new Set(dokumen.flatMap((d) => [d.pdf, d.baca].filter(Boolean).map((p) => new URL(urlDok(p, d), location.href).href)));
   const c = await caches.open(CACHE_DOKUMEN);
-  for (const req of await c.keys()) if (!berlaku.has(req.url)) c.delete(req);
+  for (const req of await c.keys()) {
+    if (!kunciBrankas && req.url.includes("/output/rahasia/")) continue;   // saat terkunci, daftarnya tak diketahui
+    if (!berlaku.has(req.url)) c.delete(req);
+  }
 }
+
+async function unduhPdf(d) {
+  if (!d.pribadi) return;
+  const data = await ambilIsi(d, d.pdf, "biner");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([data], { type: "application/pdf" }));
+  a.download = d.judul.replace(/[\\/:*?"<>|]+/g, " ").trim() + ".pdf";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+const tombolPdf = (d, kelas = "") => d.pribadi
+  ? `<button class="${kelas}" data-unduh-pdf>Unduh PDF</button>`
+  : `<a class="${kelas}" href="${urlDok(d.pdf, d)}" download>Unduh PDF</a>`;
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-unduh-pdf]") && dokAktif) unduhPdf(dokAktif).catch(() => toast("PDF gagal dibuka."));
+});
 
 async function tersimpan() {
   if (!("caches" in window)) return new Set();
@@ -122,6 +204,7 @@ async function renderRak() {
       ${ket ? `<p>${esc(ket)}</p>` : ""}
       <div class="kartu-kaki">${status}
         ${baru ? `<span class="lencana baru">Baru</span>` : ""}
+        ${d.pribadi ? `<span class="lencana pribadi"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Pribadi</span>` : ""}
         ${d.baca ? "" : `<span class="lencana">PDF</span>`}
         ${disimpan ? `<svg class="offline-ikon" viewBox="0 0 24 24" aria-label="Tersimpan offline"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>` : ""}
       </div></a></li>`;
@@ -217,9 +300,7 @@ async function bukaDokumen(d) {
 }
 
 async function tampilkanHtml(d) {
-  const res = await fetch(urlBaca(d));
-  if (!res.ok) throw new Error(res.status);
-  el.naskah.innerHTML = await res.text();
+  el.naskah.innerHTML = await ambilIsi(d, d.baca, "teks");
 
   for (const t of el.naskah.querySelectorAll("table")) {
     if (t.closest(".cover")) continue;
@@ -232,7 +313,7 @@ async function tampilkanHtml(d) {
 
   const akhir = document.createElement("div");
   akhir.className = "akhir";
-  akhir.innerHTML = `— Selesai —<br><a href="${urlDok(d.pdf, d)}" download>Unduh versi PDF</a>`;
+  akhir.innerHTML = `— Selesai —<br>${tombolPdf(d)}`;
   el.naskah.append(akhir);
 
   const judulIsi = [...el.naskah.querySelectorAll("h1[id], h2[id]")].filter((h) => !h.closest(".cover"));
@@ -258,9 +339,7 @@ async function tampilkanPdf(d) {
     pdfjs.GlobalWorkerOptions.workerSrc = new URL("vendor/pdf.worker.min.mjs", location.href).href;
   }
   el.memuat.textContent = "Membuka PDF…";
-  const res = await fetch(urlBaca(d));
-  if (!res.ok) throw new Error(res.status);
-  const pdf = await pdfjs.getDocument({ data: await res.arrayBuffer() }).promise;
+  const pdf = await pdfjs.getDocument({ data: await ambilIsi(d, d.pdf, "biner") }).promise;
   const hal1 = (await pdf.getPage(1)).getViewport({ scale: 1 });
 
   el.naskah.hidden = true;
@@ -362,8 +441,18 @@ function lembarSetelan(diRak) {
     ${diRak ? `
       <h3>Offline</h3>
       <button class="tombol-lebar" id="simpan-semua">Simpan semua dokumen ke perangkat</button>
-      <p class="catatan-kecil" id="info-ruang">Dokumen yang pernah dibuka otomatis tersimpan dan bisa dibaca tanpa internet.</p>`
-    : dokAktif ? `<a class="tombol-lebar" href="${urlDok(dokAktif.pdf, dokAktif)}" download>Unduh PDF</a>
+      <p class="catatan-kecil" id="info-ruang">Dokumen yang pernah dibuka otomatis tersimpan dan bisa dibaca tanpa internet.</p>
+      ${!brankas ? "" : kunciBrankas ? `
+        <h3>Brankas</h3>
+        <p class="catatan-kecil">Terbuka · ${dokPribadi.length} dokumen pribadi tampil di rak.</p>
+        <button class="tombol-lebar" id="kunci-brankas">Kunci brankas</button>` : `
+        <h3>Brankas</h3>
+        <form id="form-brankas" class="form-brankas">
+          <input type="password" name="sandi" placeholder="Sandi brankas" autocomplete="current-password" required>
+          <button type="submit">Buka</button>
+        </form>
+        <p class="catatan-kecil" id="info-brankas">Dokumen pribadi hanya muncul setelah brankas dibuka. Sandi diingat di perangkat ini sampai dikunci lagi.</p>`}`
+    : dokAktif ? `${tombolPdf(dokAktif, "tombol-lebar")}
       ${dokAktif.url ? `<a class="tombol-lebar" href="${esc(dokAktif.url)}" target="_blank" rel="noopener">Buka video di YouTube</a>` : ""}` : ""}
   `);
   el.lembarIsi.onclick = (e) => {
@@ -378,6 +467,31 @@ function lembarSetelan(diRak) {
       if (p != null && nama === "huruf") scrollTo(0, p * (document.documentElement.scrollHeight - innerHeight));
     }
     if (e.target.closest("#simpan-semua")) { tutupLembar(); simpanSemua(); }
+    if (e.target.closest("#kunci-brankas")) {
+      kunciKembali();
+      tutupLembar();
+      renderRak();
+      toast("Brankas dikunci.");
+    }
+  };
+  const form = $("#form-brankas");
+  if (form) form.onsubmit = async (e) => {
+    e.preventDefault();
+    const info = $("#info-brankas");
+    const tombol = form.querySelector("button");
+    tombol.disabled = true;
+    info.textContent = "Membuka…";
+    try {
+      await bukaBrankas(form.sandi.value);
+      tutupLembar();
+      renderRak();
+      toast(`Brankas terbuka: ${dokPribadi.length} dokumen pribadi.`);
+    } catch {
+      info.textContent = "Sandi salah.";
+      form.sandi.select();
+    } finally {
+      tombol.disabled = false;
+    }
   };
   if (diRak && navigator.storage?.estimate) {
     navigator.storage.estimate().then(({ usage }) => {

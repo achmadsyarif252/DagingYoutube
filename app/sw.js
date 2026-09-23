@@ -1,5 +1,5 @@
 // Service worker: app bisa dibuka offline, dan dokumen yang pernah dibuka tersimpan di HP.
-const VERSI = "v1";
+const VERSI = "v2";
 const CANGKANG = `daging-cangkang-${VERSI}`;
 const DOKUMEN = "daging-dokumen";   // dipakai juga oleh app.js (tombol "simpan semua")
 
@@ -31,7 +31,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
 
-  if (url.pathname.endsWith("/output/index.json")) {
+  if (url.pathname.endsWith("/output/index.json") || url.pathname.endsWith("/output/rahasia/brankas.json")) {
     e.respondWith(jaringanDulu(e.request));
   } else if (url.pathname.includes("/output/")) {
     // URL dokumen memuat ?v=<ukuran>, jadi dokumen yang dirender ulang dapat URL baru.

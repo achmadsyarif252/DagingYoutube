@@ -10,3 +10,5 @@ Thumbs.db
 desktop.ini
 # transkrip & bahan riset: hanya di komputer ini (repo publik)
 kerja/
+# dokumen pribadi (polos) + sandi brankas: tidak pernah di-commit
+pribadi/

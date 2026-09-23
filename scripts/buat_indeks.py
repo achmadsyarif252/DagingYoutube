@@ -9,6 +9,8 @@ Menulis  output/index.json
 PDF lama yang belum punya output/baca/<nama>.json dibuatkan metadata sekali saja
 (judul dari nama file, tanggal dari awalan nama file atau waktu file diubah).
 File .json itu ikut di-commit, jadi judul/tanggal bisa dirapikan manual kalau perlu.
+
+Kalau folder pribadi/ ada (hanya di komputer lokal), brankas terenkripsi ikut disusun (lihat brankas.py).
 """
 
 import datetime
@@ -56,6 +58,10 @@ def main():
     daftar.sort(key=lambda d: (d.get("tanggal") or "", d["id"]), reverse=True)
     (OUTPUT / "index.json").write_text(json.dumps(daftar, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Indeks: {len(daftar)} dokumen → output/index.json")
+
+    if (ROOT / "pribadi").exists():
+        import brankas
+        brankas.susun(meta_dari_nama)
 
 
 if __name__ == "__main__":
