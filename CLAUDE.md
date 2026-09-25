@@ -27,7 +27,9 @@ bukan ringkasan. Ada dua jalur:
   atau topik dokumen pribadi ke pesan commit, nama file publik, atau tempat lain yang ikut di-push.
 - **Audio (dibacakan)**: `scripts/buat_audio.py [<cari>]` membuat `output/audio/<nama>.opus` + `.json` (bab dan
   waktunya) dengan suara `id-ID-ArdiNeural` lewat edge-tts, lalu ffmpeg (Opus 24 kbps, ±10 MB/jam).
-  `terbitkan.py` menjalankannya otomatis (lewati dengan `--tanpa-audio`). Dokumen pribadi hanya dibuatkan
+  `terbitkan.py` menjalankannya otomatis (lewati dengan `--tanpa-audio`). Per dokumen: instruksi "no audio"
+  → `"tanpa_audio": true` di `info.json`; untuk dokumen yang sudah ada: `buat_audio.py <cari> --matikan`
+  (audio dihapus) / `--nyalakan`. Dokumen pribadi hanya dibuatkan
   audio bila `pribadi/.audio` ada, karena teksnya dikirim ke layanan Microsoft.
 - Dependensi: `python -m pip install yt-dlp youtube-transcript-api markdown playwright cryptography edge-tts pymupdf`,
   plus `ffmpeg` di PATH.

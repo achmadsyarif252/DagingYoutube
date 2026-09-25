@@ -4,6 +4,9 @@ Pemakaian:
     python scripts/buat_audio.py                 semua dokumen publik yang belum/berubah audionya
     python scripts/buat_audio.py <cari>          satu dokumen (sebagian judul / nama file / kode)
     python scripts/buat_audio.py --contoh <cari> contoh 30 detik → kerja/contoh_audio.mp3
+    python scripts/buat_audio.py <cari> --matikan    dokumen ini tanpa audio (audionya dihapus)
+    python scripts/buat_audio.py <cari> --nyalakan   buat audio lagi untuk dokumen itu
+    Dokumen dengan "tanpa_audio": true (di kerja/<kode>/info.json, terbawa ke baca/<nama>.json) dilewati.
     Tambah --pribadi untuk ikut membuat audio dokumen pribadi. PERHATIAN: teksnya dikirim ke layanan
     suara Microsoft (edge-tts), jadi ini keputusan sadar, bukan default.
 
@@ -278,14 +281,50 @@ def semua_dokumen(dengan_pribadi: bool):
             meta_path = dasar / "baca" / f"{pdf.stem}.json"
             meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
             yield {"status": status, "dasar": dasar, "pdf": pdf, "judul": meta.get("judul") or pdf.stem,
-                   "kode": meta.get("kode"), "html": dasar / "baca" / f"{pdf.stem}.html"}
+                   "kode": meta.get("kode"), "html": dasar / "baca" / f"{pdf.stem}.html",
+                   "meta_path": meta_path, "tanpa_audio": bool(meta.get("tanpa_audio"))}
 
 
 def ambil_bab(d):
     return bab_dari_html(d["html"]) if d["html"].exists() else bab_dari_pdf(d["pdf"], d["judul"])
 
 
+def hapus_audio(d):
+    ada = False
+    for ext in (".opus", ".json"):
+        f = d["dasar"] / "audio" / f"{d['pdf'].stem}{ext}"
+        if f.exists():
+            f.unlink()
+            ada = True
+    return ada
+
+
+def atur_tanpa_audio(d, tanpa: bool):
+    """Tandai dokumen tanpa audio (atau sebaliknya) di metadata baca dan di kerja/<kode>/info.json."""
+    paths = [d["meta_path"]]
+    if d["kode"]:
+        paths.append(ROOT / "kerja" / d["kode"] / "info.json")
+    for path in paths:
+        if not path.exists():
+            continue
+        m = json.loads(path.read_text(encoding="utf-8"))
+        if tanpa:
+            m["tanpa_audio"] = True
+        else:
+            m.pop("tanpa_audio", None)
+        path.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
+    label = d["judul"] if d["status"] == "publik" else "(dokumen pribadi)"
+    if tanpa:
+        print(f"{label}: tanpa audio" + (" (audio lama dihapus)." if hapus_audio(d) else "."))
+    else:
+        print(f"{label}: audio dinyalakan lagi.")
+
+
 def proses(d):
+    if d["tanpa_audio"]:
+        if hapus_audio(d):
+            print(f"Audio dihapus (tanpa_audio): {d['judul'] if d['status'] == 'publik' else '(dokumen pribadi)'}")
+        return False
     bab = ambil_bab(d)
     teks_semua = "\n".join(p for b in bab for p in b["paragraf"])
     sidik = hashlib.sha256(f"{SUARA}|{VERSI_TEKS}|{teks_semua}".encode()).hexdigest()[:12]
@@ -329,6 +368,14 @@ def main():
             sys.exit(f"Tidak ada dokumen yang cocok dengan '{a[0]}'.")
     if "--contoh" in sys.argv:
         return contoh(dok[0])
+    if "--matikan" in sys.argv or "--nyalakan" in sys.argv:
+        if not a or len(dok) != 1:
+            sys.exit("Sebutkan tepat satu dokumen:" + "".join(f"\n  {d['judul']}" for d in dok))
+        atur_tanpa_audio(dok[0], "--matikan" in sys.argv)
+        if "--nyalakan" in sys.argv:
+            dok[0]["tanpa_audio"] = False
+            proses(dok[0])
+        return
     dibuat = sum(proses(d) for d in dok)
     print(f"Audio dibuat/diperbarui: {dibuat} dari {len(dok)} dokumen.")
 

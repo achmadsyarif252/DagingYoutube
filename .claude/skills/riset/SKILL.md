@@ -37,6 +37,8 @@ Input: $ARGUMENTS (topik, boleh diikuti arahan seperti "fokus periode 1945–199
    `info.json` *sebelum* render (PDF lalu ada di `pribadi/`, terbit hanya terenkripsi). Pastikan sandi
    brankas sudah diset (`pribadi/.sandi` ada); kalau belum, minta pengguna menjalankan
    `python scripts/privasi.py sandi` di terminal biasa sebelum menerbitkan.
+   **Audio**: `terbitkan.py` otomatis membuat versi audio (dibacakan). Kalau pengguna bilang "no audio",
+   "tanpa audio", atau sejenisnya, tambahkan `"tanpa_audio": true` ke `info.json` *sebelum* render.
 
 6. **Laporkan**: path PDF, ruang lingkup yang dipilih, jumlah sumber, dan 3–5 temuan paling menarik.
 

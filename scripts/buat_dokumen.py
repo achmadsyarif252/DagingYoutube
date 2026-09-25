@@ -175,7 +175,7 @@ def tulis_versi_baca(info: dict, isi_html: str, dasar: Path, nama: str, tanggal:
     folder = dasar / "baca"
     folder.mkdir(parents=True, exist_ok=True)
     (folder / f"{nama}.html").write_text(isi_html, encoding="utf-8")
-    kunci = ["jenis", "judul", "subjudul", "channel", "url", "thumbnail", "durasi"]
+    kunci = ["jenis", "judul", "subjudul", "channel", "url", "thumbnail", "durasi", "tanpa_audio"]
     meta = {k: info[k] for k in kunci if info.get(k)}
     lama = folder / f"{nama}.json"
     if lama.exists():   # pertahankan id acak brankas bila dokumen dirender ulang

@@ -33,6 +33,8 @@ Input: $ARGUMENTS (URL YouTube, boleh diikuti arahan tambahan seperti "fokus ke 
    `info.json` *sebelum* render (PDF lalu ada di `pribadi/`, terbit hanya terenkripsi). Pastikan sandi
    brankas sudah diset (`pribadi/.sandi` ada); kalau belum, minta pengguna menjalankan
    `python scripts/privasi.py sandi` di terminal biasa sebelum menerbitkan.
+   **Audio**: `terbitkan.py` otomatis membuat versi audio (dibacakan). Kalau pengguna bilang "no audio",
+   "tanpa audio", atau sejenisnya, tambahkan `"tanpa_audio": true` ke `info.json` *sebelum* render.
 
 7. **Laporkan** ke pengguna: path PDF, jumlah bagian, dan 3–5 hal paling menarik dari video (singkat).
 
