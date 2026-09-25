@@ -37,6 +37,15 @@ def meta_dari_nama(pdf: Path) -> dict:
     return {"judul": judul, "tanggal": tanggal}
 
 
+def info_audio(dasar: Path, src: str):
+    """Metadata audio (dari scripts/buat_audio.py) untuk app, atau None bila belum ada."""
+    meta, opus = dasar.with_suffix(".json"), dasar.with_suffix(".opus")
+    if not (meta.exists() and opus.exists()):
+        return None
+    m = json.loads(meta.read_text(encoding="utf-8"))
+    return {"src": src, "durasi": m["durasi"], "bab": m["bab"], "v": m["sidik"], "ukuran": opus.stat().st_size}
+
+
 def main():
     BACA.mkdir(parents=True, exist_ok=True)
     daftar = []
@@ -53,6 +62,7 @@ def main():
             "pdf": f"output/{pdf.name}",
             "baca": f"output/baca/{baca.name}" if baca.exists() else None,
             "ukuran": pdf.stat().st_size,
+            "audio": info_audio(OUTPUT / "audio" / pdf.stem, f"output/audio/{pdf.stem}.opus"),
         })
 
     daftar.sort(key=lambda d: (d.get("tanggal") or "", d["id"]), reverse=True)

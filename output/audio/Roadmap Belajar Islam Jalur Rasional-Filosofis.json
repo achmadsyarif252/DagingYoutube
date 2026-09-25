@@ -1,0 +1,35 @@
+{
+ "sidik": "6da81a711f60",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 1784,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Sebelum Mulai: Asumsi dan Prinsip",
+   "t": 10.4
+  },
+  {
+   "judul": "Tahap 1: Fondasi (Bulan 1–6)",
+   "t": 207.2
+  },
+  {
+   "judul": "Tahap 2: Pendalaman (Bulan 7–18)",
+   "t": 539.5
+  },
+  {
+   "judul": "Tahap 3: Lanjutan (Tahun Kedua ke Atas)",
+   "t": 916.6
+  },
+  {
+   "judul": "Jalur Pelengkap: Bahasa, Guru, dan Jebakan",
+   "t": 1195.0
+  },
+  {
+   "judul": "Jadwal, Pengukuran, dan Peta Topik Lengkap",
+   "t": 1479.9
+  }
+ ]
+}

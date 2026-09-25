@@ -29,7 +29,8 @@ function simpan(kunci, nilai) {
   try { localStorage.setItem("daging:" + kunci, JSON.stringify(nilai)); } catch {}
 }
 const kemajuan = baca("kemajuan", {});   // { id: { p: 0..1, t: waktu terakhir dibuka } }
-const setelan = Object.assign({ tema: "auto", huruf: 18 }, baca("setelan", {}));
+const setelan = Object.assign({ tema: "auto", huruf: 18, kecepatan: 1 }, baca("setelan", {}));
+const posisiAudio = baca("audio", {});   // { id: detik }
 
 function terapkanSetelan() {
   const r = document.documentElement;
@@ -86,6 +87,7 @@ async function bukaBrankas(sandi) {
 }
 
 function kunciKembali() {
+  if (audioDok?.pribadi) hentikanAudio();
   kunciBrankas = null;
   dokPribadi = [];
   try { localStorage.removeItem("daging:kunci"); } catch {}
@@ -97,13 +99,33 @@ function gabungDokumen() {
 }
 
 // Ambil isi dokumen; dokumen pribadi didekripsi (HTML-nya juga di-gzip).
-async function ambilIsi(d, path, sebagai) {
-  const res = await fetch(urlDok(path, d));
+async function ambilIsi(d, path, sebagai, v, progres) {
+  const res = await fetch(encodeURI(path) + "?v=" + (v || d.v || d.ukuran));
   if (!res.ok) throw new Error(res.status);
-  if (!d.pribadi) return sebagai === "teks" ? res.text() : new Uint8Array(await res.arrayBuffer());
-  const data = await dekripsi(kunciBrankas, new Uint8Array(await res.arrayBuffer()));
+  if (!d.pribadi && sebagai === "teks") return res.text();
+  const mentah = progres ? await bacaDenganProgres(res, progres) : new Uint8Array(await res.arrayBuffer());
+  if (!d.pribadi) return mentah;
+  const data = await dekripsi(kunciBrankas, mentah);
   if (sebagai !== "teks") return data;
   return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+}
+
+async function bacaDenganProgres(res, progres) {
+  const total = +res.headers.get("content-length") || progres.total || 0;
+  const pembaca = res.body.getReader();
+  const potong = [];
+  let n = 0;
+  for (;;) {
+    const { done, value } = await pembaca.read();
+    if (done) break;
+    potong.push(value);
+    n += value.length;
+    if (total) progres.cb(Math.min(1, n / total));
+  }
+  const hasil = new Uint8Array(n);
+  let o = 0;
+  for (const c of potong) { hasil.set(c, o); o += c.length; }
+  return hasil;
 }
 
 /* ---------- data ---------- */
@@ -133,7 +155,10 @@ async function muatIndeks() {
 
 async function bersihkanSimpananLama() {
   if (!("caches" in window) || !dokumen.length) return;
-  const berlaku = new Set(dokumen.flatMap((d) => [d.pdf, d.baca].filter(Boolean).map((p) => new URL(urlDok(p, d), location.href).href)));
+  const berlaku = new Set(dokumen.flatMap((d) => [
+    ...[d.pdf, d.baca].filter(Boolean).map((p) => new URL(urlDok(p, d), location.href).href),
+    ...(d.audio ? [new URL(encodeURI(d.audio.src) + "?v=" + d.audio.v, location.href).href] : []),
+  ]));
   const c = await caches.open(CACHE_DOKUMEN);
   for (const req of await c.keys()) {
     if (!kunciBrankas && req.url.includes("/output/aset/")) continue;   // saat terkunci, daftarnya tak diketahui
@@ -205,6 +230,7 @@ async function renderRak() {
       <div class="kartu-kaki">${status}
         ${baru ? `<span class="lencana baru">Baru</span>` : ""}
         ${d.pribadi ? `<span class="lencana pribadi"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Pribadi</span>` : ""}
+        ${d.audio ? `<span class="lencana dengar"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4.5" height="7" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="7" rx="1.5"/></svg>${Math.round(d.audio.durasi / 60)} mnt</span>` : ""}
         ${d.baca ? "" : `<span class="lencana">PDF</span>`}
         ${disimpan ? `<svg class="offline-ikon" viewBox="0 0 24 24" aria-label="Tersimpan offline"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>` : ""}
       </div></a></li>`;
@@ -278,6 +304,8 @@ async function bukaDokumen(d) {
   el.memuat.textContent = "Memuat…";
   el.kepala.classList.remove("sembunyi");
   el.bacaJudul.textContent = d.judul;
+  $("#tombol-dengar").hidden = !d.audio;
+  $("#tombol-dengar").onclick = () => putarDokumen(d);   // bisa diketuk selagi dokumen masih dimuat
   document.title = d.judul;
   isiDokumen = [];
   scrollTo(0, 0);
@@ -399,7 +427,10 @@ async function tampilkanPdf(d) {
   ]);
   isiDokumen = ratakan(outline, false);
 
-  tutupPembaca = () => { obs.disconnect(); pdf.destroy(); };
+  tutupPembaca = () => {
+    obs.disconnect();
+    try { pdf.loadingTask?.destroy(); } catch {}   // pdf.js 6: PDFDocumentProxy tidak punya destroy()
+  };
 }
 
 /* ---------- lembar bawah ---------- */
@@ -532,10 +563,180 @@ $("#tombol-kembali").addEventListener("click", () => {
   if (dariRak) history.back(); else location.hash = "";
 });
 
+/* ---------- audio ---------- */
+const audio = $("#audio");
+const pm = {
+  kotak: $("#pemutar"), judul: $("#pemutar-judul"), bab: $("#pemutar-bab"), posisi: $("#pemutar-posisi"),
+  waktu: $("#pemutar-waktu"), sisa: $("#pemutar-sisa"), kecepatan: $("#pemutar-kecepatan"), main: $("#pemutar-main"),
+};
+const KECEPATAN = [1, 1.25, 1.5, 1.75, 2, 0.85];
+let audioDok = null, audioUrl = null, sedangGeser = false, simpanTerakhir = 0;
+
+const fmtWaktu = (t) => {
+  t = Math.max(0, Math.floor(t || 0));
+  const j = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), d = String(t % 60).padStart(2, "0");
+  return j ? `${j}:${String(m).padStart(2, "0")}:${d}` : `${m}:${d}`;
+};
+const babSaatIni = () => {
+  const bab = audioDok?.audio.bab || [];
+  let i = 0;
+  bab.forEach((b, k) => { if (audio.currentTime + 0.5 >= b.t) i = k; });
+  return i;
+};
+
+async function putarDokumen(d) {
+  if (audioDok?.id === d.id) return audio.paused ? audio.play() : audio.pause();
+  hentikanAudio();
+  audioDok = d;
+  document.body.classList.add("ada-pemutar");
+  pm.kotak.hidden = false;
+  pm.kotak.classList.add("memuat");
+  pm.judul.textContent = d.judul;
+  pm.bab.textContent = "Mengunduh audio…";
+  try {
+    const data = await ambilIsi(d, d.audio.src, "biner", d.audio.v, {
+      total: d.audio.ukuran,
+      cb: (p) => { if (audioDok === d) pm.bab.textContent = `Mengunduh audio… ${Math.round(p * 100)}%`; },
+    });
+    if (audioDok !== d) return;
+    audioUrl = URL.createObjectURL(new Blob([data], { type: "audio/ogg; codecs=opus" }));
+    audio.src = audioUrl;
+    audio.playbackRate = setelan.kecepatan;
+    const t = posisiAudio[d.id] || 0;
+    audio.currentTime = t < d.audio.durasi - 5 ? t : 0;
+    pm.kotak.classList.remove("memuat");
+    aturMediaSession(d);
+    await audio.play();
+  } catch (err) {
+    console.error(err);
+    if (audioDok !== d) return;
+    pm.kotak.classList.remove("memuat");
+    pm.bab.textContent = navigator.onLine ? "Audio gagal dimuat." : "Audio belum tersimpan di perangkat.";
+  }
+}
+
+function hentikanAudio() {
+  if (audioDok && audio.src) simpanPosisiAudio(true);
+  audio.pause();
+  audio.removeAttribute("src");
+  audio.load();
+  if (audioUrl) URL.revokeObjectURL(audioUrl);
+  audioUrl = null;
+  audioDok = null;
+  pm.kotak.hidden = true;
+  pm.kotak.classList.remove("main");
+  document.body.classList.remove("ada-pemutar");
+  if ("mediaSession" in navigator) navigator.mediaSession.metadata = null;
+}
+
+function simpanPosisiAudio(paksa) {
+  if (!audioDok || !audio.duration) return;
+  const now = Date.now();
+  if (!paksa && now - simpanTerakhir < 5000) return;
+  simpanTerakhir = now;
+  posisiAudio[audioDok.id] = Math.floor(audio.currentTime);
+  simpan("audio", posisiAudio);
+}
+
+function perbaruiPemutar() {
+  if (!audioDok) return;
+  const dur = audio.duration || audioDok.audio.durasi;
+  if (!sedangGeser) pm.posisi.value = dur ? Math.round((audio.currentTime / dur) * 1000) : 0;
+  pm.waktu.textContent = fmtWaktu(audio.currentTime);
+  pm.sisa.textContent = "-" + fmtWaktu(dur - audio.currentTime);
+  const bab = audioDok.audio.bab;
+  if (bab.length && !pm.kotak.classList.contains("memuat")) {
+    const i = babSaatIni();
+    pm.bab.textContent = `${i + 1}/${bab.length} · ${bab[i].judul}`;
+  }
+}
+
+function lompatBab(arah) {
+  const bab = audioDok?.audio.bab || [];
+  if (!bab.length) return;
+  let i = babSaatIni();
+  // "sebelumnya" di tengah bab kembali ke awal bab itu dulu
+  if (arah < 0 && audio.currentTime - bab[i].t > 4) arah = 0;
+  i = Math.min(bab.length - 1, Math.max(0, i + arah));
+  audio.currentTime = bab[i].t;
+}
+
+function aturMediaSession(d) {
+  if (!("mediaSession" in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: d.judul, artist: "Daging", album: d.jenis === "video" ? (d.channel || "Video") : "Riset",
+    artwork: [192, 512].map((n) => ({ src: new URL(`ikon/ikon-${n}.png`, location.href).href, sizes: `${n}x${n}`, type: "image/png" })),
+  });
+  const aksi = {
+    play: () => audio.play(), pause: () => audio.pause(),
+    seekbackward: (e) => (audio.currentTime = Math.max(0, audio.currentTime - (e.seekOffset || 15))),
+    seekforward: (e) => (audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + (e.seekOffset || 30))),
+    previoustrack: () => lompatBab(-1), nexttrack: () => lompatBab(1),
+    seekto: (e) => (audio.currentTime = e.seekTime),
+  };
+  for (const [k, f] of Object.entries(aksi)) { try { navigator.mediaSession.setActionHandler(k, f); } catch {} }
+}
+
+audio.addEventListener("play", () => { pm.kotak.classList.add("main"); pm.main.setAttribute("aria-label", "Jeda"); });
+audio.addEventListener("pause", () => { pm.kotak.classList.remove("main"); pm.main.setAttribute("aria-label", "Putar"); simpanPosisiAudio(true); });
+audio.addEventListener("ended", () => { if (!audioDok) return; posisiAudio[audioDok.id] = 0; simpan("audio", posisiAudio); });
+audio.addEventListener("timeupdate", () => {
+  perbaruiPemutar();
+  simpanPosisiAudio(false);
+  try {
+    if (audio.duration) navigator.mediaSession?.setPositionState({ duration: audio.duration, playbackRate: audio.playbackRate, position: audio.currentTime });
+  } catch {}
+});
+addEventListener("pagehide", () => simpanPosisiAudio(true));
+
+pm.main.addEventListener("click", () => audio.src && (audio.paused ? audio.play() : audio.pause()));
+$("#pemutar-mundur").addEventListener("click", () => (audio.currentTime = Math.max(0, audio.currentTime - 15)));
+$("#pemutar-maju").addEventListener("click", () => (audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 30)));
+$("#pemutar-tutup").addEventListener("click", hentikanAudio);
+$("#pemutar-info").addEventListener("click", () => {
+  if (audioDok && dokAktif?.id !== audioDok.id) {
+    dariRak = !el.rak.hidden;
+    gulirRak = scrollY;
+    location.hash = `#/d/${encodeURIComponent(audioDok.id)}`;
+  }
+});
+pm.kecepatan.textContent = setelan.kecepatan + "×";
+pm.kecepatan.addEventListener("click", () => {
+  setelan.kecepatan = KECEPATAN[(KECEPATAN.indexOf(setelan.kecepatan) + 1) % KECEPATAN.length];
+  audio.playbackRate = setelan.kecepatan;
+  pm.kecepatan.textContent = setelan.kecepatan + "×";
+  simpan("setelan", setelan);
+});
+pm.posisi.addEventListener("input", () => {
+  sedangGeser = true;
+  const dur = audio.duration || audioDok?.audio.durasi || 0;
+  pm.waktu.textContent = fmtWaktu((pm.posisi.value / 1000) * dur);
+});
+pm.posisi.addEventListener("change", () => {
+  sedangGeser = false;
+  if (audio.duration) audio.currentTime = (pm.posisi.value / 1000) * audio.duration;
+});
+$("#pemutar-babtombol").addEventListener("click", () => {
+  const bab = audioDok?.audio.bab || [];
+  if (!bab.length) return;
+  const aktif = babSaatIni();
+  bukaLembar(`<h3>Bab audio</h3><ul class="isi-daftar bab-audio">${bab.map((b, i) =>
+    `<li><a href="#" data-i="${i}" class="${i === aktif ? "aktif" : ""}"><span>${esc(b.judul)}</span><span class="t">${fmtWaktu(b.t)}</span></a></li>`).join("")}</ul>`);
+  el.lembarIsi.querySelector(".aktif")?.scrollIntoView({ block: "center" });
+  el.lembarIsi.onclick = (e) => {
+    const a = e.target.closest("a[data-i]");
+    if (!a) return;
+    e.preventDefault();
+    tutupLembar();
+    audio.currentTime = bab[+a.dataset.i].t;
+    if (audio.paused) audio.play();
+  };
+});
+
 /* ---------- rute ---------- */
 async function rute() {
   tutupLembar();
-  tutupPembaca?.();
+  try { tutupPembaca?.(); } catch (err) { console.error(err); }   // jangan sampai menggagalkan navigasi
   tutupPembaca = null;
   const m = location.hash.match(/^#\/d\/(.+)$/);
   const d = m && dokumen.find((x) => x.id === decodeURIComponent(m[1]));

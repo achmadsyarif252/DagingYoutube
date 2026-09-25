@@ -55,6 +55,9 @@
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <div class="baca-judul" id="baca-judul"></div>
+    <button class="ikon-tombol" id="tombol-dengar" aria-label="Dengarkan" hidden>
+      <svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4.5" height="7" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="7" rx="1.5"/></svg>
+    </button>
     <button class="ikon-tombol" id="tombol-isi" aria-label="Daftar isi">
       <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
     </button>
@@ -67,6 +70,37 @@
   <div id="halaman-pdf" class="halaman-pdf" hidden></div>
   <div id="memuat" class="memuat" hidden>Memuat…</div>
 </div>
+
+<!-- Pemutar audio (tetap tampil saat berpindah rak/pembaca) -->
+<section id="pemutar" class="pemutar" hidden aria-label="Pemutar audio">
+  <div class="pemutar-atas">
+    <button class="pemutar-info" id="pemutar-info">
+      <span class="pemutar-judul" id="pemutar-judul"></span>
+      <span class="pemutar-bab" id="pemutar-bab"></span>
+    </button>
+    <button class="ikon-tombol kecil" id="pemutar-tutup" aria-label="Hentikan audio">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <input type="range" id="pemutar-posisi" min="0" max="1000" value="0" step="1" aria-label="Posisi audio">
+  <div class="pemutar-bawah">
+    <span class="waktu" id="pemutar-waktu">0:00</span>
+    <button class="pemutar-kecil" id="pemutar-kecepatan" aria-label="Kecepatan">1×</button>
+    <button class="ikon-tombol" id="pemutar-mundur" aria-label="Mundur 15 detik">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><text x="12" y="15.5" text-anchor="middle" font-size="7.5" stroke="none" fill="currentColor" font-family="system-ui" font-weight="700">15</text></svg>
+    </button>
+    <button class="pemutar-main" id="pemutar-main" aria-label="Putar">
+      <svg viewBox="0 0 24 24" class="ikon-putar"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+      <svg viewBox="0 0 24 24" class="ikon-jeda"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="ikon-tombol" id="pemutar-maju" aria-label="Maju 30 detik">
+      <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/><text x="12" y="15.5" text-anchor="middle" font-size="7.5" stroke="none" fill="currentColor" font-family="system-ui" font-weight="700">30</text></svg>
+    </button>
+    <button class="pemutar-kecil" id="pemutar-babtombol" aria-label="Daftar bab">Bab</button>
+    <span class="waktu kanan" id="pemutar-sisa">0:00</span>
+  </div>
+</section>
+<audio id="audio" preload="auto"></audio>
 
 <!-- Lembar bawah: daftar isi / setelan -->
 <div id="latar" class="latar" hidden></div>

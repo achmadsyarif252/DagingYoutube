@@ -212,3 +212,34 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 .form-brankas button { height: 46px; padding: 0 18px; border-radius: 12px; background: var(--tinta); color: var(--kertas); font-weight: 600; }
 .form-brankas button:disabled { opacity: .5; }
+
+/* ---------- Pemutar audio ---------- */
+body.ada-pemutar #rak, body.ada-pemutar .naskah, body.ada-pemutar .halaman-pdf { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
+.pemutar {
+  position: fixed; z-index: 15; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom) + 8px);
+  max-width: 704px; margin: 0 auto; background: var(--permukaan); border: 1px solid var(--garis);
+  border-radius: 18px; padding: 8px 12px 6px; box-shadow: 0 8px 30px rgb(0 0 0 / .18);
+}
+.pemutar-atas { display: flex; align-items: center; gap: 4px; }
+.pemutar-info { flex: 1; min-width: 0; text-align: left; padding: 4px 4px 2px; }
+.pemutar-judul { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pemutar-bab { display: block; font-size: 12.5px; color: var(--redup); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.ikon-tombol.kecil { width: 36px; height: 36px; }
+.ikon-tombol.kecil svg { width: 18px; height: 18px; }
+#pemutar-posisi { width: 100%; margin: 6px 0 2px; accent-color: var(--aksen); height: 20px; }
+.pemutar-bawah { display: flex; align-items: center; justify-content: space-between; gap: 2px; }
+.pemutar-bawah .ikon-tombol { color: var(--tinta); }
+.pemutar-bawah .ikon-tombol svg { width: 26px; height: 26px; }
+.waktu { font-size: 12px; color: var(--redup); font-variant-numeric: tabular-nums; min-width: 44px; }
+.waktu.kanan { text-align: right; }
+.pemutar-kecil { font-size: 13px; font-weight: 700; color: var(--redup); min-width: 40px; height: 36px; border-radius: 10px; }
+.pemutar-kecil:active { background: var(--lembut); }
+.pemutar-main { width: 52px; height: 52px; border-radius: 50%; background: var(--tinta); color: var(--kertas); display: grid; place-items: center; flex: none; }
+.pemutar-main svg { width: 24px; height: 24px; }
+.pemutar-main .ikon-jeda, .pemutar.main .ikon-putar { display: none; }
+.pemutar.main .ikon-jeda { display: block; }
+.pemutar.memuat .pemutar-main { opacity: .5; }
+.lencana.dengar { display: inline-flex; align-items: center; gap: 4px; }
+.lencana.dengar svg { width: 12px; height: 12px; stroke-width: 2.2; }
+.bab-audio a { display: flex; justify-content: space-between; gap: 12px; }
+.bab-audio .t { color: var(--redup); font-variant-numeric: tabular-nums; flex: none; font-size: 13px; }

@@ -1,0 +1,47 @@
+{
+ "sidik": "a6036af2f356",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 4240,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Gambaran Umum",
+   "t": 5.9
+  },
+  {
+   "judul": "Peta Isi",
+   "t": 197.3
+  },
+  {
+   "judul": "Pembahasan Lengkap",
+   "t": 204.6
+  },
+  {
+   "judul": "Konsep & Istilah Kunci",
+   "t": 2959.6
+  },
+  {
+   "judul": "Pendalaman Topik Terkait",
+   "t": 3281.5
+  },
+  {
+   "judul": "Perspektif Lain",
+   "t": 3506.6
+  },
+  {
+   "judul": "Cara Menerapkan",
+   "t": 3673.8
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 3912.1
+  },
+  {
+   "judul": "Referensi & Bacaan Lanjutan",
+   "t": 4039.2
+  }
+ ]
+}

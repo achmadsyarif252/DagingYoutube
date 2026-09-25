@@ -85,6 +85,11 @@ def pindah(cari: str, tujuan: str):
         f = asal / "baca" / f"{nama}{ext}"
         if f.exists():
             f.replace(ke / "baca" / f.name)
+    for ext in (".opus", ".json"):
+        f = asal / "audio" / f"{nama}{ext}"
+        if f.exists():
+            (ke / "audio").mkdir(exist_ok=True)
+            f.replace(ke / "audio" / f.name)
     meta_path = ke / "baca" / f"{nama}.json"
     if tujuan == "publik" and meta_path.exists():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))

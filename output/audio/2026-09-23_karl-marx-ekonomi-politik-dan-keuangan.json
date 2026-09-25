@@ -1,0 +1,71 @@
+{
+ "sidik": "6492e18f21bd",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 4052,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 14.5
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 192.0
+  },
+  {
+   "judul": "Riwayat Hidup: Dari Trier ke Highgate",
+   "t": 302.4
+  },
+  {
+   "judul": "Fondasi Filsafat dan Politik",
+   "t": 679.4
+  },
+  {
+   "judul": "Ekonomi Politik Marx",
+   "t": 1046.4
+  },
+  {
+   "judul": "Uang, Kredit, dan Modal Fiktif",
+   "t": 1495.9
+  },
+  {
+   "judul": "Warisan dan Tafsir: Dari Teori ke Kekuasaan",
+   "t": 1885.0
+  },
+  {
+   "judul": "Marx di Indonesia",
+   "t": 2179.3
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 2443.4
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 2496.9
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 2806.9
+  },
+  {
+   "judul": "Kronologi",
+   "t": 2954.4
+  },
+  {
+   "judul": "Glosarium",
+   "t": 2961.8
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 3158.4
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 3307.7
+  }
+ ]
+}

@@ -1,7 +1,10 @@
 """Commit dan push semua perubahan ke GitHub, supaya dokumen baru muncul di app HP.
 
 Pemakaian:
-    python scripts/terbitkan.py ["pesan commit"]
+    python scripts/terbitkan.py ["pesan commit"] [--tanpa-audio]
+
+Sebelum commit, audio dokumen yang belum/berubah dibuat dulu (scripts/buat_audio.py; beberapa menit per
+dokumen). Dokumen pribadi ikut dibuatkan audio hanya bila file pribadi/.audio ada (teks dikirim ke edge-tts).
 
 GitHub Actions (.github/workflows/pages.yml) lalu membangun ulang situs app dalam 1-2 menit.
 """
@@ -21,13 +24,20 @@ def git(*args, cek=True):
 
 
 def main():
+    if "--tanpa-audio" not in sys.argv:
+        perintah = [sys.executable, str(ROOT / "scripts" / "buat_audio.py")]
+        if (ROOT / "pribadi" / ".audio").exists():
+            perintah.append("--pribadi")
+        if subprocess.run(perintah, cwd=ROOT).returncode != 0:
+            print("Peringatan: sebagian audio gagal dibuat; dokumen tetap diterbitkan.")
     subprocess.run([sys.executable, str(ROOT / "scripts" / "buat_indeks.py")], cwd=ROOT, check=True)
     git("add", "-A")
     if not git("status", "--porcelain").stdout.strip():
         print("Tidak ada perubahan untuk diterbitkan.")
         return
 
-    pesan = sys.argv[1] if len(sys.argv) > 1 else ""
+    argumen = [a for a in sys.argv[1:] if not a.startswith("--")]
+    pesan = argumen[0] if argumen else ""
     if not pesan:
         # hanya PDF baru; nama PDF yang dihapus (mis. baru dijadikan pribadi) jangan masuk pesan commit
         baru = [baris[3:] for baris in git("status", "--porcelain").stdout.splitlines()

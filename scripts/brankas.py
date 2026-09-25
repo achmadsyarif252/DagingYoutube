@@ -4,6 +4,7 @@ Dokumen pribadi disimpan polos di pribadi/ (tidak di-commit). Yang terbit ke rep
     output/aset/data.json   daftar dokumen pribadi, terenkripsi (judul pun tidak terbaca)
     output/aset/<acak>-p.bin   PDF terenkripsi
     output/aset/<acak>-b.bin   versi baca HTML (gzip) terenkripsi
+    output/aset/<acak>-a.bin   audio (pribadi/audio/<nama>.opus) terenkripsi
 
 Kripto: PBKDF2-SHA256 (600.000 iterasi) -> kunci AES-256-GCM. Format .bin = iv(12 byte) + ciphertext.
 Harus cocok dengan app/app.js (fungsi brankas).
@@ -92,14 +93,19 @@ def susun(meta_dari_nama):
         html = PRIBADI / "baca" / f"{pdf.stem}.html"
         isi_pdf = pdf.read_bytes()
         isi_html = html.read_bytes() if html.exists() else None
-        sidik = hashlib.sha256(isi_pdf + (isi_html or b"")).hexdigest()[:12]
+        audio, audio_meta = PRIBADI / "audio" / f"{pdf.stem}.opus", PRIBADI / "audio" / f"{pdf.stem}.json"
+        ada_audio = audio.exists() and audio_meta.exists()
+        am = json.loads(audio_meta.read_text(encoding="utf-8")) if ada_audio else None
+        sidik = hashlib.sha256(isi_pdf + (isi_html or b"") + (am["sidik"].encode() if am else b"")).hexdigest()[:12]
 
         a = meta["acak"]
-        bin_pdf, bin_html = RAHASIA / f"{a}-p.bin", RAHASIA / f"{a}-b.bin"
-        if ganti or meta.get("sidik") != sidik or not bin_pdf.exists() or (isi_html and not bin_html.exists()):
+        bin_pdf, bin_html, bin_audio = RAHASIA / f"{a}-p.bin", RAHASIA / f"{a}-b.bin", RAHASIA / f"{a}-a.bin"
+        if ganti or meta.get("sidik") != sidik or not bin_pdf.exists() or (isi_html and not bin_html.exists())                 or (ada_audio and not bin_audio.exists()):
             bin_pdf.write_bytes(enkripsi(kunci, isi_pdf))
             if isi_html:
                 bin_html.write_bytes(enkripsi(kunci, gzip.compress(isi_html, mtime=0)))
+            if ada_audio:
+                bin_audio.write_bytes(enkripsi(kunci, audio.read_bytes()))
             meta["sidik"] = sidik
             print(f"Dienkripsi: {pdf.stem}")
         berkas_meta.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -107,6 +113,8 @@ def susun(meta_dari_nama):
         dipakai.add(bin_pdf.name)
         if isi_html:
             dipakai.add(bin_html.name)
+        if ada_audio:
+            dipakai.add(bin_audio.name)
         publik = {k: v for k, v in meta.items() if k not in ("acak", "sidik")}
         entri.append({
             "id": f"p-{a}", **publik,
@@ -114,6 +122,8 @@ def susun(meta_dari_nama):
             "baca": f"output/aset/{bin_html.name}" if isi_html else None,
             # v ikut berubah saat sandi diganti, supaya HP tidak memakai salinan lama dari cache
             "ukuran": len(isi_pdf), "v": sidik + salt.hex()[:6], "pribadi": True,
+            "audio": {"src": f"output/aset/{bin_audio.name}", "durasi": am["durasi"], "bab": am["bab"],
+                      "v": sidik + salt.hex()[:6], "ukuran": audio.stat().st_size} if ada_audio else None,
         })
 
     for f in RAHASIA.iterdir():

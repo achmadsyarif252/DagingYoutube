@@ -25,5 +25,10 @@ bukan ringkasan. Ada dua jalur:
   menambah tombol/menu/teks yang menunjukkan ada brankas atau dokumen pribadi.
   `scripts/privasi.py sandi | daftar | <cari> pribadi | <cari> publik`. Jangan pernah menulis judul
   atau topik dokumen pribadi ke pesan commit, nama file publik, atau tempat lain yang ikut di-push.
-- Dependensi: `python -m pip install yt-dlp youtube-transcript-api markdown playwright cryptography`
+- **Audio (dibacakan)**: `scripts/buat_audio.py [<cari>]` membuat `output/audio/<nama>.opus` + `.json` (bab dan
+  waktunya) dengan suara `id-ID-ArdiNeural` lewat edge-tts, lalu ffmpeg (Opus 24 kbps, ±10 MB/jam).
+  `terbitkan.py` menjalankannya otomatis (lewati dengan `--tanpa-audio`). Dokumen pribadi hanya dibuatkan
+  audio bila `pribadi/.audio` ada, karena teksnya dikirim ke layanan Microsoft.
+- Dependensi: `python -m pip install yt-dlp youtube-transcript-api markdown playwright cryptography edge-tts pymupdf`,
+  plus `ffmpeg` di PATH.
 - Revisi dilakukan dengan mengedit `dokumen.md`, lalu render ulang.
