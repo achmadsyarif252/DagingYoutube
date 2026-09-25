@@ -1,0 +1,39 @@
+{
+ "sidik": "00fced358946",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 2569,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pengantar: Apa Isi Dokumen Ini",
+   "t": 9.3
+  },
+  {
+   "judul": "Bagian I: Riwayat Hidup dan Konteks",
+   "t": 143.0
+  },
+  {
+   "judul": "Bagian II: Tiga Buku Utama",
+   "t": 455.4
+  },
+  {
+   "judul": "Bagian III: Ceramah The Purpose of Life",
+   "t": 1018.9
+  },
+  {
+   "judul": "Bagian IV: Tema Besar Lintas Karya dan Glosarium Konsep",
+   "t": 1408.5
+  },
+  {
+   "judul": "Bagian V: Kritik, Kontroversi, dan Posisi dalam Wacana Islam",
+   "t": 1826.1
+  },
+  {
+   "judul": "Bagian VI: Panduan Membaca, Sumber, dan Pertanyaan Diskusi",
+   "t": 2144.0
+  }
+ ]
+}

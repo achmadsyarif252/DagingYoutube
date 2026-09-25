@@ -1,0 +1,75 @@
+{
+ "sidik": "79c4197ec10d",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 4700,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 16.5
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 185.6
+  },
+  {
+   "judul": "Latar: Litografi Sebelum ASML",
+   "t": 343.4
+  },
+  {
+   "judul": "Sejarah ASML: Dari Gudang Bocor ke Monopoli",
+   "t": 519.4
+  },
+  {
+   "judul": "Sains Litografi: Cahaya, Gelombang, dan Batas Fisika",
+   "t": 1452.4
+  },
+  {
+   "judul": "Di Dalam Mesin EUV",
+   "t": 1696.8
+  },
+  {
+   "judul": "Model Bisnis dan Rantai Pasok",
+   "t": 2275.6
+  },
+  {
+   "judul": "Geopolitik: ASML di Tengah Perang Chip",
+   "t": 2507.4
+  },
+  {
+   "judul": "Dampak Komprehensif",
+   "t": 2741.2
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 3023.0
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 3081.1
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 3322.3
+  },
+  {
+   "judul": "Kronologi",
+   "t": 3511.9
+  },
+  {
+   "judul": "Glosarium",
+   "t": 3519.3
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 3747.8
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 3892.3
+  }
+ ]
+}

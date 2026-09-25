@@ -1,0 +1,35 @@
+{
+ "sidik": "e22b78d91e99",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 10320,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "BAGIAN I — FONDASI NORMATIF",
+   "t": 439.4
+  },
+  {
+   "judul": "BAGIAN II — PRAKTIK SEJARAH",
+   "t": 2724.1
+  },
+  {
+   "judul": "BAGIAN III — PEMIKIRAN POLITIK",
+   "t": 4234.2
+  },
+  {
+   "judul": "BAGIAN IV — EKSPERIMEN MODERN",
+   "t": 6077.9
+  },
+  {
+   "judul": "BAGIAN V — PENILAIAN",
+   "t": 8566.1
+  },
+  {
+   "judul": "LAMPIRAN",
+   "t": 9007.2
+  }
+ ]
+}

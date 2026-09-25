@@ -1,0 +1,43 @@
+{
+ "sidik": "3bb146bc27c1",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 3774,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pengantar: Apa yang Dokumen Ini Coba Lakukan",
+   "t": 11.8
+  },
+  {
+   "judul": "Bagian I: Teologi — Tuhan, Wahyu, Manusia, dan Akhirat",
+   "t": 232.5
+  },
+  {
+   "judul": "Bagian II: Filsafat dan Epistemologi — Bagaimana Muslim Berpikir",
+   "t": 804.6
+  },
+  {
+   "judul": "Bagian III: Makna Ibadah — Mengapa Harus Salat, Puasa, Zakat, Haji",
+   "t": 1307.9
+  },
+  {
+   "judul": "Bagian IV: Syariat dan Fikih — Hukum yang Punya Tujuan",
+   "t": 1894.8
+  },
+  {
+   "judul": "Bagian V: Ekonomi — Harta, Riba, dan Keadilan Distributif",
+   "t": 2423.1
+  },
+  {
+   "judul": "Bagian VI: Etika Sosial — Akhlak, Komunitas, dan Hidup Bersama",
+   "t": 2940.0
+  },
+  {
+   "judul": "Bagian VII: Sintesis, Peta Bacaan, dan Pertanyaan Renungan",
+   "t": 3388.0
+  }
+ ]
+}

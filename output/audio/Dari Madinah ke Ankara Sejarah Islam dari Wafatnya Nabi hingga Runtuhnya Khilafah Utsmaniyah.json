@@ -1,0 +1,39 @@
+{
+ "sidik": "a52ae0dea1a1",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 10939,
+ "bab": [
+  {
+   "judul": "Dari Madinah ke Ankara",
+   "t": 0.0
+  },
+  {
+   "judul": "BAGIAN I — FONDASI (632–661)",
+   "t": 493.8
+  },
+  {
+   "judul": "BAGIAN II — IMPERIUM (661–850)",
+   "t": 1928.0
+  },
+  {
+   "judul": "BAGIAN III — PERADABAN (750–1250)",
+   "t": 3030.7
+  },
+  {
+   "judul": "BAGIAN IV — PECAH, DISERANG, BERTAHAN (900–1400)",
+   "t": 4261.0
+  },
+  {
+   "judul": "BAGIAN V — PUNCAK KEDUA (1400–1700)",
+   "t": 5814.8
+  },
+  {
+   "judul": "BAGIAN VI — TRANSFORMASI DAN AKHIR (1700–1924)",
+   "t": 7493.6
+  },
+  {
+   "judul": "LAMPIRAN",
+   "t": 9442.2
+  }
+ ]
+}
