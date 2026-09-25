@@ -1,0 +1,87 @@
+{
+ "sidik": "6575be95b894",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 7460,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 19.3
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 231.1
+  },
+  {
+   "judul": "Fondasi: Apa Itu \"Model Bahasa\"?",
+   "t": 407.3
+  },
+  {
+   "judul": "Jaringan Saraf dan Cara Belajarnya",
+   "t": 920.8
+  },
+  {
+   "judul": "Data dan Tokenisasi: Bahan Baku LLM",
+   "t": 1726.5
+  },
+  {
+   "judul": "Arsitektur Transformer: Mesin di Balik LLM",
+   "t": 2260.1
+  },
+  {
+   "judul": "Pretraining: Membaca Internet dan Menebak Kata Berikutnya",
+   "t": 2800.1
+  },
+  {
+   "judul": "Post-training: Dari Pembaca Internet Menjadi Asisten",
+   "t": 3429.8
+  },
+  {
+   "judul": "Evaluasi: Bagaimana Tahu Modelnya Bagus?",
+   "t": 4352.1
+  },
+  {
+   "judul": "Inferensi: Apa yang Terjadi Saat Anda Bertanya",
+   "t": 4487.1
+  },
+  {
+   "judul": "Resep Lengkap: Membangun LLM dari Nol",
+   "t": 4863.7
+  },
+  {
+   "judul": "Batasan dan Miskonsepsi",
+   "t": 5127.7
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 5305.2
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 5368.5
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 5735.8
+  },
+  {
+   "judul": "Kronologi",
+   "t": 5931.3
+  },
+  {
+   "judul": "Glosarium",
+   "t": 5938.7
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 6326.4
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 6490.2
+  }
+ ]
+}
