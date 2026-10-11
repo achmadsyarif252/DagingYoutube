@@ -1,0 +1,83 @@
+{
+ "sidik": "340f5356093e",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 3947,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 23.5
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 169.5
+  },
+  {
+   "judul": "Bentuk-Bentuk Kata Kerja",
+   "t": 361.4
+  },
+  {
+   "judul": "Present: Simple dan Progressive",
+   "t": 576.9
+  },
+  {
+   "judul": "Past: Simple, Progressive, dan Kebiasaan Lampau",
+   "t": 831.3
+  },
+  {
+   "judul": "Perfect: Menghubungkan Dua Waktu",
+   "t": 1003.4
+  },
+  {
+   "judul": "Masa Depan",
+   "t": 1455.1
+  },
+  {
+   "judul": "Modal Verbs",
+   "t": 1581.1
+  },
+  {
+   "judul": "Passive Voice",
+   "t": 1908.2
+  },
+  {
+   "judul": "Conditionals: Syarat Nyata dan Tidak Nyata",
+   "t": 2215.4
+  },
+  {
+   "judul": "Gerund dan Infinitive",
+   "t": 2505.7
+  },
+  {
+   "judul": "Phrasal Verbs",
+   "t": 2849.9
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 3037.9
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 3088.0
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 3261.7
+  },
+  {
+   "judul": "Glosarium",
+   "t": 3338.1
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 3519.1
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 3656.2
+  }
+ ]
+}

@@ -1,0 +1,79 @@
+{
+ "sidik": "4b235205477c",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 3024,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 22.2
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 162.0
+  },
+  {
+   "judul": "Koordinasi dan Kata Penghubung",
+   "t": 274.8
+  },
+  {
+   "judul": "Klausa Relatif",
+   "t": 456.8
+  },
+  {
+   "judul": "Klausa Partisipel dan Reduksi Klausa",
+   "t": 856.2
+  },
+  {
+   "judul": "Klausa Noun",
+   "t": 997.3
+  },
+  {
+   "judul": "Klausa Keterangan",
+   "t": 1212.5
+  },
+  {
+   "judul": "Reported Speech",
+   "t": 1403.3
+  },
+  {
+   "judul": "Pertanyaan dan Negasi",
+   "t": 1608.9
+  },
+  {
+   "judul": "Penekanan dan Urutan Informasi",
+   "t": 1920.9
+  },
+  {
+   "judul": "Kohesi: Dari Kalimat ke Paragraf",
+   "t": 2184.6
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 2287.8
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 2352.0
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 2491.2
+  },
+  {
+   "judul": "Glosarium",
+   "t": 2554.0
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 2725.4
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 2849.2
+  }
+ ]
+}

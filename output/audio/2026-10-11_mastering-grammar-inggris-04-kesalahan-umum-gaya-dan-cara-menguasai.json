@@ -1,0 +1,71 @@
+{
+ "sidik": "87f8b781ab18",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 2639,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 22.2
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 137.5
+  },
+  {
+   "judul": "Katalog Kesalahan Khas Penutur Indonesia",
+   "t": 231.2
+  },
+  {
+   "judul": "Tanda Baca dan Kapitalisasi",
+   "t": 359.6
+  },
+  {
+   "judul": "Register: Grammar Formal, Informal, dan Lisan",
+   "t": 626.8
+  },
+  {
+   "judul": "British vs American English",
+   "t": 821.4
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 866.0
+  },
+  {
+   "judul": "Apa Kata Riset tentang Belajar Grammar",
+   "t": 1152.7
+  },
+  {
+   "judul": "Metode Latihan yang Efektif",
+   "t": 1389.5
+  },
+  {
+   "judul": "Rencana Belajar 12 Bulan",
+   "t": 1586.3
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 1675.1
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 1700.2
+  },
+  {
+   "judul": "Glosarium",
+   "t": 1804.5
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 1971.6
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 2103.9
+  }
+ ]
+}

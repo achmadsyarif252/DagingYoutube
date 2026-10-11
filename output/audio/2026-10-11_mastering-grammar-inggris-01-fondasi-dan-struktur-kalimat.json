@@ -1,0 +1,83 @@
+{
+ "sidik": "30999c6eee2d",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 4130,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 21.4
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 211.6
+  },
+  {
+   "judul": "Mengapa Grammar Inggris Seperti Ini",
+   "t": 418.9
+  },
+  {
+   "judul": "Kelas Kata: Bahan Baku Kalimat",
+   "t": 626.6
+  },
+  {
+   "judul": "Struktur Kalimat",
+   "t": 853.9
+  },
+  {
+   "judul": "Frasa dan Urutan Kata",
+   "t": 1233.9
+  },
+  {
+   "judul": "Noun: Countable, Uncountable, dan Jamak",
+   "t": 1445.9
+  },
+  {
+   "judul": "Artikel dan Determiner",
+   "t": 1617.6
+  },
+  {
+   "judul": "Pronoun",
+   "t": 1759.0
+  },
+  {
+   "judul": "Adjective dan Adverb",
+   "t": 1930.7
+  },
+  {
+   "judul": "Preposisi",
+   "t": 2249.2
+  },
+  {
+   "judul": "Subject-Verb Agreement",
+   "t": 2494.4
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 2868.9
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 2976.6
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 3163.8
+  },
+  {
+   "judul": "Glosarium",
+   "t": 3291.2
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 3536.8
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 3659.6
+  }
+ ]
+}
