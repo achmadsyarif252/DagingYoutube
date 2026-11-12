@@ -1,0 +1,1670 @@
+
+<section class="cover topik">
+  <div class="label">Daging · Riset Mendalam</div>
+  <h1>Dari Kode ke Chip: Cara Compiler Berbicara dengan Hardware</h1>
+  <p class="subjudul">Perjalanan sebuah baris kode dari bahasa pemrograman, compiler, linker, hingga transistor di mikrokontroler, termasuk memory alignment, volatile, cache, DMA, dan studi kasus pembaca serta tag RFID</p>
+  <div class="dibuat">Dokumen dibuat 12 November 2026. Disusun dari riset berbagai sumber; rujukan tiap klaim
+  tercantum sebagai catatan kaki di akhir dokumen. Data dan angka berlaku per tanggal sumbernya.</div>
+</section><div class="toc">
+<ul>
+<li><a href="#pendahuluan">Pendahuluan</a></li>
+<li><a href="#gambaran-besar">Gambaran Besar</a><ul>
+<li><a href="#tujuh-lapisan-dari-ide-ke-elektron">Tujuh lapisan dari ide ke elektron</a></li>
+<li><a href="#tiga-ide-yang-menjelaskan-hampir-semuanya">Tiga ide yang menjelaskan hampir semuanya</a></li>
+<li><a href="#fakta-kunci">Fakta kunci</a></li>
+</ul>
+</li>
+<li><a href="#sejarah-singkat-dari-kabel-ke-compiler">Sejarah Singkat: Dari Kabel ke Compiler</a><ul>
+<li><a href="#ketika-memprogram-berarti-memasang-kabel">Ketika "memprogram" berarti memasang kabel</a></li>
+<li><a href="#fortran-bukti-bahwa-mesin-bisa-menulis-kode-yang-cepat">FORTRAN: bukti bahwa mesin bisa menulis kode yang cepat</a></li>
+<li><a href="#c-bahasa-yang-dekat-dengan-logam">C: bahasa yang "dekat dengan logam"</a></li>
+<li><a href="#gcc-dan-llvm-dua-raksasa-compiler-terbuka">GCC dan LLVM: dua raksasa compiler terbuka</a></li>
+</ul>
+</li>
+<li><a href="#bahasa-pemrograman-sebagai-kontrak">Bahasa Pemrograman sebagai Kontrak</a><ul>
+<li><a href="#mesin-abstrak-dan-aturan-seolah-olah">Mesin abstrak dan aturan "seolah-olah"</a></li>
+<li><a href="#tiga-jenis-ketidakpastian-yang-diizinkan-standar">Tiga jenis "ketidakpastian" yang diizinkan standar</a></li>
+<li><a href="#tipe-data-bahasa-yang-berbicara-tentang-ukuran-dan-alamat">Tipe data: bahasa yang berbicara tentang ukuran dan alamat</a></li>
+</ul>
+</li>
+<li><a href="#di-dalam-compiler">Di Dalam Compiler</a><ul>
+<li><a href="#peta-besar-front-end-middle-end-back-end">Peta besar: front-end, middle-end, back-end</a></li>
+<li><a href="#tahap-1-dari-teks-ke-pohon-lexing-parsing-analisis-semantik">Tahap 1: dari teks ke pohon (lexing, parsing, analisis semantik)</a></li>
+<li><a href="#tahap-2-representasi-antara-dan-bentuk-ssa">Tahap 2: representasi antara dan bentuk SSA</a></li>
+<li><a href="#tahap-3-optimisasi">Tahap 3: optimisasi</a></li>
+<li><a href="#tahap-4-back-end-dari-ir-ke-instruksi-nyata">Tahap 4: back-end, dari IR ke instruksi nyata</a></li>
+<li><a href="#mengapa-level-optimisasi-mengubah-perilaku-program">Mengapa level optimisasi mengubah perilaku program</a></li>
+</ul>
+</li>
+<li><a href="#assembler-linker-dan-kode-startup">Assembler, Linker, dan Kode Startup</a><ul>
+<li><a href="#file-objek-kode-yang-belum-tahu-alamatnya">File objek: kode yang belum tahu alamatnya</a></li>
+<li><a href="#linker-menyusun-peta-memori">Linker: menyusun peta memori</a></li>
+<li><a href="#saat-listrik-menyala-urutan-reset-cortex-m">Saat listrik menyala: urutan reset Cortex-M</a></li>
+<li><a href="#dari-elf-ke-chip">Dari ELF ke chip</a></li>
+</ul>
+</li>
+<li><a href="#di-dalam-chip-cpu-bus-dan-periferal">Di Dalam Chip: CPU, Bus, dan Periferal</a><ul>
+<li><a href="#isa-kontrak-antara-compiler-dan-silikon">ISA: kontrak antara compiler dan silikon</a></li>
+<li><a href="#pipeline-instruksi-tidak-dikerjakan-satu-per-satu">Pipeline: instruksi tidak dikerjakan satu per satu</a></li>
+<li><a href="#peta-memori-semua-hal-punya-alamat">Peta memori: semua hal punya alamat</a></li>
+<li><a href="#dari-instruksi-str-ke-pin-yang-menyala">Dari instruksi STR ke pin yang menyala</a></li>
+<li><a href="#interupsi-dan-dma-hardware-yang-bergerak-sendiri">Interupsi dan DMA: hardware yang bergerak sendiri</a></li>
+</ul>
+</li>
+<li><a href="#memory-alignment-secara-tuntas">Memory Alignment Secara Tuntas</a><ul>
+<li><a href="#definisi-dan-intuisi">Definisi dan intuisi</a></li>
+<li><a href="#mengapa-hardware-peduli-empat-lapisan-alasan">Mengapa hardware peduli: empat lapisan alasan</a></li>
+<li><a href="#peta-perilaku-per-arsitektur">Peta perilaku per arsitektur</a></li>
+<li><a href="#bagaimana-compiler-menjaga-alignment-padding-struct">Bagaimana compiler menjaga alignment: padding struct</a></li>
+<li><a href="#packed-mematikan-padding-dan-harganya">packed: mematikan padding, dan harganya</a></li>
+<li><a href="#cara-yang-benar-membaca-data-tak-aligned">Cara yang benar membaca data tak-aligned</a></li>
+<li><a href="#menaikkan-alignment-kapan-dan-mengapa">Menaikkan alignment: kapan dan mengapa</a></li>
+<li><a href="#dma-cache-dan-alignment-jebakan-terbesar-di-cortex-m7">DMA, cache, dan alignment: jebakan terbesar di Cortex-M7</a></li>
+<li><a href="#daftar-periksa-alignment-untuk-firmware">Daftar periksa alignment untuk firmware</a></li>
+</ul>
+</li>
+<li><a href="#ketika-compiler-dan-hardware-salah-paham">Ketika Compiler dan Hardware Salah Paham</a><ul>
+<li><a href="#volatile-jangan-berasumsi-tentang-memori-ini">volatile: "jangan berasumsi tentang memori ini"</a></li>
+<li><a href="#barrier-dua-jenis-pagar">Barrier: dua jenis pagar</a></li>
+<li><a href="#strict-aliasing-compiler-percaya-pada-tipe">Strict aliasing: compiler percaya pada tipe</a></li>
+<li><a href="#endianness-urutan-byte-di-dalam-word">Endianness: urutan byte di dalam word</a></li>
+<li><a href="#bit-field-nyaman-tetapi-tidak-portabel">Bit-field: nyaman tetapi tidak portabel</a></li>
+</ul>
+</li>
+<li><a href="#studi-kasus-rfid-dari-udara-ke-server">Studi Kasus RFID: Dari Udara ke Server</a><ul>
+<li><a href="#tiga-frekuensi-tiga-dunia">Tiga frekuensi, tiga dunia</a></li>
+<li><a href="#sisi-tag-chip-tanpa-cpu-tanpa-compiler">Sisi tag: chip tanpa CPU, tanpa compiler</a></li>
+<li><a href="#sisi-pembaca-lapisan-di-dalam-lapisan">Sisi pembaca: lapisan di dalam lapisan</a></li>
+<li><a href="#mengikuti-satu-epc-dari-udara-ke-server">Mengikuti satu EPC dari udara ke server</a></li>
+</ul>
+</li>
+<li><a href="#data-angka-kunci">Data &amp; Angka Kunci</a><ul>
+<li><a href="#perbandingan-arsitektur-dan-alignment">Perbandingan arsitektur dan alignment</a></li>
+<li><a href="#aturan-alignment-abi-32-bit-ringkas">Aturan alignment ABI 32-bit (ringkas)</a></li>
+<li><a href="#angka-angka-rfid">Angka-angka RFID</a></li>
+</ul>
+</li>
+<li><a href="#perdebatan-perspektif">Perdebatan &amp; Perspektif</a><ul>
+<li><a href="#optimisasi-berbasis-undefined-behavior-fitur-atau-jebakan">Optimisasi berbasis undefined behavior: fitur atau jebakan?</a></li>
+<li><a href="#apakah-volatile-sudah-cukup">Apakah volatile sudah cukup?</a></li>
+<li><a href="#bit-field-dan-struct-packed-untuk-register-dan-protokol">Bit-field dan struct packed untuk register dan protokol</a></li>
+<li><a href="#c-c-atau-rust-untuk-firmware">C, C++, atau Rust untuk firmware?</a></li>
+<li><a href="#assembly-tulisan-tangan">Assembly tulisan tangan</a></li>
+</ul>
+</li>
+<li><a href="#kondisi-terkini-prospek">Kondisi Terkini &amp; Prospek</a></li>
+<li><a href="#kronologi">Kronologi</a></li>
+<li><a href="#glosarium">Glosarium</a></li>
+<li><a href="#kesimpulan">Kesimpulan</a></li>
+<li><a href="#bacaan-lanjutan">Bacaan Lanjutan</a></li>
+</ul>
+</div>
+<h1 id="pendahuluan">Pendahuluan</h1>
+<p>Setiap kali sebuah pembaca RFID di gudang "berbunyi" karena menangkap tag di sebuah kardus, ada rantai panjang yang bekerja tanpa terlihat. Seseorang menulis baris kode seperti <code>if (tag_ditemukan) kirim_ke_server(epc);</code>. Baris itu kemudian diterjemahkan, dioptimalkan, dipecah menjadi puluhan instruksi mesin, disusun di alamat-alamat tertentu di memori flash, lalu dieksekusi oleh jutaan transistor di sebuah mikrokontroler. Mikrokontroler itu berbicara dengan chip radio lewat kabel SPI, chip radio memancarkan gelombang 900 MHz, dan sebuah chip seukuran butiran pasir di dalam label tag menyerap energi gelombang itu, menghidupkan dirinya sendiri, lalu menjawab dengan "memantulkan" sinyal.</p>
+<p>Di setiap sambungan rantai itu ada <strong>kontrak</strong>: aturan tentang bagaimana satu lapisan boleh memperlakukan lapisan di bawahnya. Bahasa C berjanji pada programmer tentang arti sebuah program. Compiler berjanji menghasilkan instruksi yang "berperilaku seolah-olah" sama. Arsitektur prosesor berjanji tentang apa yang terjadi ketika instruksi <code>STR</code> menulis ke alamat <code>0x40013804</code>. Dan chip periferal berjanji bahwa menulis ke alamat itu akan mengirimkan satu byte ke kabel serial. Sebagian besar bug paling sulit di sistem tertanam (<em>embedded</em>) lahir di <strong>celah antar-kontrak</strong> itu: compiler "membuang" pembacaan register karena merasa tidak perlu, prosesor menolak membaca angka 32-bit dari alamat ganjil, atau cache menyimpan data lama yang sebenarnya sudah ditimpa oleh DMA.</p>
+<p>Dokumen ini mencoba menjawab pertanyaan-pertanyaan berikut:</p>
+<ol>
+<li><strong>Apa yang sebenarnya dilakukan compiler</strong>, tahap demi tahap, dari teks sumber sampai file biner yang di-<em>flash</em> ke chip?</li>
+<li><strong>Bagaimana sebuah instruksi menjadi aksi fisik</strong>: sinyal di bus, register periferal, dan perubahan tegangan di pin?</li>
+<li><strong>Mengapa memory alignment penting</strong>, dari mana aturan itu berasal (bus, cache, ABI), apa bedanya di x86, ARM Cortex-M, dan RISC-V, dan bagaimana menghindari jebakannya?</li>
+<li><strong>Di titik mana compiler dan hardware bisa "salah paham"</strong>, misalnya soal <code>volatile</code>, <em>memory barrier</em>, <em>strict aliasing</em>, <em>endianness</em>, <em>bit-field</em>, cache, dan DMA?</li>
+<li><strong>Bagaimana semua itu terlihat di dunia RFID</strong>, baik di sisi tag (chip pasif tanpa baterai) maupun di sisi pembaca (MCU + chip radio + protokol jaringan)?</li>
+</ol>
+<div class="admonition catatan">
+<p class="admonition-title">Ruang lingkup dan cara membaca</p>
+<p>Topik ini sangat luas, jadi dokumen ini memilih satu "jalur utama": <strong>bahasa C</strong> (dengan sedikit C++ dan Rust), <strong>compiler GCC/Clang-LLVM</strong>, dan <strong>mikrokontroler ARM Cortex-M</strong>, karena kombinasi inilah yang paling umum dipakai di perangkat RFID, IoT, dan elektronik industri. x86 (PC/server) dan RISC-V dibahas sebagai pembanding. Detail fisika semikonduktor (cara transistor dibuat) dan desain compiler tingkat lanjut (teori parsing, <em>polyhedral optimization</em>) sengaja tidak dibahas mendalam. Contoh kode assembly bersifat ilustratif: hasil compiler nyata bisa sedikit berbeda tergantung versi dan opsi. Untuk melihatnya sendiri, coba situs <em>Compiler Explorer</em> (godbolt.org).</p>
+<p>Pembaca yang ingin intinya saja cukup membaca <strong>Gambaran Besar</strong>, bab <strong>Memory Alignment Secara Tuntas</strong>, dan <strong>Kesimpulan</strong>. Pembaca dari dunia RFID bisa langsung melompat ke <strong>Studi Kasus RFID</strong> lalu kembali ke bab-bab sebelumnya saat menemukan istilah yang belum jelas. Semua istilah teknis dijelaskan di <strong>Glosarium</strong>.</p>
+</div>
+<h1 id="gambaran-besar">Gambaran Besar</h1>
+<h2 id="tujuh-lapisan-dari-ide-ke-elektron">Tujuh lapisan dari ide ke elektron</h2>
+<p>Cara paling mudah memahami hubungan compiler dan hardware adalah membayangkan sebuah tangga. Di puncak ada gagasan manusia; di dasar ada elektron yang bergerak di dalam silikon. Setiap anak tangga menerjemahkan bentuk di atasnya menjadi bentuk yang lebih dekat ke mesin.</p>
+<table>
+<thead>
+<tr>
+<th>Lapisan</th>
+<th>Bentuk "program" di lapisan ini</th>
+<th>Siapa yang mengerjakan</th>
+<th>Contoh</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Bahasa sumber</td>
+<td>Teks: fungsi, variabel, tipe</td>
+<td>Programmer</td>
+<td><code>uint32_t epc_crc = hitung_crc(buf, 12);</code></td>
+</tr>
+<tr>
+<td>2. Representasi antara (IR)</td>
+<td>Instruksi abstrak, register tak terbatas</td>
+<td><em>Front-end</em> dan <em>optimizer</em> compiler</td>
+<td><code>%3 = call i32 @hitung_crc(ptr %buf, i32 12)</code></td>
+</tr>
+<tr>
+<td>3. Assembly / kode mesin</td>
+<td>Instruksi spesifik arsitektur</td>
+<td><em>Back-end</em> compiler, assembler</td>
+<td><code>movs r1, #12</code> lalu <code>bl hitung_crc</code></td>
+</tr>
+<tr>
+<td>4. File objek dan biner</td>
+<td>Byte-byte di <em>section</em> <code>.text</code>, <code>.data</code>, <code>.bss</code></td>
+<td>Assembler, linker</td>
+<td><code>firmware.elf</code>, <code>firmware.bin</code></td>
+</tr>
+<tr>
+<td>5. Memori chip</td>
+<td>Byte di flash dan SRAM pada alamat tertentu</td>
+<td><em>Programmer/debugger</em>, kode <em>startup</em></td>
+<td>Vektor reset di <code>0x0800_0004</code></td>
+</tr>
+<tr>
+<td>6. Mikroarsitektur</td>
+<td><em>Fetch</em>, <em>decode</em>, <em>execute</em>, transaksi bus</td>
+<td>Inti CPU (misal Cortex-M4)</td>
+<td>Pipeline 3 tahap, bus AHB</td>
+</tr>
+<tr>
+<td>7. Periferal dan fisik</td>
+<td>Register periferal, sinyal pin, gelombang RF</td>
+<td>Blok SPI, UART, chip radio, antena</td>
+<td>Clock SPI 8 MHz ke chip pembaca RFID</td>
+</tr>
+</tbody>
+</table>
+<p>Yang membuat tangga ini menarik adalah bahwa <strong>setiap lapisan hanya melihat kontrak lapisan di bawahnya, bukan isinya.</strong> Programmer C tidak tahu (dan secara resmi tidak perlu tahu) apakah variabelnya disimpan di register <code>r4</code> atau di stack. Compiler tidak tahu bahwa alamat <code>0x4001_3804</code> adalah register data UART: baginya itu hanya alamat memori. CPU tidak tahu bahwa byte yang ia tulis akan menjadi sinyal radio. Abstraksi inilah yang membuat perangkat lunak modern bisa dibangun, tetapi juga sumber kebingungan ketika abstraksinya "bocor".</p>
+<h2 id="tiga-ide-yang-menjelaskan-hampir-semuanya">Tiga ide yang menjelaskan hampir semuanya</h2>
+<p><strong>Pertama: compiler bekerja untuk "mesin abstrak", bukan untuk chip Anda.</strong> Standar bahasa C mendefinisikan arti program terhadap sebuah mesin imajiner. Compiler boleh mengubah apa pun (menghapus variabel, menyusun ulang perintah, menggabungkan pembacaan memori) selama perilaku yang <em>bisa diamati</em> menurut standar tetap sama. Masalahnya, menurut standar, membaca alamat memori biasa bukan "perilaku yang bisa diamati". Padahal di mikrokontroler, membaca register status UART bisa menghapus flag interupsi. Karena itulah ada kata kunci <code>volatile</code>, jembatan pertama antara dunia compiler dan dunia hardware.</p>
+<p><strong>Kedua: hardware punya "selera" tentang alamat.</strong> Memori fisik tidak dibaca per byte, tetapi per <em>word</em> (misalnya 4 byte) melalui bus, dan per <em>cache line</em> (32 atau 64 byte) melalui cache. Data yang "duduk rapi" di batas alamat kelipatan ukurannya (<em>aligned</em>) bisa diambil dalam satu kali jalan. Data yang menyeberangi batas itu harus diambil dua kali, atau, di prosesor sederhana seperti Cortex-M0, langsung memicu <em>HardFault</em>. Compiler mengetahui selera ini lewat dokumen <strong>ABI</strong> (<em>Application Binary Interface</em>), lalu menambahkan <em>padding</em> (byte kosong) di dalam struct supaya setiap field selalu aligned.</p>
+<p><strong>Ketiga: periferal adalah memori yang "hidup".</strong> Di arsitektur ARM Cortex-M, register-register periferal (GPIO, SPI, UART, timer) dipetakan ke ruang alamat yang sama dengan RAM. Menulis ke alamat tertentu sama dengan menekan tombol di periferal. Konsep ini disebut <strong>memory-mapped I/O (MMIO)</strong>. Karena dari sudut pandang instruksi tidak ada bedanya antara RAM dan register periferal, seluruh tanggung jawab untuk memperlakukannya dengan benar ada pada programmer dan compiler.</p>
+<h2 id="fakta-kunci">Fakta kunci</h2>
+<table>
+<thead>
+<tr>
+<th>Hal</th>
+<th>Fakta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compiler pertama yang beroperasi</td>
+<td>Diperdebatkan: A-0 Grace Hopper (UNIVAC I) dan Autocode Alick Glennie, keduanya 1952<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+</tr>
+<tr>
+<td>Compiler optimisasi pertama yang sukses</td>
+<td>FORTRAN I untuk IBM 704, dirilis ke pelanggan April 1957<sup id="fnref2:3"><a class="footnote-ref" href="#fn:3">3</a></sup><sup id="fnref4:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+</tr>
+<tr>
+<td>Bahasa C</td>
+<td>Lahir di Bell Labs 1969–1973, periode paling kreatif tahun 1972<sup id="fnref4:5"><a class="footnote-ref" href="#fn:5">5</a></sup></td>
+</tr>
+<tr>
+<td>LLVM</td>
+<td>Dimulai tahun 2000 di University of Illinois; rilis 1.0 tahun 2003<sup id="fnref3:6"><a class="footnote-ref" href="#fn:6">6</a></sup></td>
+</tr>
+<tr>
+<td>Aturan alignment ABI Arm</td>
+<td>Tipe primitif berukuran 1, 2, 4, 8 byte harus aligned sesuai ukurannya; stack 8-byte aligned di batas fungsi publik<sup id="fnref4:17"><a class="footnote-ref" href="#fn:17">17</a></sup></td>
+</tr>
+<tr>
+<td>Cortex-M0/M0+</td>
+<td>Tidak mendukung akses tak-aligned; mencobanya memicu HardFault<sup id="fnref4:19"><a class="footnote-ref" href="#fn:19">19</a></sup><sup id="fnref2:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+</tr>
+<tr>
+<td>Cache line Cortex-M7</td>
+<td>32 byte; buffer DMA idealnya aligned dan berukuran kelipatan 32<sup id="fnref7:34"><a class="footnote-ref" href="#fn:34">34</a></sup></td>
+</tr>
+<tr>
+<td>Cache line x86 modern</td>
+<td>64 byte; akses tak-aligned di dalam satu line praktis gratis, yang menyeberang line lebih mahal<sup id="fnref2:22"><a class="footnote-ref" href="#fn:22">22</a></sup><sup id="fnref2:23"><a class="footnote-ref" href="#fn:23">23</a></sup></td>
+</tr>
+<tr>
+<td>Memori tag UHF Gen2</td>
+<td>4 bank (Reserved, EPC, TID, User); dialamatkan per <em>word</em> 16-bit<sup id="fnref2:42"><a class="footnote-ref" href="#fn:42">42</a></sup><sup id="fnref4:44"><a class="footnote-ref" href="#fn:44">44</a></sup></td>
+</tr>
+<tr>
+<td>Chip pembaca UHF Impinj E710</td>
+<td>Antarmuka host SPI; di dalamnya ada MCU dengan MAC sendiri<sup id="fnref3:49"><a class="footnote-ref" href="#fn:49">49</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h1 id="sejarah-singkat-dari-kabel-ke-compiler">Sejarah Singkat: Dari Kabel ke Compiler</h1>
+<h2 id="ketika-memprogram-berarti-memasang-kabel">Ketika "memprogram" berarti memasang kabel</h2>
+<p>Komputer elektronik generasi pertama di tahun 1940-an tidak punya bahasa pemrograman. Program dimasukkan dengan memasang kabel, memutar sakelar, atau menulis kode mesin dalam bentuk angka. Setiap instruksi harus ditulis sebagai pola bit yang dipahami langsung oleh mesin, dan alamat memori dihitung dengan tangan. Kalau satu instruksi disisipkan di tengah program, semua alamat sesudahnya bergeser dan harus dihitung ulang. Masalah inilah yang kelak diselesaikan oleh <em>assembler</em> dan <em>linker</em>.</p>
+<p>Langkah pertama keluar dari kesulitan itu adalah <strong>pustaka subrutin</strong>: potongan program yang sering dipakai (misalnya menghitung sinus) disimpan dan disalin ke program baru. Grace Hopper, yang bekerja dengan komputer UNIVAC I, mengumpulkan subrutin-subrutin itu di pita magnetik dan membuat sistem bernama <strong>A-0</strong> (1951–1952). Sistem ini mengambil subrutin yang diperlukan dan merangkainya menjadi program utuh<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>. Dalam istilah modern, A-0 lebih mirip <em>linker/loader</em> daripada compiler penuh, dan karena itu gelar "compiler pertama" masih diperdebatkan. Sebuah tulisan di blog <em>Communications of the ACM</em> mencatat bahwa Alick Glennie di Inggris juga mengklaim compiler pertama yang benar-benar berjalan di komputer, juga pada tahun 1952<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. Yang tidak diperdebatkan adalah perlawanan yang dihadapi Hopper: banyak orang saat itu yakin komputer tidak bisa "menulis programnya sendiri".</p>
+<h2 id="fortran-bukti-bahwa-mesin-bisa-menulis-kode-yang-cepat">FORTRAN: bukti bahwa mesin bisa menulis kode yang cepat</h2>
+<p>Keraguan terbesar terhadap bahasa tingkat tinggi bukanlah "apakah bisa", melainkan "apakah hasilnya cukup cepat". Waktu komputer sangat mahal, dan programmer assembly yang berpengalaman bisa memeras setiap siklus. Tim IBM yang dipimpin <strong>John Backus</strong> menjawab keraguan itu dengan <strong>FORTRAN</strong> (<em>FORmula TRANslation</em>). Proyek dimulai sekitar 1954, manual pertama terbit Oktober 1956, dan compiler-nya dikirim ke pelanggan IBM 704 pada April 1957, jauh melewati target awal enam bulan<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>. IBM sendiri menganggap 1957 sebagai "tanggal lahir" FORTRAN<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>.</p>
+<p>Pencapaian terpenting FORTRAN bukan sintaksnya, tetapi <strong>optimizer-nya</strong>. Compiler ini menganalisis program dan menghasilkan kode yang hampir secepat buatan tangan<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup>. Inilah pertama kalinya terbukti bahwa sebuah program bisa memahami program lain cukup dalam untuk memperbaikinya. Gagasan-gagasan dari compiler FORTRAN, seperti analisis alur kontrol dan alokasi register, masih menjadi inti setiap compiler sampai hari ini.</p>
+<h2 id="c-bahasa-yang-dekat-dengan-logam">C: bahasa yang "dekat dengan logam"</h2>
+<p>Bahasa C lahir di Bell Labs antara 1969 dan 1973, bersamaan dengan pengembangan sistem operasi Unix. Dennis Ritchie menulis bahwa periode paling kreatifnya terjadi pada 1972<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup>. C adalah keturunan bahasa B, yang oleh Ritchie digambarkan sebagai BCPL yang "diperas" agar muat di memori 8 KB<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup>. Tujuan C sangat praktis: menulis sistem operasi yang bisa dipindahkan ke mesin lain tanpa ditulis ulang dalam assembly.</p>
+<p>Desain C mencerminkan hardware zamannya. Pointer adalah alamat memori. Array adalah deretan byte yang berdekatan. <code>struct</code> adalah cara memberi nama pada potongan-potongan memori. Tidak ada pengecekan batas array dan tidak ada <em>garbage collector</em>. Kedekatan inilah yang membuat C, lima puluh tahun kemudian, masih menjadi bahasa utama untuk firmware mikrokontroler, termasuk hampir semua firmware pembaca RFID. Namun kedekatan itu juga ilusi yang berbahaya: seperti yang akan kita lihat, compiler C modern <strong>tidak</strong> menerjemahkan kode baris per baris secara harfiah. C distandardisasi oleh komite ANSI X3J11 pada pertengahan 1980-an<sup id="fnref3:5"><a class="footnote-ref" href="#fn:5">5</a></sup>, lalu oleh ISO (C90, C99, C11, C17, dan C23).</p>
+<h2 id="gcc-dan-llvm-dua-raksasa-compiler-terbuka">GCC dan LLVM: dua raksasa compiler terbuka</h2>
+<p>Selama tahun 1980–1990-an, compiler untuk mikroprosesor umumnya produk komersial dari vendor chip atau perusahaan seperti Keil dan IAR. Proyek GNU melahirkan <strong>GCC</strong> (GNU Compiler Collection) pada akhir 1980-an. GCC kemudian menjadi compiler standar dunia Linux dan, lewat varian <code>arm-none-eabi-gcc</code>, compiler paling umum untuk ARM Cortex-M.</p>
+<p>Tahun 2000, Chris Lattner dan Vikram Adve memulai proyek <strong>LLVM</strong> di University of Illinois at Urbana-Champaign<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>. Ide intinya adalah membuat compiler yang modular: sebuah <em>representasi antara</em> (IR) yang terdefinisi rapi, sehingga <em>front-end</em> untuk berbagai bahasa dan <em>back-end</em> untuk berbagai chip bisa dicampur dan dicocokkan. Makalah mereka di GCC Summit 2003 menyebutkan rencana rilis publik pertama dengan lisensi longgar pada musim panas 2003<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup>; LLVM 1.0 diumumkan pada akhir Oktober 2003<sup id="fnref2:6"><a class="footnote-ref" href="#fn:6">6</a></sup>. Hari ini LLVM menjadi fondasi Clang (C/C++), Rust, Swift, dan banyak compiler lain, termasuk toolchain resmi Arm.</p>
+<div class="admonition konteks">
+<p class="admonition-title">Mengapa sejarah ini relevan untuk insinyur RFID</p>
+<p>Firmware pembaca RFID yang Anda tulis hari ini kemungkinan besar dikompilasi oleh GCC (lewat STM32CubeIDE, ESP-IDF, atau Zephyr) atau oleh compiler berbasis LLVM (Arm Compiler 6, Rust). Kedua compiler ini mewarisi filosofi FORTRAN: <strong>compiler adalah optimizer yang agresif.</strong> Ia tidak bertugas menjalankan perintah Anda kata demi kata, melainkan menghasilkan program tercepat yang perilakunya "sama" menurut standar bahasa. Memahami kata "sama" di sini adalah kunci seluruh dokumen.</p>
+</div>
+<h1 id="bahasa-pemrograman-sebagai-kontrak">Bahasa Pemrograman sebagai Kontrak</h1>
+<h2 id="mesin-abstrak-dan-aturan-seolah-olah">Mesin abstrak dan aturan "seolah-olah"</h2>
+<p>Standar C tidak mendefinisikan arti program dalam bentuk instruksi ARM atau x86. Ia mendefinisikan sebuah <strong>mesin abstrak</strong>, yaitu komputer imajiner tempat setiap ekspresi dievaluasi persis sesuai teks. Lalu standar memberi compiler kebebasan besar lewat aturan yang biasa disebut <strong><em>as-if rule</em></strong>: implementasi boleh melakukan apa saja asalkan <strong>perilaku yang bisa diamati</strong> dari program sama dengan perilaku mesin abstrak.</p>
+<p>Apa saja yang termasuk "bisa diamati"? Secara garis besar hanya tiga: akses ke objek <code>volatile</code>, data yang ditulis ke file atau keluar program, dan interaksi dengan perangkat interaktif. Selebihnya, yaitu nilai variabel biasa, urutan perhitungan, berapa kali memori dibaca, adalah urusan dalam compiler. Contoh sederhana:</p>
+<pre><code class="language-c">int jumlah_tag(void) {
+    int total = 0;
+    for (int i = 0; i &lt; 100; i++)
+        total += 2;
+    return total;
+}
+</code></pre>
+<p>Compiler dengan optimisasi tidak akan membuat loop sama sekali. Ia langsung menghasilkan <code>return 200;</code>, karena hasil akhirnya sama. Ini contoh yang tidak berbahaya. Contoh yang berbahaya muncul ketika "memori biasa" ternyata adalah register hardware:</p>
+<pre><code class="language-c">#define UART_SR  (*(uint32_t *)0x40013800u)   /* register status, TANPA volatile */
+#define RXNE     (1u &lt;&lt; 5)
+
+void tunggu_byte(void) {
+    while ((UART_SR &amp; RXNE) == 0) { }   /* tunggu sampai ada data masuk */
+}
+</code></pre>
+<p>Menurut mesin abstrak, tidak ada yang mengubah nilai di alamat <code>0x40013800</code> di dalam loop. Jadi compiler boleh membaca alamat itu <strong>sekali</strong>, lalu, kalau bitnya 0, berputar selamanya tanpa membaca lagi. Di dunia nyata, hardware UART mengubah bit itu ketika byte datang, tetapi CPU tidak pernah melihatnya. Program "macet" hanya ketika dikompilasi dengan <code>-O2</code>, dan berjalan normal dengan <code>-O0</code>. Pola bug "jalan di <em>debug</em>, macet di <em>release</em>" ini sangat khas di firmware.</p>
+<h2 id="tiga-jenis-ketidakpastian-yang-diizinkan-standar">Tiga jenis "ketidakpastian" yang diizinkan standar</h2>
+<p>Standar C sengaja tidak mendefinisikan semua hal, supaya bahasa bisa berjalan efisien di hardware yang sangat beragam. Ada tiga kategori yang harus dibedakan:</p>
+<table>
+<thead>
+<tr>
+<th>Kategori</th>
+<th>Arti</th>
+<th>Contoh yang relevan dengan hardware</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><em>Implementation-defined</em></strong></td>
+<td>Compiler bebas memilih, tetapi <strong>wajib mendokumentasikan</strong> pilihannya</td>
+<td>Ukuran <code>int</code>, apakah <code>char</code> bertanda, urutan bit dalam <em>bit-field</em></td>
+</tr>
+<tr>
+<td><strong><em>Unspecified</em></strong></td>
+<td>Compiler bebas memilih di antara beberapa kemungkinan, tanpa wajib dokumentasi</td>
+<td>Urutan evaluasi argumen fungsi <code>f(a(), b())</code></td>
+</tr>
+<tr>
+<td><strong><em>Undefined behavior</em> (UB)</strong></td>
+<td>Standar tidak memberi jaminan apa pun; compiler boleh menganggap ini <strong>tidak pernah terjadi</strong></td>
+<td>Membaca <code>uint32_t</code> lewat pointer tak-aligned, <em>signed overflow</em>, melanggar <em>strict aliasing</em>, mengakses di luar batas array</td>
+</tr>
+</tbody>
+</table>
+<p>Kategori ketiga adalah yang paling sering disalahpahami. <em>Undefined behavior</em> bukan berarti "hasilnya acak". Yang lebih berbahaya, compiler <strong>memakai asumsi bahwa UB tidak pernah terjadi</strong> untuk mengoptimalkan kode. Kalau programmer menulis <code>*(uint32_t *)(buf + 3)</code>, compiler berhak menganggap alamat itu pasti kelipatan 4, lalu memilih instruksi yang hanya benar untuk alamat aligned. Di Cortex-M4 mungkin tetap jalan; di Cortex-M0 langsung <em>HardFault</em>; dan di kasus lain bisa muncul nilai yang salah tanpa tanda apa pun. Kita akan kembali ke contoh ini di bab alignment dan studi kasus RFID.</p>
+<h2 id="tipe-data-bahasa-yang-berbicara-tentang-ukuran-dan-alamat">Tipe data: bahasa yang berbicara tentang ukuran dan alamat</h2>
+<p>Setiap tipe di C membawa tiga informasi yang langsung berhubungan dengan hardware:</p>
+<ol>
+<li><strong>Ukuran</strong> (<code>sizeof</code>): berapa byte yang ditempati.</li>
+<li><strong>Alignment</strong> (<code>alignof</code>, sejak C11): alamat objek tipe itu harus kelipatan berapa.</li>
+<li><strong>Representasi</strong>: bagaimana bit-bitnya diartikan (bilangan bulat komplemen dua, IEEE-754, pointer).</li>
+</ol>
+<p>C11 menambahkan operator <code>_Alignof</code> dan penentu <code>_Alignas</code>, yang biasa dipakai lewat makro <code>alignof</code> dan <code>alignas</code> dari <code>&lt;stdalign.h&gt;</code><sup id="fnref:14"><a class="footnote-ref" href="#fn:14">14</a></sup>; di C23 keduanya menjadi kata kunci biasa. Usulan resmi WG14 yang melatarbelakanginya (dokumen N1507) bertujuan menyamakan cara C dan C++ berbicara tentang alignment<sup id="fnref:15"><a class="footnote-ref" href="#fn:15">15</a></sup>. Sebelum C11, programmer harus memakai ekstensi compiler seperti <code>__attribute__((aligned(8)))</code> di GCC atau <code>__align</code> di compiler Arm lama.</p>
+<p>Tipe berukuran tetap seperti <code>uint8_t</code>, <code>uint16_t</code>, dan <code>uint32_t</code> (dari <code>&lt;stdint.h&gt;</code>, sejak C99) sangat penting di firmware. <code>int</code> di mikrokontroler 8-bit AVR berukuran 16 bit, sedangkan di Cortex-M 32 bit. Kalau Anda mendefinisikan format paket protokol RFID dengan <code>int</code>, ukurannya bisa berubah ketika kode dipindahkan ke chip lain.</p>
+<h1 id="di-dalam-compiler">Di Dalam Compiler</h1>
+<h2 id="peta-besar-front-end-middle-end-back-end">Peta besar: front-end, middle-end, back-end</h2>
+<p>Compiler modern hampir selalu dibagi tiga<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>:</p>
+<ul>
+<li><strong>Front-end</strong> memahami bahasa sumber: membaca teks, memeriksa tata bahasa dan tipe, lalu menurunkannya ke IR.</li>
+<li><strong>Middle-end (optimizer)</strong> mengubah IR menjadi IR lain yang lebih efisien. Karena bekerja di IR, optimizer ini bisa dipakai bersama oleh banyak bahasa.</li>
+<li><strong>Back-end</strong> menerjemahkan IR ke instruksi chip tertentu: memilih instruksi, membagi register, menyusun ulang urutan, dan menghasilkan assembly atau kode objek.</li>
+</ul>
+<p>Pembagian ini adalah alasan mengapa satu compiler bisa melayani puluhan arsitektur. Di LLVM, kode khusus target berada di direktori <code>llvm/lib/Target</code>, misalnya <code>ARM</code>, <code>RISCV</code>, dan <code>X86</code>, sementara optimizer-nya sama untuk semuanya. Akibat praktisnya: compiler mengetahui hal-hal spesifik chip (berapa register, alignment apa yang diizinkan, instruksi apa yang tersedia) <strong>hanya</strong> lewat deskripsi target dan opsi seperti <code>-mcpu=cortex-m0plus</code>. Kalau opsi ini salah, compiler akan dengan percaya diri menghasilkan instruksi yang tidak dimiliki chip Anda.</p>
+<h2 id="tahap-1-dari-teks-ke-pohon-lexing-parsing-analisis-semantik">Tahap 1: dari teks ke pohon (lexing, parsing, analisis semantik)</h2>
+<p>Ambil fungsi kecil dari firmware pembaca RFID ini:</p>
+<pre><code class="language-c">uint16_t ambil_pc(const uint8_t *resp) {
+    return (uint16_t)((resp[0] &lt;&lt; 8) | resp[1]);   /* PC word, big-endian */
+}
+</code></pre>
+<p><strong>Preprocessor</strong> berjalan lebih dulu: ia mengganti <code>#include</code> dengan isi file header, mengembangkan makro, dan memproses <code>#if</code>. Hasilnya masih teks.</p>
+<p><strong>Lexer</strong> memotong teks menjadi <em>token</em>: <code>uint16_t</code>, <code>ambil_pc</code>, <code>(</code>, <code>const</code>, <code>uint8_t</code>, <code>*</code>, <code>resp</code>, dan seterusnya. Spasi dan komentar dibuang.</p>
+<p><strong>Parser</strong> menyusun token menjadi <strong>pohon sintaks abstrak</strong> (AST). Ekspresi <code>(resp[0] &lt;&lt; 8) | resp[1]</code> menjadi sebuah simpul <code>|</code> dengan anak kiri <code>&lt;&lt;</code> (yang punya anak <code>resp[0]</code> dan <code>8</code>) dan anak kanan <code>resp[1]</code>.</p>
+<p><strong>Analisis semantik</strong> memeriksa makna: apakah <code>resp</code> dideklarasikan, apa tipenya, dan konversi apa yang terjadi. Di sinilah aturan C yang sering mengejutkan diterapkan. <code>resp[0]</code> bertipe <code>uint8_t</code>, tetapi sebelum digeser ia <strong>dipromosikan</strong> menjadi <code>int</code> (<em>integer promotion</em>). Karena itu <code>resp[0] &lt;&lt; 8</code> aman. Seandainya kita menulis <code>resp[0] &lt;&lt; 24</code> dan <code>resp[0]</code> bernilai 0x80 atau lebih, hasilnya melampaui batas <code>int</code> bertanda, yang merupakan UB. Inilah sebabnya kode parsing protokol yang benar menulis <code>(uint32_t)resp[0] &lt;&lt; 24</code>.</p>
+<h2 id="tahap-2-representasi-antara-dan-bentuk-ssa">Tahap 2: representasi antara dan bentuk SSA</h2>
+<p>Setelah lolos front-end, program diturunkan ke <strong>IR</strong>. LLVM IR, misalnya, ada dalam tiga bentuk yang setara: teks <code>.ll</code> yang bisa dibaca manusia, <em>bitcode</em> biner <code>.bc</code>, dan struktur data di memori<sup id="fnref2:8"><a class="footnote-ref" href="#fn:8">8</a></sup>. Fungsi di atas kira-kira menjadi:</p>
+<pre><code class="language-llvm">define i16 @ambil_pc(ptr %resp) {
+  %b0  = load i8, ptr %resp, align 1
+  %p1  = getelementptr i8, ptr %resp, i32 1
+  %b1  = load i8, ptr %p1, align 1
+  %z0  = zext i8 %b0 to i32
+  %sh  = shl i32 %z0, 8
+  %z1  = zext i8 %b1 to i32
+  %or  = or i32 %sh, %z1
+  %res = trunc i32 %or to i16
+  ret i16 %res
+}
+</code></pre>
+<p>Perhatikan tiga hal. <strong>Pertama</strong>, setiap nilai hanya ditetapkan sekali (<code>%b0</code>, <code>%sh</code>, ...). Bentuk ini disebut <strong>SSA</strong> (<em>Static Single Assignment</em>) dan membuat analisis aliran data jauh lebih mudah. <strong>Kedua</strong>, IR menganggap register tidak terbatas; pembagian ke register fisik baru dilakukan nanti. <strong>Ketiga</strong>, dan ini penting untuk topik kita, <strong>setiap <code>load</code> membawa informasi alignment</strong> (<code>align 1</code>). Compiler mencatat apa yang ia ketahui tentang alamat. Seandainya kodenya <code>*(uint32_t *)resp</code>, IR-nya akan berbunyi <code>load i32, ptr %resp, align 4</code>: compiler <strong>menjanjikan</strong> kepada back-end bahwa alamatnya kelipatan 4, karena itulah alignment <code>uint32_t</code> menurut ABI. Janji itulah yang dilanggar ketika programmer melakukan <em>cast</em> sembarangan.</p>
+<h2 id="tahap-3-optimisasi">Tahap 3: optimisasi</h2>
+<p>Optimizer LLVM dan GCC terdiri dari ratusan <em>pass</em> kecil, masing-masing melakukan satu transformasi, dan disusun berbeda untuk <code>-O0</code>, <code>-O1</code>, <code>-O2</code>, <code>-O3</code>, <code>-Os</code>, dan <code>-Oz</code>. Beberapa yang paling penting untuk dipahami insinyur embedded:</p>
+<table>
+<thead>
+<tr>
+<th>Optimisasi</th>
+<th>Apa yang dilakukan</th>
+<th>Dampak ke hardware</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Constant folding &amp; propagation</em></td>
+<td>Menghitung ekspresi konstan saat kompilasi</td>
+<td><code>0x40000000 + 0x3800</code> menjadi satu konstanta alamat</td>
+</tr>
+<tr>
+<td><em>Dead code elimination</em></td>
+<td>Membuang perhitungan yang hasilnya tidak dipakai</td>
+<td>Pembacaan register non-<code>volatile</code> yang hasilnya tak dipakai <strong>hilang</strong></td>
+</tr>
+<tr>
+<td><em>Common subexpression elimination</em></td>
+<td>Menghitung ekspresi yang sama sekali saja</td>
+<td>Dua pembacaan register yang sama bisa digabung jadi satu</td>
+</tr>
+<tr>
+<td><em>Loop-invariant code motion</em></td>
+<td>Mengangkat perhitungan yang tetap ke luar loop</td>
+<td>Pembacaan flag status di dalam loop bisa diangkat keluar (bug polling)</td>
+</tr>
+<tr>
+<td><em>Inlining</em></td>
+<td>Menyalin isi fungsi kecil ke pemanggil</td>
+<td>Kode lebih cepat tapi lebih besar; alur kode di debugger berubah</td>
+</tr>
+<tr>
+<td><em>Store merging / load widening</em></td>
+<td>Menggabungkan beberapa akses kecil menjadi satu akses lebar</td>
+<td>Empat tulisan byte bisa jadi satu tulisan 32-bit, <strong>hanya jika</strong> alignment diketahui aman</td>
+</tr>
+<tr>
+<td><em>Vectorization</em></td>
+<td>Memproses beberapa elemen sekaligus dengan instruksi SIMD</td>
+<td>Di Cortex-M4/M7 (DSP) dan x86 (SSE/AVX); sangat sensitif alignment</td>
+</tr>
+<tr>
+<td><em>Alias analysis</em></td>
+<td>Menentukan apakah dua pointer bisa menunjuk ke memori yang sama</td>
+<td>Dasar dari aturan <em>strict aliasing</em></td>
+</tr>
+</tbody>
+</table>
+<p>Sebagai contoh, fungsi <code>ambil_pc</code> di atas, dengan <code>-O2</code> untuk Cortex-M4, bisa dikompilasi menjadi beberapa instruksi saja: dua pembacaan byte, satu penggabungan, dan kembali. Di x86-64, Clang bahkan bisa mengenali pola "baca 16 bit lalu tukar urutan byte", lalu memakai satu pembacaan 16-bit diikuti instruksi <code>rol</code>/<code>bswap</code>, karena di x86 pembacaan tak-aligned diizinkan. Untuk Cortex-M0, compiler <strong>tidak</strong> boleh melakukan pelebaran itu, karena alamat <code>resp</code> hanya dijamin aligned 1 byte dan M0 tidak bisa membaca halfword dari alamat ganjil. Jadi kode C yang sama menghasilkan strategi berbeda, dan keduanya benar, karena compiler tahu kemampuan masing-masing target.</p>
+<h2 id="tahap-4-back-end-dari-ir-ke-instruksi-nyata">Tahap 4: back-end, dari IR ke instruksi nyata</h2>
+<p>Back-end bekerja dalam beberapa langkah besar:</p>
+<p><strong>Pemilihan instruksi (<em>instruction selection</em>).</strong> Pola-pola IR dicocokkan dengan instruksi yang tersedia. <code>shl</code> lalu <code>or</code> di ARM bisa menjadi satu instruksi <code>orr r0, r1, r0, lsl #8</code>, karena ARM bisa menggeser operan kedua tanpa biaya tambahan. Di sinilah compiler memakai pengetahuan tentang alignment: <code>load i32 ... align 4</code> boleh menjadi <code>LDR</code>, sedangkan <code>load i32 ... align 1</code> di Cortex-M0 harus dipecah menjadi empat <code>LDRB</code> plus penggeseran dan penggabungan.</p>
+<p><strong>Alokasi register.</strong> Cortex-M punya 13 register serbaguna (<code>r0</code>–<code>r12</code>) ditambah <code>sp</code>, <code>lr</code>, dan <code>pc</code>. Ribuan nilai SSA harus dipetakan ke register yang terbatas itu. Nilai yang tidak kebagian register di-<em>spill</em> ke stack. Konvensi pemanggilan <strong>AAPCS</strong> (<em>Procedure Call Standard for the Arm Architecture</em>) menentukan bahwa argumen pertama sampai keempat masuk di <code>r0</code>–<code>r3</code>, nilai kembali di <code>r0</code>, dan register <code>r4</code>–<code>r11</code> harus dipulihkan oleh fungsi yang memakainya. Aturan seperti ini memungkinkan kode yang dikompilasi oleh compiler berbeda (misalnya pustaka vendor buatan IAR dan aplikasi Anda buatan GCC) saling memanggil.</p>
+<p><strong>Penjadwalan instruksi (<em>scheduling</em>).</strong> Instruksi diurutkan ulang supaya pipeline prosesor tidak menganggur, misalnya memisahkan instruksi <code>LDR</code> dari instruksi yang memakai hasilnya.</p>
+<p><strong>Emisi kode.</strong> Hasil akhirnya berupa file assembly (<code>.s</code>) atau langsung file objek (<code>.o</code>). Hasil akhir untuk <code>ambil_pc</code> di Cortex-M4 dengan <code>-O2</code> kira-kira:</p>
+<pre><code class="language-asm">ambil_pc:
+    ldrb    r1, [r0]          @ r1 = resp[0]
+    ldrb    r0, [r0, #1]      @ r0 = resp[1]
+    orr     r0, r0, r1, lsl #8
+    bx      lr                @ kembali; hasil di r0
+</code></pre>
+<p>Empat instruksi, sebagian besar 16-bit. Dari sebuah ekspresi C dengan promosi tipe, <em>cast</em>, dan dua akses array, compiler menyisakan pekerjaan yang benar-benar dibutuhkan hardware.</p>
+<div class="admonition praktik">
+<p class="admonition-title">Melihat sendiri apa yang dilakukan compiler</p>
+<ul>
+<li><code>arm-none-eabi-gcc -O2 -mcpu=cortex-m4 -mthumb -S file.c</code> menghasilkan <code>file.s</code> berisi assembly.</li>
+<li><code>clang --target=thumbv6m-none-eabi -O2 -S -emit-llvm file.c</code> menghasilkan LLVM IR.</li>
+<li><code>arm-none-eabi-objdump -d firmware.elf</code> membongkar biner yang sudah jadi.</li>
+<li><code>-fdump-tree-optimized</code> (GCC) memperlihatkan representasi antara GCC setelah optimisasi.</li>
+<li>Situs Compiler Explorer (godbolt.org) menampilkan kode C dan assembly berdampingan untuk puluhan compiler dan target, sangat berguna untuk membandingkan <code>cortex-m0plus</code> dan <code>cortex-m4</code>.</li>
+</ul>
+</div>
+<h2 id="mengapa-level-optimisasi-mengubah-perilaku-program">Mengapa level optimisasi mengubah perilaku program</h2>
+<p>Programmer firmware sering curiga ketika bug muncul hanya di <code>-O2</code>: "compiler-nya bug." Sangat jarang begitu. Yang lebih sering terjadi, program memang mengandung UB atau lupa <code>volatile</code>, dan <code>-O0</code> kebetulan menyembunyikannya karena di level itu compiler menyimpan setiap variabel di memori dan membacanya ulang setiap kali dipakai. Dengan kata lain, <code>-O0</code> menghasilkan kode yang mendekati terjemahan "harfiah", sedangkan <code>-O2</code> memanfaatkan setiap kebebasan yang diberikan standar. Prinsip praktisnya: <strong>uji firmware dengan level optimisasi yang sama dengan rilis</strong>, dan perlakukan "jalan di <code>-O0</code>, gagal di <code>-O2</code>" sebagai tanda ada kontrak yang dilanggar, bukan alasan untuk menurunkan optimisasi.</p>
+<h1 id="assembler-linker-dan-kode-startup">Assembler, Linker, dan Kode Startup</h1>
+<h2 id="file-objek-kode-yang-belum-tahu-alamatnya">File objek: kode yang belum tahu alamatnya</h2>
+<p>Assembler mengubah teks assembly menjadi <strong>file objek</strong> (<code>.o</code>), biasanya berformat <strong>ELF</strong> di dunia GCC/LLVM. File objek berisi beberapa <em>section</em><sup id="fnref:39"><a class="footnote-ref" href="#fn:39">39</a></sup><sup id="fnref:40"><a class="footnote-ref" href="#fn:40">40</a></sup>:</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Isi</th>
+<th>Di mana akhirnya disimpan di mikrokontroler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.text</code></td>
+<td>Kode mesin</td>
+<td>Flash</td>
+</tr>
+<tr>
+<td><code>.rodata</code></td>
+<td>Konstanta (<code>const</code>), string, tabel CRC</td>
+<td>Flash</td>
+</tr>
+<tr>
+<td><code>.data</code></td>
+<td>Variabel global/statis yang punya nilai awal bukan nol</td>
+<td>Disimpan di flash, <strong>disalin</strong> ke RAM saat startup</td>
+</tr>
+<tr>
+<td><code>.bss</code></td>
+<td>Variabel global/statis bernilai awal nol</td>
+<td>Hanya di RAM; <strong>diisi nol</strong> saat startup; tidak memakan tempat di file</td>
+</tr>
+<tr>
+<td><code>.stack</code>, <code>.heap</code></td>
+<td>Ruang stack dan heap (ditentukan linker script)</td>
+<td>RAM</td>
+</tr>
+</tbody>
+</table>
+<p>Yang menarik, setiap section di file objek dimulai dari alamat nol<sup id="fnref2:40"><a class="footnote-ref" href="#fn:40">40</a></sup>. Ketika fungsi <code>baca_tag()</code> di <code>rfid.o</code> memanggil <code>spi_transfer()</code> yang ada di <code>spi.o</code>, assembler belum tahu alamat <code>spi_transfer</code>. Ia hanya meninggalkan "lubang" di instruksi <code>BL</code> dan mencatat <strong>entri relokasi</strong>: "di offset sekian dalam <code>.text</code>, isi dengan alamat simbol <code>spi_transfer</code>, memakai rumus jenis <code>R_ARM_THM_CALL</code>." Tabel simbol (<code>.symtab</code>) mencatat simbol apa yang didefinisikan file ini dan simbol apa yang dibutuhkannya dari luar.</p>
+<h2 id="linker-menyusun-peta-memori">Linker: menyusun peta memori</h2>
+<p><strong>Linker</strong> (<code>ld</code>, <code>lld</code>, atau <code>gold</code>) punya dua tugas utama<sup id="fnref2:39"><a class="footnote-ref" href="#fn:39">39</a></sup>:</p>
+<ol>
+<li><strong>Resolusi simbol</strong>: setiap referensi ke <code>spi_transfer</code> dihubungkan ke tepat satu definisi. Kalau tidak ada definisi, muncul galat <em>undefined reference</em>; kalau ada dua, muncul <em>multiple definition</em>.</li>
+<li><strong>Relokasi</strong>: menentukan alamat akhir setiap section, lalu menambal semua "lubang" yang dicatat assembler.</li>
+</ol>
+<p>Di PC, linker menghasilkan program yang nanti dimuat oleh sistem operasi ke alamat virtual. Di mikrokontroler tidak ada sistem operasi yang memuat program; <strong>alamat fisik harus ditentukan saat link</strong>. Untuk itu ada <strong>linker script</strong> (<code>.ld</code>), file yang menjelaskan peta memori chip:</p>
+<pre><code class="language-ld">MEMORY
+{
+  FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 256K
+  RAM   (rwx) : ORIGIN = 0x20000000, LENGTH = 64K
+}
+
+SECTIONS
+{
+  .isr_vector : { KEEP(*(.isr_vector)) } &gt; FLASH   /* tabel vektor di awal flash */
+  .text       : { *(.text*) *(.rodata*) } &gt; FLASH
+  .data       : { _sdata = .; *(.data*); _edata = .; } &gt; RAM AT &gt; FLASH
+  _sidata = LOADADDR(.data);                       /* lokasi salinan .data di flash */
+  .bss  (NOLOAD) : { _sbss = .; *(.bss*) *(COMMON); _ebss = .; } &gt; RAM
+  . = ALIGN(8);
+  _estack = ORIGIN(RAM) + LENGTH(RAM);             /* stack tumbuh turun dari ujung RAM */
+}
+</code></pre>
+<p>Baris <code>&gt; RAM AT &gt; FLASH</code> adalah inti cara kerja variabel global di mikrokontroler: alamat <strong>eksekusi</strong> (VMA) <code>.data</code> ada di RAM, tetapi <strong>isinya</strong> (LMA) disimpan di flash, karena RAM kehilangan isinya ketika listrik mati. Simbol <code>_sdata</code>, <code>_edata</code>, <code>_sidata</code>, <code>_sbss</code>, dan <code>_ebss</code> tidak berisi data; mereka hanya <strong>label alamat</strong> yang nanti dibaca oleh kode startup<sup id="fnref:38"><a class="footnote-ref" href="#fn:38">38</a></sup>. Linker script juga penuh perintah <code>ALIGN(...)</code>, karena tabel vektor, stack, dan buffer DMA punya syarat alignment sendiri. Linker script pustaka Rust <code>cortex-m-rt</code>, misalnya, memeriksa secara eksplisit bahwa tabel vektor diletakkan dengan alignment yang benar<sup id="fnref:37"><a class="footnote-ref" href="#fn:37">37</a></sup>.</p>
+<h2 id="saat-listrik-menyala-urutan-reset-cortex-m">Saat listrik menyala: urutan reset Cortex-M</h2>
+<p>Apa yang terjadi di nanodetik pertama setelah tombol reset dilepas? Di Cortex-M, urutannya ditentukan oleh hardware, bukan oleh perangkat lunak<sup id="fnref2:38"><a class="footnote-ref" href="#fn:38">38</a></sup>:</p>
+<ol>
+<li>CPU membaca <strong>word pertama</strong> tabel vektor (misalnya di <code>0x0800_0000</code> pada STM32) dan memasukkannya ke register <code>SP</code> sebagai nilai awal stack.</li>
+<li>CPU membaca <strong>word kedua</strong> (<code>0x0800_0004</code>), yaitu alamat <code>Reset_Handler</code>, lalu melompat ke sana.</li>
+<li><code>Reset_Handler</code> (kode startup, biasanya <code>startup_stm32xxx.s</code> atau ditulis dalam C) melakukan:<ul>
+<li>menyalin <code>.data</code> dari flash (<code>_sidata</code>) ke RAM (<code>_sdata</code> sampai <code>_edata</code>);</li>
+<li>mengisi nol <code>.bss</code> (<code>_sbss</code> sampai <code>_ebss</code>);</li>
+<li>(opsional) mengaktifkan FPU, mengatur clock sistem lewat <code>SystemInit()</code>;</li>
+<li>memanggil konstruktor C++ statis, lalu <code>main()</code>.</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-c">extern uint32_t _sidata, _sdata, _edata, _sbss, _ebss;
+
+void Reset_Handler(void) {
+    uint32_t *src = &amp;_sidata, *dst = &amp;_sdata;
+    while (dst &lt; &amp;_edata) *dst++ = *src++;   /* salin .data */
+    for (dst = &amp;_sbss; dst &lt; &amp;_ebss; ) *dst++ = 0;  /* nolkan .bss */
+    SystemInit();
+    main();
+    for (;;) { }
+}
+</code></pre>
+<p>Perhatikan bahwa loop di atas menyalin <strong>per word 32-bit</strong>. Ini hanya benar kalau linker script menjamin <code>_sdata</code>, <code>_edata</code>, <code>_sbss</code>, dan <code>_ebss</code> aligned 4 byte. Kalau ada yang lupa <code>ALIGN(4)</code>, beberapa byte terakhir <code>.data</code> tidak tersalin atau byte di luar <code>.bss</code> ikut terhapus. Ini contoh nyata bagaimana alignment bukan hanya soal kecepatan, tetapi soal <strong>kebenaran</strong>.</p>
+<div class="admonition catatan">
+<p class="admonition-title">Konsekuensi bagi C: mengapa variabel global punya nilai awal</p>
+<p>Standar C menjamin variabel statis tanpa inisialisasi bernilai nol. Di PC, jaminan ini dipenuhi oleh sistem operasi, yang memberikan halaman memori bersih. Di mikrokontroler, jaminan itu dipenuhi oleh <strong>beberapa baris kode startup</strong> di atas. Kalau kode startup dimodifikasi dan loop <code>.bss</code> terhapus, program C yang "benar" bisa berperilaku acak karena variabel global berisi sisa data dari sebelum reset.</p>
+</div>
+<h2 id="dari-elf-ke-chip">Dari ELF ke chip</h2>
+<p>Hasil akhir linker adalah <code>firmware.elf</code>, yang masih membawa simbol dan informasi debug (berguna untuk GDB). Untuk ditulis ke flash, file itu sering diubah menjadi gambar biner mentah (<code>arm-none-eabi-objcopy -O binary</code>) atau format Intel HEX. <em>Programmer/debugger</em> (ST-LINK, J-Link, CMSIS-DAP) kemudian menulis byte-byte itu ke flash lewat antarmuka <strong>SWD</strong> atau <strong>JTAG</strong>. Di titik ini program kita sudah sepenuhnya berupa pola bit di sel-sel memori flash, siap dieksekusi.</p>
+<h1 id="di-dalam-chip-cpu-bus-dan-periferal">Di Dalam Chip: CPU, Bus, dan Periferal</h1>
+<h2 id="isa-kontrak-antara-compiler-dan-silikon">ISA: kontrak antara compiler dan silikon</h2>
+<p><strong>Instruction Set Architecture (ISA)</strong> adalah kontrak paling penting dalam dokumen ini. Ia mendefinisikan instruksi apa yang ada, register apa yang terlihat, bagaimana alamat memori dihitung, dan apa yang terjadi pada akses tak-aligned. Compiler hanya perlu menaati ISA; ia tidak perlu tahu bagaimana ISA itu diwujudkan di silikon. Dua chip dengan ISA sama (misalnya Cortex-M4 buatan ST dan buatan NXP) bisa menjalankan biner yang sama untuk bagian CPU-nya, meskipun periferalnya berbeda.</p>
+<p>Keluarga Cortex-M hanya mendukung instruksi <strong>Thumb/Thumb-2</strong><sup id="fnref:31"><a class="footnote-ref" href="#fn:31">31</a></sup>. Thumb-2 adalah <em>encoding</em> campuran: sebagian besar instruksi berukuran 16 bit, dan sebagian lain 32 bit. Hasilnya adalah <strong>kepadatan kode</strong> yang tinggi, yang penting karena flash mikrokontroler mahal dan kecil. Harganya: banyak instruksi 16-bit hanya bisa memakai register <code>r0</code>–<code>r7</code>, dan eksekusi bersyarat memerlukan instruksi awalan <code>IT</code><sup id="fnref2:31"><a class="footnote-ref" href="#fn:31">31</a></sup>. Compiler mengetahui semua batasan ini dan memilih bentuk 16-bit setiap kali memungkinkan, terutama dengan <code>-Os</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Inti</th>
+<th>Arsitektur</th>
+<th>Akses tak-aligned</th>
+<th>Cache</th>
+<th>Catatan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cortex-M0 / M0+</td>
+<td>ARMv6-M</td>
+<td><strong>Tidak</strong>; selalu <em>HardFault</em><sup id="fnref5:19"><a class="footnote-ref" href="#fn:19">19</a></sup><sup id="fnref3:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+<td>Tidak</td>
+<td>Paling kecil dan hemat daya; banyak di modul RFID murah</td>
+</tr>
+<tr>
+<td>Cortex-M3</td>
+<td>ARMv7-M</td>
+<td>Ya untuk <code>LDR</code>/<code>STR</code>/<code>LDRH</code>/<code>STRH</code> biasa; tidak untuk <code>LDM</code>/<code>STM</code>/<code>LDRD</code><sup id="fnref:61"><a class="footnote-ref" href="#fn:61">60</a></sup></td>
+<td>Tidak</td>
+<td>Pipeline 3 tahap, bus Harvard<sup id="fnref2:29"><a class="footnote-ref" href="#fn:29">29</a></sup></td>
+</tr>
+<tr>
+<td>Cortex-M4</td>
+<td>ARMv7E-M</td>
+<td>Sama seperti M3</td>
+<td>Tidak (kadang ada <em>accelerator</em> flash dari vendor)</td>
+<td>Instruksi DSP dan FPU opsional</td>
+</tr>
+<tr>
+<td>Cortex-M7</td>
+<td>ARMv7E-M</td>
+<td>Sama seperti M3</td>
+<td><strong>Ya</strong>, cache data dengan line 32 byte<sup id="fnref8:34"><a class="footnote-ref" href="#fn:34">34</a></sup></td>
+<td>Pipeline superskalar 6 tahap; perlu perhatian khusus untuk DMA</td>
+</tr>
+<tr>
+<td>Cortex-M33 / M55 / M85</td>
+<td>ARMv8-M</td>
+<td>Sama seperti M3</td>
+<td>M55/M85 ya</td>
+<td>TrustZone; M55/M85 dengan vektor Helium</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pipeline-instruksi-tidak-dikerjakan-satu-per-satu">Pipeline: instruksi tidak dikerjakan satu per satu</h2>
+<p>Cortex-M3 memiliki pipeline tiga tahap: <strong>fetch</strong> (ambil instruksi dari memori), <strong>decode</strong> (pahami instruksinya), dan <strong>execute</strong> (kerjakan)<sup id="fnref:30"><a class="footnote-ref" href="#fn:30">30</a></sup>. Saat satu instruksi dieksekusi, instruksi berikutnya sedang di-<em>decode</em> dan instruksi sesudahnya sedang diambil. Arm menjelaskan bahwa Cortex-M3 bahkan mulai mengambil instruksi tujuan sebuah <em>branch</em> sudah di tahap <em>decode</em>, sebelum <em>branch</em>-nya benar-benar diselesaikan di tahap <em>execute</em><sup id="fnref:29"><a class="footnote-ref" href="#fn:29">29</a></sup>.</p>
+<p>Yang lebih penting bagi pembahasan kita: Cortex-M3 memakai <strong>arsitektur bus Harvard</strong> dengan tiga antarmuka AHB-Lite terpisah, yaitu <strong>I-Code</strong> (ambil instruksi dari flash), <strong>D-Code</strong> (ambil data/konstanta dari flash), dan <strong>System</strong> (akses SRAM dan periferal)<sup id="fnref2:30"><a class="footnote-ref" href="#fn:30">30</a></sup>. Karena jalurnya terpisah, CPU bisa mengambil instruksi berikutnya sambil membaca data, tanpa saling menunggu.</p>
+<h2 id="peta-memori-semua-hal-punya-alamat">Peta memori: semua hal punya alamat</h2>
+<p>Arsitektur ARMv7-M membagi ruang alamat 32-bit (4 GB) menjadi wilayah-wilayah dengan fungsi tetap<sup id="fnref:27"><a class="footnote-ref" href="#fn:27">27</a></sup><sup id="fnref:28"><a class="footnote-ref" href="#fn:28">28</a></sup>:</p>
+<table>
+<thead>
+<tr>
+<th>Rentang alamat</th>
+<th>Wilayah</th>
+<th>Tipe memori</th>
+<th>Isi tipikal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0x0000_0000</code>–<code>0x1FFF_FFFF</code></td>
+<td>Code</td>
+<td>Normal</td>
+<td>Flash, tabel vektor</td>
+</tr>
+<tr>
+<td><code>0x2000_0000</code>–<code>0x3FFF_FFFF</code></td>
+<td>SRAM</td>
+<td>Normal</td>
+<td>Variabel, stack, heap, buffer DMA</td>
+</tr>
+<tr>
+<td><code>0x4000_0000</code>–<code>0x5FFF_FFFF</code></td>
+<td>Peripheral</td>
+<td><strong>Device</strong>, tidak boleh dieksekusi (XN)</td>
+<td>GPIO, SPI, UART, timer, DMA</td>
+</tr>
+<tr>
+<td><code>0x6000_0000</code>–<code>0x9FFF_FFFF</code></td>
+<td>RAM eksternal</td>
+<td>Normal</td>
+<td>SDRAM, PSRAM</td>
+</tr>
+<tr>
+<td><code>0xA000_0000</code>–<code>0xDFFF_FFFF</code></td>
+<td>Perangkat eksternal</td>
+<td>Device</td>
+<td>Memori atau chip eksternal yang dipetakan</td>
+</tr>
+<tr>
+<td><code>0xE000_0000</code>–<code>0xE00F_FFFF</code></td>
+<td>Private Peripheral Bus</td>
+<td><em>Strongly-ordered</em></td>
+<td>NVIC, SysTick, System Control Block<sup id="fnref3:28"><a class="footnote-ref" href="#fn:28">28</a></sup></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tipe memori</strong> di kolom keempat bukan sekadar label. Ia mengubah aturan main CPU. Memori <strong>Normal</strong> boleh dibaca secara spekulatif, aksesnya boleh digabung atau disusun ulang, dan akses tak-aligned diizinkan (di M3 ke atas). Memori <strong>Device</strong> dan <strong><em>Strongly-ordered</em></strong> dianggap punya efek samping: setiap akses harus benar-benar terjadi, dalam urutan dan ukuran yang ditulis program. Tipe ini dirancang persis untuk register periferal. Beberapa inti juga menyediakan <em>bit-banding</em> (misalnya di Cortex-M3/M4): satu word di wilayah alias <code>0x4200_0000</code> memetakan satu bit di wilayah periferal <code>0x4000_0000</code><sup id="fnref2:28"><a class="footnote-ref" href="#fn:28">28</a></sup>, sehingga sebuah bit bisa diubah tanpa <em>read-modify-write</em>. Fitur ini opsional dan tidak ada di semua inti.</p>
+<h2 id="dari-instruksi-str-ke-pin-yang-menyala">Dari instruksi <code>STR</code> ke pin yang menyala</h2>
+<p>Bagaimana sebuah tulisan C benar-benar menyalakan LED? Mari ikuti satu baris:</p>
+<pre><code class="language-c">#define GPIOA_ODR (*(volatile uint32_t *)0x48000014u)
+
+void led_nyala(void) {
+    GPIOA_ODR |= (1u &lt;&lt; 5);
+}
+</code></pre>
+<p>Compiler menghasilkan kira-kira:</p>
+<pre><code class="language-asm">led_nyala:
+    ldr     r2, =0x48000014   @ alamat register (diambil dari literal pool di flash)
+    ldr     r3, [r2]          @ BACA nilai register sekarang
+    orr     r3, r3, #32       @ set bit 5
+    str     r3, [r2]          @ TULIS kembali
+    bx      lr
+</code></pre>
+<p>Lalu di dalam chip:</p>
+<ol>
+<li><strong>Fetch</strong>: inti mengambil instruksi <code>str</code> dari flash lewat bus I-Code.</li>
+<li><strong>Execute</strong>: unit <em>load/store</em> mengirimkan transaksi <strong>tulis 32-bit</strong> ke bus System dengan alamat <code>0x4800_0014</code> dan data di <code>r3</code>.</li>
+<li><strong>Matriks bus</strong> (<em>bus matrix</em>) melihat bit-bit atas alamat dan meneruskan transaksi ke bus periferal yang tepat. Di banyak chip, periferal cepat ada di AHB dan periferal lambat di APB, dihubungkan lewat jembatan (<em>bridge</em>).</li>
+<li><strong>Dekoder alamat</strong> di blok GPIO memilih register <code>ODR</code> (offset <code>0x14</code>), lalu menyimpan nilai ke <em>flip-flop</em> register itu.</li>
+<li>Keluaran flip-flop bit 5 terhubung ke <em>driver</em> pin. Tegangan pin PA5 naik ke 3,3 V dan LED menyala.</li>
+</ol>
+<p>Inilah esensi MMIO: <strong>dari sudut pandang CPU, menyalakan LED sama dengan menyimpan angka ke memori.</strong> Seluruh "makna" ada di hardware di ujung bus.</p>
+<div class="admonition kritis">
+<p class="admonition-title">Tiga jebakan yang tersembunyi di baris sederhana itu</p>
+<ol>
+<li><strong>Read-modify-write tidak atomik.</strong> Jika sebuah interupsi mengubah bit lain di <code>GPIOA_ODR</code> di antara <code>ldr</code> dan <code>str</code>, perubahan itu tertimpa. Karena itu banyak chip menyediakan register khusus set/reset (misalnya <code>BSRR</code> di STM32) yang cukup ditulis tanpa dibaca.</li>
+<li><strong>Clock periferal.</strong> Di kebanyakan mikrokontroler, blok periferal mati sampai clock-nya diaktifkan (misalnya lewat register RCC). Tulisan ke register periferal yang clock-nya mati bisa diabaikan begitu saja. Compiler tidak tahu apa-apa soal ini.</li>
+<li><strong>Lebar akses.</strong> Sebagian register hanya menerima akses 32-bit. Kalau compiler (atau programmer) menulisnya dengan <code>STRB</code> 8-bit, hasilnya bisa diabaikan atau berbeda. <code>volatile uint32_t</code> memberi tahu compiler lebar aksesnya, tetapi sebuah laporan lama di milis GCC menunjukkan bahwa ini dulu pun pernah menjadi masalah<sup id="fnref:62"><a class="footnote-ref" href="#fn:62">61</a></sup>.</li>
+</ol>
+</div>
+<h2 id="interupsi-dan-dma-hardware-yang-bergerak-sendiri">Interupsi dan DMA: hardware yang bergerak sendiri</h2>
+<p>Dua mekanisme membuat hardware tidak sekadar "pasif menunggu perintah":</p>
+<p><strong>Interupsi.</strong> Ketika UART menerima byte atau chip RFID menarik pin IRQ, <strong>NVIC</strong> (<em>Nested Vectored Interrupt Controller</em>) menghentikan program utama, menyimpan beberapa register secara otomatis ke stack, lalu melompat ke alamat <em>handler</em> yang tercatat di tabel vektor. Fungsi interupsi di Cortex-M bisa ditulis sebagai fungsi C biasa, karena hardware menyimpan register sesuai konvensi AAPCS. Inilah contoh indah bagaimana hardware dirancang <strong>untuk</strong> compiler: arsitek Cortex-M sengaja membuat urutan masuk interupsi cocok dengan konvensi pemanggilan C. Satu syarat: stack harus aligned 8 byte di batas fungsi publik menurut AAPCS<sup id="fnref:17"><a class="footnote-ref" href="#fn:17">17</a></sup>, dan hardware Cortex-M bisa menambahkan padding otomatis saat masuk interupsi untuk menjaga syarat itu.</p>
+<p><strong>DMA</strong> (<em>Direct Memory Access</em>). Pengendali DMA adalah "CPU kecil" yang hanya bisa memindahkan data, misalnya dari register data SPI ke buffer di SRAM, tanpa melibatkan CPU. Untuk pembaca RFID yang menerima ratusan respons tag per detik, DMA sangat berharga. Tetapi DMA juga membuat <strong>dua pihak</strong> mengubah memori yang sama tanpa saling tahu, dan compiler hanya tahu satu di antaranya. Ini dibahas lebih dalam di bab berikutnya.</p>
+<h1 id="memory-alignment-secara-tuntas">Memory Alignment Secara Tuntas</h1>
+<h2 id="definisi-dan-intuisi">Definisi dan intuisi</h2>
+<p>Sebuah alamat disebut <strong>aligned ke N</strong> jika alamat itu kelipatan N. Alamat <code>0x2000_0008</code> aligned ke 1, 2, 4, dan 8; alamat <code>0x2000_0006</code> aligned ke 2 tetapi tidak ke 4. Setiap tipe data punya <strong>syarat alignment</strong>: di kebanyakan ABI 32-bit, <code>uint16_t</code> harus aligned 2, <code>uint32_t</code> dan <code>float</code> harus aligned 4, dan <code>uint64_t</code> serta <code>double</code> aligned 8 (di ABI Arm) atau 4 (di beberapa ABI lain). ABI Arm merumuskannya dengan sederhana: tipe primitif berukuran 1, 2, 4, atau 8 byte harus aligned sesuai ukurannya sendiri<sup id="fnref2:17"><a class="footnote-ref" href="#fn:17">17</a></sup>. Inilah yang disebut <strong><em>natural alignment</em></strong>.</p>
+<p>Bayangkan memori sebagai rak buku dengan sekat setiap 4 buku. Petugas perpustakaan (bus) selalu mengambil satu sekat penuh sekaligus. Kalau Anda menyimpan satu "jilid 4 buku" tepat di dalam satu sekat, petugas mengambilnya sekali jalan. Kalau jilid itu menyeberangi sekat (2 buku di sekat pertama, 2 di sekat kedua), petugas harus jalan dua kali, mengambil dua sekat, lalu memotong dan menyambung bukunya. Ada petugas yang mau melakukannya meskipun lebih lambat (x86, Cortex-M3 ke atas), dan ada petugas yang langsung menolak (Cortex-M0 dan banyak RISC lama).</p>
+<h2 id="mengapa-hardware-peduli-empat-lapisan-alasan">Mengapa hardware peduli: empat lapisan alasan</h2>
+<p><strong>1. Lebar bus dan desain unit load/store.</strong> Bus data 32-bit menghubungkan CPU ke memori dengan 32 jalur data. Memori SRAM biasanya diorganisasi per word 32-bit, dan dua bit terbawah alamat tidak memilih baris memori melainkan <em>byte lane</em> (byte keberapa di dalam word). Akses 32-bit yang aligned berarti satu transaksi bus. Akses yang menyeberang batas word berarti <strong>dua</strong> transaksi, ditambah rangkaian untuk menggeser dan menggabungkan byte. Di inti yang sangat kecil, rangkaian tambahan itu sengaja tidak dibuat untuk menghemat luas silikon dan daya. Itulah keputusan desain Cortex-M0/M0+: akses tak-aligned tidak didukung dan selalu memicu HardFault, tanpa opsi untuk dimatikan<sup id="fnref:19"><a class="footnote-ref" href="#fn:19">19</a></sup><sup id="fnref:20"><a class="footnote-ref" href="#fn:20">20</a></sup>.</p>
+<p><strong>2. Cache line.</strong> Prosesor dengan cache tidak membaca memori per word, tetapi per <strong>cache line</strong>: 32 byte di Cortex-M7<sup id="fnref:34"><a class="footnote-ref" href="#fn:34">34</a></sup>, 64 byte di x86 modern. Data yang menyeberangi batas line memaksa CPU mengakses dua line. Agner Fog melaporkan bahwa pada prosesor Intel sejak Sandy Bridge, pembacaan tak-aligned yang tetap di dalam satu line praktis tanpa penalti, dan sejak Haswell penalti lintas-line untuk <em>load</em> hilang, tetapi tidak untuk <em>store</em><sup id="fnref:22"><a class="footnote-ref" href="#fn:22">22</a></sup>. Sebuah pengukuran di sepuluh CPU Intel menemukan penalti 0% untuk akses tak-aligned di dalam satu line, tetapi naik sampai sekitar 30–70% ketika akses memecah line L1<sup id="fnref:23"><a class="footnote-ref" href="#fn:23">23</a></sup>.</p>
+<p><strong>3. Halaman memori virtual.</strong> Di sistem dengan MMU (Linux, Android), akses yang menyeberangi batas halaman 4 KB membutuhkan dua terjemahan alamat. Kalau halaman kedua belum dimuat, satu instruksi bisa memicu <em>page fault</em> di tengah-tengah akses, dan hardware harus mampu membatalkan setengah akses yang sudah terjadi. Laporan di forum Intel menyebut tulisan yang menyeberangi halaman 4 KB pada Sandy Bridge memakan penalti lebih dari 100 siklus<sup id="fnref:64"><a class="footnote-ref" href="#fn:64">63</a></sup>.</p>
+<p><strong>4. Atomisitas.</strong> Instruksi atomik (misalnya <code>LDREX</code>/<code>STREX</code> di ARM, <code>LOCK CMPXCHG</code> di x86) dirancang untuk mengunci satu lokasi. Di ARM, akses eksklusif ke alamat tak-aligned langsung gagal dengan fault. x86 masih mengizinkan operasi atomik yang terbelah di dua cache line (<em>split lock</em>), tetapi harganya sangat mahal karena dapat menghambat seluruh sistem, sehingga Linux menambahkan deteksi <em>split lock</em>, dan beberapa CPU Intel bisa memicu pengecualian <code>#AC</code> untuknya<sup id="fnref:24"><a class="footnote-ref" href="#fn:24">24</a></sup>.</p>
+<h2 id="peta-perilaku-per-arsitektur">Peta perilaku per arsitektur</h2>
+<table>
+<thead>
+<tr>
+<th>Arsitektur</th>
+<th>Akses tak-aligned ke memori biasa</th>
+<th>Biaya</th>
+<th>Catatan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x86 / x86-64</td>
+<td>Diizinkan untuk instruksi biasa</td>
+<td>Hampir nol di dalam satu cache line; lebih mahal lintas line/halaman<sup id="fnref3:22"><a class="footnote-ref" href="#fn:22">22</a></sup><sup id="fnref3:23"><a class="footnote-ref" href="#fn:23">23</a></sup></td>
+<td>Instruksi SSE tertentu (<code>movaps</code>) tetap mewajibkan alignment 16</td>
+</tr>
+<tr>
+<td>Cortex-M0 / M0+ (ARMv6-M)</td>
+<td><strong>Tidak</strong>: HardFault<sup id="fnref6:19"><a class="footnote-ref" href="#fn:19">19</a></sup><sup id="fnref4:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+<td>—</td>
+<td>Compiler harus memecah akses jadi per byte jika alignment tidak diketahui</td>
+</tr>
+<tr>
+<td>Cortex-M3/M4/M7/M33 (ARMv7-M, ARMv8-M)</td>
+<td>Ya untuk <code>LDR</code>, <code>STR</code>, <code>LDRH</code>, <code>STRH</code>; tidak untuk <code>LDM</code>, <code>STM</code>, <code>LDRD</code>, <code>STRD</code>, eksklusif<sup id="fnref2:61"><a class="footnote-ref" href="#fn:61">60</a></sup></td>
+<td>Beberapa siklus tambahan (dipecah jadi beberapa transaksi bus)</td>
+<td>Bit <code>UNALIGN_TRP</code> di register CCR bisa membuat semua akses tak-aligned menjadi fault<sup id="fnref3:61"><a class="footnote-ref" href="#fn:61">60</a></sup></td>
+</tr>
+<tr>
+<td>AArch64 (Cortex-A, Apple M)</td>
+<td>Ya untuk memori Normal</td>
+<td>Kecil</td>
+<td>Ke memori Device tetap fault</td>
+</tr>
+<tr>
+<td>RISC-V</td>
+<td><strong>Tergantung implementasi</strong>: bisa didukung hardware, ditangani perangkat lunak lewat <em>trap</em>, atau fatal<sup id="fnref2:25"><a class="footnote-ref" href="#fn:25">25</a></sup></td>
+<td>Dari nol sampai ratusan siklus (emulasi)</td>
+<td>Ekstensi profil <strong>Zicclsm</strong> menandai dukungan; QEMU baru menambah emulasi "jujur" untuknya pada 2026<sup id="fnref2:26"><a class="footnote-ref" href="#fn:26">26</a></sup></td>
+</tr>
+</tbody>
+</table>
+<p>Pelajaran dari tabel ini: <strong>"berjalan di PC saya" tidak membuktikan apa pun tentang alignment.</strong> Kode parsing yang diuji di laptop x86 bisa langsung <em>crash</em> di modul pembaca RFID berbasis Cortex-M0+.</p>
+<h2 id="bagaimana-compiler-menjaga-alignment-padding-struct">Bagaimana compiler menjaga alignment: padding struct</h2>
+<p>Compiler menempatkan field-field struct <strong>berurutan sesuai deklarasi</strong> (C tidak mengizinkan compiler menyusun ulang), tetapi menyisipkan byte kosong (<em>padding</em>) agar setiap field memenuhi syarat alignment-nya. Alignment struct sendiri sama dengan alignment terbesar di antara anggotanya<sup id="fnref:18"><a class="footnote-ref" href="#fn:18">18</a></sup>, dan ukurannya dibulatkan ke kelipatan alignment itu supaya elemen-elemen dalam array tetap aligned.</p>
+<p>Contoh catatan hasil pembacaan tag di firmware pembaca (ABI Arm 32-bit):</p>
+<pre><code class="language-c">struct baca_tag {          /* offset  ukuran */
+    uint8_t  antena;       /*   0       1    */
+                           /*   1..3    3    padding */
+    uint32_t waktu_ms;     /*   4       4    */
+    uint8_t  rssi;         /*   8       1    */
+                           /*   9       1    padding */
+    uint16_t pc;           /*  10       2    */
+};                         /* sizeof = 12, alignof = 4 */
+</code></pre>
+<p>Empat dari dua belas byte (33%) terbuang untuk padding. Menyusun ulang field dari yang terbesar ke terkecil menghapus semuanya:</p>
+<pre><code class="language-c">struct baca_tag_rapi {
+    uint32_t waktu_ms;     /*   0  */
+    uint16_t pc;           /*   4  */
+    uint8_t  antena;       /*   6  */
+    uint8_t  rssi;         /*   7  */
+};                         /* sizeof = 8 */
+</code></pre>
+<p>Untuk satu catatan, selisih 4 byte tidak berarti. Untuk <em>buffer</em> 2.000 hasil baca di mikrokontroler dengan RAM 32 KB, selisihnya 8 KB, seperempat RAM.</p>
+<div class="admonition catatan">
+<p class="admonition-title">Contoh perbedaan ABI yang terkenal</p>
+<p><code>struct { char c; double d; }</code> berukuran <strong>16 byte</strong> di ABI Arm 32-bit (karena <code>double</code> aligned 8), tetapi <strong>12 byte</strong> di ABI System V untuk x86 32-bit (Linux i386), yang hanya mewajibkan <code>double</code> di dalam struct aligned 4. Artinya, struct yang sama punya tata letak berbeda di dua mesin 32-bit. Inilah alasan utama mengapa <strong>menyalin struct mentah langsung ke kabel atau file</strong> (<code>write(fd, &amp;s, sizeof s)</code>) adalah praktik yang rapuh.</p>
+</div>
+<h2 id="packed-mematikan-padding-dan-harganya"><code>packed</code>: mematikan padding, dan harganya</h2>
+<p>Kadang kita butuh struct yang tata letaknya persis sama dengan format byte di kabel, misalnya header frame dari chip pembaca RFID. GCC dan Clang menyediakan atribut <code>packed</code>, yang menghapus padding antar-anggota; menerapkannya ke struct sama dengan menerapkannya ke setiap anggota<sup id="fnref:16"><a class="footnote-ref" href="#fn:16">16</a></sup>. GCC juga menjelaskan bahwa atribut <code>aligned</code> hanya bisa <strong>menaikkan</strong> alignment, sedangkan untuk <strong>menurunkannya</strong> dipakai <code>packed</code><sup id="fnref2:16"><a class="footnote-ref" href="#fn:16">16</a></sup>.</p>
+<pre><code class="language-c">struct __attribute__((packed)) frame_hdr {
+    uint8_t  sof;        /* 0 */
+    uint16_t panjang;    /* 1..2  ← tak-aligned! */
+    uint8_t  perintah;   /* 3 */
+    uint32_t nomor;      /* 4..7 */
+};                       /* sizeof = 8, alignof = 1 */
+</code></pre>
+<p>Ketika kode mengakses <code>hdr-&gt;panjang</code> <strong>langsung lewat struct</strong>, compiler tahu field itu mungkin tak-aligned, sehingga di Cortex-M0 ia menghasilkan dua <code>LDRB</code> dan penggabungan. Aman, tetapi lebih lambat dan lebih besar. Masalah muncul ketika alamat field itu "dicuci" menjadi pointer biasa:</p>
+<pre><code class="language-c">uint16_t *p = &amp;hdr-&gt;panjang;   /* informasi &quot;mungkin tak-aligned&quot; HILANG */
+uint16_t n = *p;               /* compiler memakai LDRH → HardFault di M0 */
+</code></pre>
+<p>Tipe <code>uint16_t *</code> membawa janji alignment 2. Compiler mempercayai janji itu. GCC sejak versi 9 memberi peringatan <code>-Waddress-of-packed-member</code> untuk pola ini. Diskusi di forum Arm dan Launchpad mencatat kasus nyata: struct packed yang diakses lewat pointer acak di Cortex-M0 dengan <code>-Os</code> menghasilkan HardFault, dan solusinya adalah <code>memcpy()</code><sup id="fnref:21"><a class="footnote-ref" href="#fn:21">21</a></sup><sup id="fnref2:19"><a class="footnote-ref" href="#fn:19">19</a></sup>.</p>
+<h2 id="cara-yang-benar-membaca-data-tak-aligned">Cara yang benar membaca data tak-aligned</h2>
+<p>Ada dua pola yang portabel dan, dengan compiler modern, sama sekali tidak lambat:</p>
+<pre><code class="language-c">#include &lt;string.h&gt;
+
+/* Pola 1: memcpy — compiler tahu alignment sumber hanya 1 */
+static inline uint32_t baca_u32_ne(const uint8_t *p) {
+    uint32_t v;
+    memcpy(&amp;v, p, sizeof v);   /* urutan byte = urutan mesin (little-endian di Cortex-M) */
+    return v;
+}
+
+/* Pola 2: rakit dari byte — sekaligus menentukan endianness secara eksplisit */
+static inline uint32_t baca_u32_be(const uint8_t *p) {
+    return ((uint32_t)p[0] &lt;&lt; 24) | ((uint32_t)p[1] &lt;&lt; 16) |
+           ((uint32_t)p[2] &lt;&lt; 8)  |  (uint32_t)p[3];
+}
+</code></pre>
+<p><code>memcpy</code> dengan ukuran konstan kecil tidak benar-benar memanggil fungsi pustaka. Compiler mengenalinya sebagai <em>built-in</em>: di Cortex-M4 ia menjadi satu <code>LDR</code> (karena M4 mendukung <code>LDR</code> tak-aligned), di Cortex-M0 menjadi empat <code>LDRB</code>, dan di x86 menjadi satu <code>mov</code>. Ini contoh terbaik dari "kontrak yang jujur": programmer menyatakan apa yang sebenarnya ia ketahui (alamat bisa tak-aligned), lalu compiler memilih instruksi terbaik untuk chip yang dituju. Pola 2 bahkan sering dikenali dan diganti dengan <code>LDR</code> + <code>REV</code> (instruksi pembalik urutan byte) di Cortex-M3 ke atas.</p>
+<h2 id="menaikkan-alignment-kapan-dan-mengapa">Menaikkan alignment: kapan dan mengapa</h2>
+<p>Kebalikan dari <code>packed</code>, kadang kita perlu alignment <strong>lebih besar</strong> daripada bawaan:</p>
+<table>
+<thead>
+<tr>
+<th>Kebutuhan</th>
+<th>Alignment</th>
+<th>Cara</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Buffer DMA di Cortex-M7 dengan cache</td>
+<td>32 byte, ukuran kelipatan 32<sup id="fnref9:34"><a class="footnote-ref" href="#fn:34">34</a></sup></td>
+<td><code>alignas(32) uint8_t rx_buf[256];</code></td>
+</tr>
+<tr>
+<td>Tabel vektor yang dipindahkan ke RAM (<code>VTOR</code>)</td>
+<td>Minimal 128 byte, tergantung jumlah vektor</td>
+<td><code>ALIGN(...)</code> di linker script</td>
+</tr>
+<tr>
+<td>Stack di batas fungsi publik (AAPCS)</td>
+<td>8 byte<sup id="fnref5:17"><a class="footnote-ref" href="#fn:17">17</a></sup></td>
+<td>Diatur linker script dan kode startup</td>
+</tr>
+<tr>
+<td>Region proteksi MPU (ARMv7-M)</td>
+<td>Sebesar ukuran region (pangkat dua)</td>
+<td>Alignment di linker script</td>
+</tr>
+<tr>
+<td>Data SIMD (SSE/NEON/Helium)</td>
+<td>16 byte atau lebih</td>
+<td><code>alignas(16)</code></td>
+</tr>
+<tr>
+<td>Menghindari <em>false sharing</em> antar-core</td>
+<td>64 byte (x86)</td>
+<td><code>alignas(64)</code> per variabel yang dipakai thread berbeda</td>
+</tr>
+</tbody>
+</table>
+<p>Di C11 cukup menulis <code>alignas(N)</code> (dari <code>&lt;stdalign.h&gt;</code>)<sup id="fnref2:14"><a class="footnote-ref" href="#fn:14">14</a></sup>; di GCC/Clang lama, <code>__attribute__((aligned(N)))</code>. Untuk memori dinamis ada <code>aligned_alloc()</code> (C11).</p>
+<h2 id="dma-cache-dan-alignment-jebakan-terbesar-di-cortex-m7">DMA, cache, dan alignment: jebakan terbesar di Cortex-M7</h2>
+<p>Cortex-M7 punya cache data. Ketika CPU menulis ke buffer, data mungkin baru masuk cache dan belum sampai ke SRAM. Ketika DMA menulis ke SRAM, cache CPU mungkin masih menyimpan versi lama. Kedua pihak "melihat" isi memori yang berbeda, karena Cortex-M7 tidak menjaga koherensi cache dengan DMA secara otomatis<sup id="fnref2:34"><a class="footnote-ref" href="#fn:34">34</a></sup>. Aturannya<sup id="fnref3:34"><a class="footnote-ref" href="#fn:34">34</a></sup><sup id="fnref:35"><a class="footnote-ref" href="#fn:35">35</a></sup>:</p>
+<ul>
+<li><strong>Sebelum DMA mengirim</strong> (TX, misalnya perintah ke chip RFID lewat SPI): <em>clean</em> cache untuk buffer itu (<code>SCB_CleanDCache_by_Addr</code>), supaya isi cache tertulis ke SRAM.</li>
+<li><strong>Setelah DMA menerima</strong> (RX, misalnya respons tag): <em>invalidate</em> cache untuk buffer itu (<code>SCB_InvalidateDCache_by_Addr</code>) sebelum CPU membacanya.</li>
+<li><strong>Alamat awal buffer harus aligned 32 byte, dan ukurannya kelipatan 32.</strong> Fungsi-fungsi CMSIS bekerja per line utuh; alamat yang tak-aligned dibulatkan ke bawah diam-diam<sup id="fnref:36"><a class="footnote-ref" href="#fn:36">36</a></sup>. Jika buffer berbagi satu line dengan variabel lain, <em>invalidate</em> bisa <strong>menghapus nilai terbaru variabel tetangga</strong> itu<sup id="fnref3:35"><a class="footnote-ref" href="#fn:35">35</a></sup>.</li>
+<li><strong>Alternatif:</strong> tandai wilayah buffer DMA sebagai <em>non-cacheable</em> lewat MPU. Banyak contoh resmi ST memilih cara ini<sup id="fnref6:34"><a class="footnote-ref" href="#fn:34">34</a></sup>.</li>
+</ul>
+<div class="admonition kritis">
+<p class="admonition-title">Mengapa bug ini begitu sulit dilacak</p>
+<p>Bug koherensi cache tidak muncul di debugger ketika Anda menghentikan program, karena debugger sering membaca memori lewat jalur yang berbeda dari CPU. Bug ini muncul acak, tergantung kapan line cache kebetulan dikeluarkan, dan sering hilang ketika Anda menambahkan <code>printf</code> (yang mengubah isi cache). Gejala tipikal di pembaca RFID: sesekali EPC yang terbaca berisi data dari pembacaan <strong>sebelumnya</strong>.</p>
+</div>
+<h2 id="daftar-periksa-alignment-untuk-firmware">Daftar periksa alignment untuk firmware</h2>
+<ol>
+<li>Jangan pernah melakukan <em>cast</em> <code>uint8_t *</code> ke <code>uint16_t *</code>/<code>uint32_t *</code> untuk membaca data dari buffer komunikasi. Gunakan <code>memcpy</code> atau perakitan byte.</li>
+<li>Jangan mengambil alamat anggota struct <code>packed</code>. Aktifkan <code>-Wall -Wextra -Waddress-of-packed-member -Wcast-align=strict</code>.</li>
+<li>Susun field struct dari yang terbesar ke terkecil kalau tata letak tidak terikat format eksternal.</li>
+<li>Pakai <code>_Static_assert(sizeof(struct x) == 8, "...")</code> dan <code>offsetof</code> untuk mengunci tata letak yang penting.</li>
+<li>Buffer DMA di chip ber-cache: <code>alignas(32)</code>, ukuran kelipatan 32, atau letakkan di wilayah non-cacheable.</li>
+<li>Kompilasi dengan <code>-mcpu</code> yang benar. Kode untuk <code>cortex-m4</code> yang dijalankan di M0+ akan memakai instruksi dan asumsi alignment yang tidak dimiliki M0+.</li>
+<li>Uji di hardware target, bukan hanya di PC.</li>
+</ol>
+<h1 id="ketika-compiler-dan-hardware-salah-paham">Ketika Compiler dan Hardware Salah Paham</h1>
+<h2 id="volatile-jangan-berasumsi-tentang-memori-ini"><code>volatile</code>: "jangan berasumsi tentang memori ini"</h2>
+<p>Kata kunci <code>volatile</code> dirancang untuk objek khusus, seperti register perangkat, yang isinya bisa berubah sendiri<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>. Ia memberi tahu compiler bahwa <strong>setiap</strong> akses ke objek itu adalah perilaku yang bisa diamati: tidak boleh dihapus, digabung, diduplikasi, atau disusun ulang terhadap akses <code>volatile</code> lain. Karena itu pola standar akses register adalah pointer ke tipe <code>volatile</code><sup id="fnref:11"><a class="footnote-ref" href="#fn:11">11</a></sup>:</p>
+<pre><code class="language-c">#define UART_SR  (*(volatile uint32_t *)0x40013800u)
+while ((UART_SR &amp; RXNE) == 0) { }   /* sekarang register dibaca di setiap putaran */
+</code></pre>
+<p>Kerangka CMSIS dari Arm memakai pola yang sama dalam bentuk lebih rapi: sebuah struct berisi anggota <code>volatile</code> (lewat makro <code>__IO</code>, <code>__I</code>, <code>__O</code>) yang dipetakan ke alamat dasar periferal, misalnya <code>USART1-&gt;SR</code>. Struct dipakai untuk tata letak word-word register, sedangkan field di dalam setiap register didefinisikan sebagai <em>mask</em> dengan <code>#define</code><sup id="fnref:41"><a class="footnote-ref" href="#fn:41">41</a></sup>.</p>
+<p>Namun <code>volatile</code> sering dianggap lebih sakti dari kenyataannya. John Regehr mendaftar "sembilan cara merusak kode sistem dengan <code>volatile</code>"<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup>. Yang terpenting:</p>
+<ul>
+<li><strong><code>volatile</code> tidak membuat operasi atomik.</strong> <code>counter++</code> pada variabel <code>volatile</code> tetap tiga instruksi (baca, tambah, tulis). Interupsi di tengahnya bisa menghilangkan satu penambahan.</li>
+<li><strong><code>volatile</code> tidak mengurutkan akses non-<code>volatile</code>.</strong> Compiler masih boleh memindahkan tulisan ke buffer biasa melewati tulisan ke register <code>volatile</code> yang memulai DMA. Akibatnya DMA bisa mulai sebelum buffer terisi.</li>
+<li><strong><code>volatile</code> tidak mengatur urutan di tingkat hardware.</strong> Ia hanya berbicara kepada compiler. Apa yang dilakukan bus, <em>write buffer</em>, atau cache adalah urusan lain.</li>
+<li><strong>Dokumentasi GNU sendiri mengingatkan</strong> bahwa standar C tidak merinci perilaku persis untuk kasus seperti ini, sehingga detailnya bisa berbeda antar-platform<sup id="fnref2:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</li>
+</ul>
+<h2 id="barrier-dua-jenis-pagar"><em>Barrier</em>: dua jenis pagar</h2>
+<p>Untuk mengatasi dua kelemahan terakhir, ada dua jenis "pagar" yang berbeda tingkatannya:</p>
+<p><strong>Compiler barrier</strong> melarang compiler memindahkan akses memori melewati satu titik. Di GCC/Clang bentuknya <code>asm volatile("" ::: "memory");</code>. Wiki OSDev menyarankan memakai barrier eksplisit seperti ini daripada mengandalkan <code>volatile</code> sebagai pengganti barrier<sup id="fnref2:11"><a class="footnote-ref" href="#fn:11">11</a></sup>. Instruksi ini tidak menghasilkan satu instruksi mesin pun. Ia murni pesan kepada optimizer.</p>
+<p><strong>Hardware barrier</strong> melarang <strong>prosesor</strong> dan sistem memori menyusun ulang akses. Di ARM ada tiga<sup id="fnref:32"><a class="footnote-ref" href="#fn:32">32</a></sup><sup id="fnref:33"><a class="footnote-ref" href="#fn:33">33</a></sup>:</p>
+<table>
+<thead>
+<tr>
+<th>Instruksi</th>
+<th>Nama</th>
+<th>Arti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DMB</code></td>
+<td><em>Data Memory Barrier</em></td>
+<td>Akses memori sebelum <code>DMB</code> terlihat oleh pihak lain sebelum akses sesudahnya</td>
+</tr>
+<tr>
+<td><code>DSB</code></td>
+<td><em>Data Synchronization Barrier</em></td>
+<td>Seperti <code>DMB</code>, ditambah menunggu sampai semua akses yang tertunda benar-benar selesai</td>
+</tr>
+<tr>
+<td><code>ISB</code></td>
+<td><em>Instruction Synchronization Barrier</em></td>
+<td>Mengosongkan pipeline, sehingga instruksi sesudahnya diambil ulang dengan konteks baru (misalnya setelah mengubah <code>VTOR</code> atau MPU)</td>
+</tr>
+</tbody>
+</table>
+<p>CMSIS menyediakannya sebagai fungsi intrinsik <code>__DMB()</code>, <code>__DSB()</code>, dan <code>__ISB()</code>, yang juga berlaku sebagai compiler barrier. Arm menerbitkan panduan khusus, <em>Application Note 321</em>, tentang kapan barrier dibutuhkan di Cortex-M<sup id="fnref2:32"><a class="footnote-ref" href="#fn:32">32</a></sup>. Dalam praktik, inti Cortex-M sederhana (M0, M3, M4) jarang menyusun ulang akses memori, sehingga banyak kode berjalan benar tanpa barrier. Itu sebabnya ada pendapat di forum Arm bahwa barrier di inti-inti ini nyaris tidak pernah diperlukan<sup id="fnref2:33"><a class="footnote-ref" href="#fn:33">33</a></sup>. Tetapi Cortex-M7, dengan pipeline superskalar dan cache, <strong>berbeda</strong>, dan kode yang ingin portabel antar-inti sebaiknya mengikuti panduan AN321. Contoh klasik: setelah menonaktifkan interupsi atau mengubah konfigurasi MPU, tambahkan <code>__DSB(); __ISB();</code>.</p>
+<h2 id="strict-aliasing-compiler-percaya-pada-tipe"><em>Strict aliasing</em>: compiler percaya pada tipe</h2>
+<p>Aturan <em>strict aliasing</em> menyatakan bahwa objek bertipe <code>T</code> hanya boleh diakses lewat lvalue bertipe <code>T</code> (atau varian yang kompatibel, atau <code>char</code>). Melanggarnya, misalnya membaca <code>float</code> lewat <code>uint32_t *</code>, adalah <em>undefined behavior</em><sup id="fnref:12"><a class="footnote-ref" href="#fn:12">12</a></sup><sup id="fnref:13"><a class="footnote-ref" href="#fn:13">13</a></sup>. Mengapa aturan ini ada? Karena ia memberi optimizer informasi berharga: tulisan lewat <code>uint16_t *</code> <strong>pasti</strong> tidak mengubah <code>uint32_t</code> mana pun, sehingga nilai <code>uint32_t</code> yang sudah ada di register tidak perlu dibaca ulang.</p>
+<pre><code class="language-c">uint32_t baca_epc_word(uint8_t *buf) {
+    uint32_t *w = (uint32_t *)buf;   /* melanggar aliasing (dan mungkin alignment) */
+    buf[0] = 0x30;                   /* compiler boleh menganggap ini tak mengubah *w */
+    return *w;
+}
+</code></pre>
+<p>Di GCC, analisis ini aktif secara bawaan pada <code>-O2</code> ke atas (<code>-fstrict-aliasing</code>), dan bisa dimatikan dengan <code>-fno-strict-aliasing</code>. Kernel Linux, misalnya, sengaja dikompilasi dengan opsi itu. Solusi yang sah dan efisien kembali sama: <strong><code>memcpy</code></strong><sup id="fnref2:12"><a class="footnote-ref" href="#fn:12">12</a></sup><sup id="fnref2:13"><a class="footnote-ref" href="#fn:13">13</a></sup>. Pengecualian penting: tipe karakter (<code>char</code>, <code>unsigned char</code>, <code>uint8_t</code> di praktiknya) <strong>boleh</strong> mengakses objek apa pun, karena itulah cara kerja <code>memcpy</code> itu sendiri.</p>
+<h2 id="endianness-urutan-byte-di-dalam-word">Endianness: urutan byte di dalam word</h2>
+<p>Bilangan 32-bit <code>0x30742578</code> disimpan di memori little-endian (Cortex-M, x86, RISC-V) sebagai byte <code>78 25 74 30</code> dari alamat terkecil, dan di memori big-endian sebagai <code>30 74 25 78</code>. CPU tidak "salah" dalam kedua kasus; yang penting adalah <strong>kesepakatan</strong> antara pengirim dan penerima. Protokol jaringan dan banyak protokol RFID mengirimkan bit atau byte paling signifikan lebih dulu ("urutan jaringan"). Ketika firmware little-endian menerima angka big-endian dan membacanya lewat <code>memcpy</code> ke <code>uint32_t</code>, hasilnya terbalik. Solusinya:</p>
+<ul>
+<li>rakit byte secara eksplisit seperti <code>baca_u32_be()</code> di atas, atau</li>
+<li>gunakan <code>__builtin_bswap32()</code> / <code>__REV()</code> (CMSIS), yang menjadi satu instruksi <code>REV</code> di Cortex-M3 ke atas.</li>
+</ul>
+<h2 id="bit-field-nyaman-tetapi-tidak-portabel">Bit-field: nyaman tetapi tidak portabel</h2>
+<p>C mengizinkan struct berisi field selebar beberapa bit:</p>
+<pre><code class="language-c">struct pc_word { uint16_t panjang:5; uint16_t umi:1; uint16_t xi:1; uint16_t t:1; uint16_t afi:8; };
+</code></pre>
+<p>Kelihatannya ideal untuk memodelkan register atau word protokol. Masalahnya, standar C membiarkan <strong>urutan alokasi bit di dalam satu unit</strong> (dari bit tinggi ke rendah atau sebaliknya) sebagai <em>implementation-defined</em>, dan alignment unit penyimpanannya tidak ditentukan<sup id="fnref2:41"><a class="footnote-ref" href="#fn:41">41</a></sup><sup id="fnref:63"><a class="footnote-ref" href="#fn:63">62</a></sup>. Dua compiler bisa menempatkan <code>panjang</code> di bit 0–4 atau di bit 11–15. Untuk register hardware ada risiko tambahan: menulis satu bit-field menghasilkan <em>read-modify-write</em> atas seluruh word, yang bisa tak sengaja mengubah bit lain atau membersihkan flag <em>write-1-to-clear</em><sup id="fnref3:41"><a class="footnote-ref" href="#fn:41">41</a></sup>. Karena itulah CMSIS dan sebagian besar driver profesional memakai <em>mask</em> dan <em>shift</em> eksplisit. Sebagian praktisi berpendapat risiko ini bisa diterima selama seluruh proyek memakai satu compiler yang perilakunya diuji. Ini bagian dari perdebatan yang dibahas belakangan.</p>
+<h1 id="studi-kasus-rfid-dari-udara-ke-server">Studi Kasus RFID: Dari Udara ke Server</h1>
+<h2 id="tiga-frekuensi-tiga-dunia">Tiga frekuensi, tiga dunia</h2>
+<p>"RFID" sebenarnya payung untuk beberapa teknologi yang sangat berbeda<sup id="fnref:58"><a class="footnote-ref" href="#fn:58">58</a></sup>:</p>
+<table>
+<thead>
+<tr>
+<th>Pita</th>
+<th>Frekuensi</th>
+<th>Standar utama</th>
+<th>Jarak baca tipikal</th>
+<th>Contoh penggunaan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LF</td>
+<td>125–134 kHz</td>
+<td>ISO 11784/11785, berbagai format kartu proksimitas</td>
+<td>Beberapa sentimeter</td>
+<td>Kartu akses lama, identifikasi hewan</td>
+</tr>
+<tr>
+<td>HF / NFC</td>
+<td>13,56 MHz</td>
+<td>ISO/IEC 14443 (kartu, MIFARE), ISO/IEC 15693 (<em>vicinity</em>), NFC</td>
+<td>Sentimeter sampai ±1 m</td>
+<td>Kartu transportasi, perpustakaan, ponsel</td>
+</tr>
+<tr>
+<td>UHF (RAIN)</td>
+<td>860–960 MHz</td>
+<td>GS1 EPC UHF Gen2 = ISO/IEC 18000-63</td>
+<td>Beberapa meter</td>
+<td>Ritel, logistik, gudang, inventaris</td>
+</tr>
+</tbody>
+</table>
+<p>Bab ini berfokus pada <strong>UHF Gen2</strong> karena paling kaya contoh soal bit, word, dan alignment, dengan beberapa catatan tentang HF.</p>
+<h2 id="sisi-tag-chip-tanpa-cpu-tanpa-compiler">Sisi tag: chip tanpa CPU, tanpa compiler</h2>
+<p>Chip tag UHF pasif tidak punya baterai. Antena tag menangkap energi gelombang radio dari pembaca, lalu rangkaian penyearah di chip mengubahnya menjadi tegangan untuk menghidupkan logika. Gelombang pembawa yang sama dipakai untuk dua hal sekaligus: dipanen sebagai daya dan dipantulkan kembali sebagai jawaban<sup id="fnref:47"><a class="footnote-ref" href="#fn:47">47</a></sup>. Demodulator memulihkan data dari pembaca, lalu menyerahkannya ke sebuah <strong>mesin keadaan</strong> (<em>state machine</em>) yang memutuskan respons<sup id="fnref2:47"><a class="footnote-ref" href="#fn:47">47</a></sup>. Tag menjawab dengan teknik <strong>backscatter</strong>: mengubah impedansi antena di antara dua keadaan sehingga jumlah sinyal yang dipantulkan berubah-ubah sesuai bit data.</p>
+<p>Di sinilah ada pelajaran menarik bagi topik kita. <strong>Tidak ada program, tidak ada CPU, dan tidak ada compiler perangkat lunak di dalam chip tag.</strong> Seluruh protokol Gen2 (menerima <code>Query</code>, menghitung <em>slot</em>, memilih bilangan acak, membaca memori) diwujudkan sebagai rangkaian logika khusus, karena CPU umum terlalu boros daya untuk hidup dari energi yang dipanen dari jarak beberapa meter. Tetapi rangkaian itu sendiri pun lahir dari sebuah "compiler": insinyur menulis perilaku chip dalam bahasa deskripsi hardware (Verilog atau VHDL), lalu perangkat <strong>sintesis logika</strong> menerjemahkannya menjadi jaringan gerbang AND/OR/flip-flop, mengoptimalkannya, dan memetakannya ke pustaka sel milik pabrik semikonduktor. Prinsipnya sama dengan compiler C (front-end, representasi antara, optimisasi, pemetaan ke target), hanya saja targetnya transistor, bukan instruksi.</p>
+<h3 id="memori-tag-empat-bank-word-16-bit">Memori tag: empat bank, word 16-bit</h3>
+<p>Memori tag Gen2 dibagi menjadi empat <strong>bank</strong>, dengan kode 2-bit yang dipakai dalam perintah<sup id="fnref:42"><a class="footnote-ref" href="#fn:42">42</a></sup><sup id="fnref:43"><a class="footnote-ref" href="#fn:43">43</a></sup>:</p>
+<table>
+<thead>
+<tr>
+<th>Kode</th>
+<th>Bank</th>
+<th>Isi</th>
+<th>Catatan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>00</code></td>
+<td>Reserved</td>
+<td><em>Kill password</em> (32 bit) dan <em>access password</em> (32 bit)</td>
+<td>Bisa dikunci sehingga tidak terbaca<sup id="fnref3:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+<tr>
+<td><code>01</code></td>
+<td>EPC</td>
+<td>StoredCRC, <em>Protocol Control</em> (PC), lalu EPC</td>
+<td>EPC minimal 96 bit; PC menyatakan panjang EPC<sup id="fnref4:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+<tr>
+<td><code>10</code></td>
+<td>TID</td>
+<td>Identitas chip dari pabrik (pembuat, model, sering nomor seri)</td>
+<td>Ditulis pabrik, tidak bisa diubah<sup id="fnref5:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+<tr>
+<td><code>11</code></td>
+<td>User</td>
+<td>Data aplikasi</td>
+<td>Opsional; ukurannya sangat bervariasi antar-chip<sup id="fnref6:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+</tbody>
+</table>
+<p>Yang penting untuk pembahasan alignment: <strong>memori Gen2 dialamatkan per <em>word</em> 16-bit, bukan per byte.</strong> Perintah <code>Read</code> menyebutkan bank, alamat word awal (<code>WordPtr</code>), dan jumlah word (<code>WordCount</code>)<sup id="fnref:44"><a class="footnote-ref" href="#fn:44">44</a></sup>. Di bank EPC, word 0 berisi StoredCRC, word 1 berisi PC, dan EPC dimulai di word 2 (alamat bit <code>0x20</code>). Akibatnya, "alignment" juga berlaku di udara: Anda tidak bisa membaca atau menulis setengah word, dan EPC 96 bit selalu menempati tepat enam word.</p>
+<p>Memori ini adalah memori non-volatil (NVM) yang lambat ditulis dan punya umur tulis terbatas. Chip NXP UCODE 9, misalnya, memiliki EPC 96 bit dan dijamin minimal 100.000 siklus tulis<sup id="fnref:45"><a class="footnote-ref" href="#fn:45">45</a></sup>; variannya, UCODE 9xm, memungkinkan pembagian memori yang bisa dikonfigurasi pengguna antara EPC dan User (misalnya EPC 128 bit/User 752 bit sampai EPC 496 bit/User 384 bit)<sup id="fnref:46"><a class="footnote-ref" href="#fn:46">46</a></sup>.</p>
+<h3 id="antikolisi-algoritma-q">Antikolisi: algoritma Q</h3>
+<p>Bagaimana pembaca membedakan ratusan tag yang menjawab bersamaan? Gen2 memakai varian <strong>slotted ALOHA</strong>. Pembaca mengirim <code>Query</code> yang membawa parameter <strong>Q</strong>. Setiap tag memilih angka acak antara 0 dan 2^Q − 1 sebagai penghitung slot. Tag yang penghitungnya nol menjawab dengan bilangan acak 16-bit (<strong>RN16</strong>); pembaca membalas <code>ACK</code>, dan tag mengirim PC + EPC + CRC-16. Perintah <code>QueryRep</code> mengurangi penghitung semua tag, sehingga tag berikutnya mendapat giliran<sup id="fnref:48"><a class="footnote-ref" href="#fn:48">48</a></sup>. Jika terlalu banyak tabrakan, pembaca menaikkan Q (lebih banyak slot); jika terlalu banyak slot kosong, menurunkannya. Spesifikasi menyediakan contoh algoritma dengan nilai awal sekitar 4 dan konstanta penyesuaian kecil, tetapi pembuat pembaca bebas memakai strategi sendiri<sup id="fnref2:44"><a class="footnote-ref" href="#fn:44">44</a></sup><sup id="fnref2:48"><a class="footnote-ref" href="#fn:48">48</a></sup>. Bagi programmer firmware, ini berarti satu perintah "inventaris" di level aplikasi sebenarnya memicu ratusan transaksi kecil di udara, semuanya dikerjakan oleh chip pembaca.</p>
+<h2 id="sisi-pembaca-lapisan-di-dalam-lapisan">Sisi pembaca: lapisan di dalam lapisan</h2>
+<p>Pembaca UHF modern adalah tumpukan komputer kecil:</p>
+<pre><code class="language-text">[Aplikasi/server]  ←TCP/IP, LLRP atau REST/MQTT→  [Prosesor host di pembaca: Linux SoC atau MCU]
+                                                          │  SPI / UART
+                                                          ▼
+                                   [Chip pembaca RFID: MCU internal + MAC + modem + radio]
+                                                          │  RF 860–960 MHz
+                                                          ▼
+                                             [Antena] ~~~~~~ [Tag pasif]
+</code></pre>
+<p>Chip pembaca seperti <strong>Impinj E710</strong> menggabungkan transceiver radio, <em>front-end</em> RF, modem yang bisa dikonfigurasi, pembatalan <em>self-jammer</em>, manajemen daya, sebuah <strong>MCU dengan MAC</strong> (lapisan kendali protokol), dan <strong>antarmuka host SPI</strong><sup id="fnref:49"><a class="footnote-ref" href="#fn:49">49</a></sup>. Generasi sebelumnya, Impinj Indy R2000, berkomunikasi lewat UART dan sudah memasuki proses akhir masa produksi sejak September 2022<sup id="fnref:50"><a class="footnote-ref" href="#fn:50">50</a></sup>; Impinj menyebut E710 memiliki sensitivitas hingga 9 dB lebih baik dibanding R2000<sup id="fnref:51"><a class="footnote-ref" href="#fn:51">51</a></sup>. Di sisi HF/NFC, chip seperti <strong>ST25R3916B</strong> dari STMicroelectronics menyediakan FIFO 512 byte dan SPI hingga 10 Mbit/s<sup id="fnref:52"><a class="footnote-ref" href="#fn:52">52</a></sup>.</p>
+<p>Perhatikan apa artinya: <strong>di dalam chip pembaca itu sendiri ada firmware yang dikompilasi</strong>, berjalan di MCU internal, dan tidak pernah Anda lihat. Firmware Anda di MCU host berbicara dengan firmware itu lewat SPI, persis seperti CPU berbicara dengan register periferal. Dari sudut pandang MCU host, chip pembaca adalah "periferal eksternal"; dari sudut pandang server, seluruh pembaca adalah "periferal jaringan". Abstraksi yang sama berulang di setiap lapisan.</p>
+<h2 id="mengikuti-satu-epc-dari-udara-ke-server">Mengikuti satu EPC dari udara ke server</h2>
+<p>Mari ikuti satu pembacaan tag, dan tandai di mana compiler dan hardware bisa salah paham.</p>
+<p><strong>Langkah 1: tag menjawab.</strong> Bit-bit PC dan EPC dikirim lewat udara, bit paling signifikan lebih dulu, dilindungi CRC-16. Chip pembaca memeriksa CRC dan menyimpan hasil di buffer internalnya.</p>
+<p><strong>Langkah 2: chip pembaca memberi tahu host.</strong> Chip menarik pin IRQ. MCU host masuk ke <em>interrupt handler</em>. Di sini muncul jebakan pertama: forum ST mengingatkan bahwa jika ada perangkat lain di bus SPI yang sama, komunikasi SPI sebaiknya tidak dilakukan di dalam konteks interupsi. Pola yang umum adalah handler hanya membangunkan sebuah <em>task</em> yang kemudian membaca chip<sup id="fnref:53"><a class="footnote-ref" href="#fn:53">53</a></sup>. Errata ST juga mencatat bahwa pada revisi silikon tertentu, pola bit tertentu saat membaca status interupsi bisa membuat flag tidak valid<sup id="fnref:59"><a class="footnote-ref" href="#fn:59">59</a></sup>, pengingat bahwa hardware pun punya bug, dan driver yang baik menyertakan <em>workaround</em>-nya.</p>
+<pre><code class="language-c">static volatile bool rfid_irq_flag;          /* diubah ISR, dibaca task: wajib volatile */
+
+void EXTI4_IRQHandler(void) {
+    EXTI-&gt;PR = EXTI_PR_PR4;                  /* bersihkan flag (write-1-to-clear) */
+    rfid_irq_flag = true;                    /* atau: beri sinyal ke task RTOS */
+}
+</code></pre>
+<p><strong>Langkah 3: DMA menerima respons lewat SPI.</strong> Firmware memulai transfer DMA dari register data SPI ke buffer RAM. Di Cortex-M7, buffer ini harus <code>alignas(32)</code> dan cache-nya di-<em>invalidate</em> setelah transfer selesai<sup id="fnref4:34"><a class="footnote-ref" href="#fn:34">34</a></sup>; kalau tidak, CPU mungkin membaca respons tag <strong>sebelumnya</strong>.</p>
+<pre><code class="language-c">alignas(32) static uint8_t rx_buf[64];       /* 64 = kelipatan 32 */
+
+void setelah_dma_selesai(void) {
+    SCB_InvalidateDCache_by_Addr((uint32_t *)rx_buf, sizeof rx_buf);
+    proses_frame(rx_buf, panjang_diterima);
+}
+</code></pre>
+<p><strong>Langkah 4: firmware mem-<em>parsing</em> frame.</strong> Misalkan (sebagai ilustrasi, mirip format banyak modul UHF serial) frame respons berbentuk:</p>
+<table>
+<thead>
+<tr>
+<th>Offset</th>
+<th>Ukuran</th>
+<th>Isi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>Penanda awal <code>0xBB</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>Tipe frame</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>Kode perintah</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2</td>
+<td>Panjang payload (big-endian)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>1</td>
+<td>RSSI</td>
+</tr>
+<tr>
+<td>6</td>
+<td>2</td>
+<td>PC word (big-endian)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>12</td>
+<td>EPC (96 bit)</td>
+</tr>
+<tr>
+<td>20</td>
+<td>2</td>
+<td>CRC-16 tag</td>
+</tr>
+<tr>
+<td>22</td>
+<td>1</td>
+<td>Checksum frame</td>
+</tr>
+<tr>
+<td>23</td>
+<td>1</td>
+<td>Penanda akhir <code>0x7E</code></td>
+</tr>
+</tbody>
+</table>
+<p>Perhatikan bahwa field 16-bit "panjang" berada di offset 3, <strong>ganjil</strong>. Kode berikut terlihat wajar, dan bahkan berjalan di laptop:</p>
+<pre><code class="language-c">/* SALAH: tiga pelanggaran sekaligus */
+uint16_t panjang = *(uint16_t *)(rx_buf + 3);  /* 1) tak-aligned  2) aliasing  3) endianness salah */
+</code></pre>
+<p>Di Cortex-M0+ ini menghasilkan HardFault. Di Cortex-M4 ia "jalan" tetapi menghasilkan nilai dengan byte terbalik, karena data big-endian dibaca oleh CPU little-endian. Di compiler dengan optimisasi agresif, pelanggaran aliasing bisa membuat nilai yang dibaca tidak sinkron dengan isi buffer. Versi yang benar sederhana dan sama cepatnya:</p>
+<pre><code class="language-c">static inline uint16_t be16(const uint8_t *p) { return (uint16_t)((p[0] &lt;&lt; 8) | p[1]); }
+
+bool proses_frame(const uint8_t *f, size_t n) {
+    if (n &lt; 24 || f[0] != 0xBB || f[n - 1] != 0x7E) return false;
+    uint16_t panjang = be16(f + 3);
+    int8_t   rssi    = (int8_t)f[5];
+    uint16_t pc      = be16(f + 6);
+    unsigned epc_words = pc &gt;&gt; 11;           /* 5 bit teratas PC = panjang EPC dalam word */
+    const uint8_t *epc = f + 8;              /* tetap sebagai byte, tidak di-cast */
+    /* ... validasi checksum dan CRC, lalu simpan ... */
+    return epc_words == 6;
+}
+</code></pre>
+<p>Kalau ingin memakai struct untuk kerapian, gunakan struct <strong>biasa</strong> (bukan packed) sebagai representasi di dalam program, lalu isi field-fieldnya dari buffer byte dengan fungsi seperti <code>be16()</code>. Pisahkan dengan tegas <strong>format di kabel</strong> (deretan byte, urutan jaringan) dari <strong>format di memori</strong> (struct, aligned, urutan mesin).</p>
+<p><strong>Langkah 5: menerjemahkan EPC.</strong> EPC 96 bit biasanya berisi data GS1 yang dikodekan sesuai <em>Tag Data Standard</em>. Byte pertama adalah <strong>header</strong>; nilai <code>0x30</code> menandakan skema <strong>SGTIN-96</strong>, yaitu GTIN (nomor barang) berseri yang dikodekan dalam 96 bit<sup id="fnref:56"><a class="footnote-ref" href="#fn:56">56</a></sup>. Strukturnya: header 8 bit, <em>filter</em> 3 bit, <em>partition</em> 3 bit, <em>company prefix</em> + <em>item reference</em> total 44 bit (pembagiannya ditentukan nilai partition), dan nomor seri 38 bit<sup id="fnref:57"><a class="footnote-ref" href="#fn:57">57</a></sup>. Field-field ini <strong>tidak sejajar dengan batas byte</strong>, jadi perlu ekstraksi per bit:</p>
+<pre><code class="language-c">static uint64_t ambil_bit(const uint8_t *b, unsigned awal, unsigned n) {
+    uint64_t v = 0;
+    for (unsigned i = 0; i &lt; n; i++) {
+        unsigned pos = awal + i;                       /* bit 0 = MSB byte 0 */
+        v = (v &lt;&lt; 1) | ((b[pos &gt;&gt; 3] &gt;&gt; (7 - (pos &amp; 7))) &amp; 1u);
+    }
+    return v;
+}
+
+/* EPC contoh: 30 74 25 7B F7 19 4E 40 00 00 1A 85 */
+header   = ambil_bit(epc,  0,  8);   /* 0x30 → SGTIN-96          */
+filter   = ambil_bit(epc,  8,  3);   /* 3                        */
+partisi  = ambil_bit(epc, 11,  3);   /* 5 → prefix 24 bit, item 20 bit */
+prefix   = ambil_bit(epc, 14, 24);   /* 614141                   */
+item     = ambil_bit(epc, 38, 20);   /* 812345                   */
+serial   = ambil_bit(epc, 58, 38);   /* 6789                     */
+</code></pre>
+<p>EPC contoh di atas, yang sering dipakai dalam dokumentasi GS1, menghasilkan <em>company prefix</em> 0614141, <em>item reference</em> 812345, dan nomor seri 6789. Kode ini sengaja ditulis per bit agar jelas dan bebas dari masalah alignment maupun endianness. Versi yang dioptimalkan bisa memuat 96 bit ke dua variabel 64-bit lalu memakai <em>shift</em> dan <em>mask</em>, tetapi pemuatan itu tetap harus dilakukan dengan perakitan byte big-endian, bukan <em>cast</em>.</p>
+<p><strong>Langkah 6: mengirim ke server.</strong> Pembaca kelas industri sering memakai <strong>LLRP</strong> (<em>Low Level Reader Protocol</em>), standar GS1 untuk komunikasi pembaca dan klien, kini dalam Rilis 2.0 (2021)<sup id="fnref:54"><a class="footnote-ref" href="#fn:54">54</a></sup>. LLRP berjalan di atas TCP dengan port IANA 5084, dan pesannya dikodekan biner dengan header tetap berisi tipe, panjang, dan ID pesan<sup id="fnref:55"><a class="footnote-ref" href="#fn:55">55</a></sup>. Parameter di dalamnya berbentuk TLV (tipe–panjang–nilai) dengan header berisi bit cadangan, tipe 10-bit, dan panjang 16-bit<sup id="fnref2:55"><a class="footnote-ref" href="#fn:55">55</a></sup>; bilangan dikirim dengan urutan byte jaringan (paling signifikan lebih dulu). Sekali lagi berlaku aturan yang sama: <strong>serialisasi field demi field</strong>, jangan mengirim struct mentah, karena padding dan endianness struct di memori tidak sama dengan format di kabel.</p>
+<div class="admonition praktik">
+<p class="admonition-title">Ringkasan: titik rawan di pembaca RFID</p>
+<table>
+<thead>
+<tr>
+<th>Titik</th>
+<th>Kontrak yang bisa dilanggar</th>
+<th>Pencegahan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flag dari ISR</td>
+<td>Compiler menyimpan flag di register</td>
+<td><code>volatile</code> (atau atomik C11)</td>
+</tr>
+<tr>
+<td>Penulisan register chip lewat SPI</td>
+<td>Urutan akses buffer vs register DMA</td>
+<td>Barrier compiler/<code>__DSB()</code> sebelum memulai DMA</td>
+</tr>
+<tr>
+<td>Buffer DMA di Cortex-M7</td>
+<td>Koherensi cache</td>
+<td><code>alignas(32)</code>, ukuran kelipatan 32, <em>clean/invalidate</em>, atau MPU non-cacheable</td>
+</tr>
+<tr>
+<td>Parsing frame</td>
+<td>Alignment, aliasing, endianness</td>
+<td><code>be16()</code>/<code>memcpy</code>, jangan <em>cast</em> pointer</td>
+</tr>
+<tr>
+<td>Struct protokol</td>
+<td>Padding beda antar-ABI</td>
+<td>Serialisasi eksplisit; <code>_Static_assert</code></td>
+</tr>
+<tr>
+<td>Memori tag</td>
+<td>Alamat dan panjang dalam word 16-bit</td>
+<td>Hitung <code>WordPtr</code>/<code>WordCount</code>, bukan byte</td>
+</tr>
+<tr>
+<td>Ganti MCU (M4 → M0+)</td>
+<td>Akses tak-aligned diizinkan → fault</td>
+<td><code>-mcpu</code> benar, uji di target</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="data-angka-kunci">Data &amp; Angka Kunci</h1>
+<h2 id="perbandingan-arsitektur-dan-alignment">Perbandingan arsitektur dan alignment</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Cortex-M0/M0+</th>
+<th>Cortex-M3/M4</th>
+<th>Cortex-M7</th>
+<th>x86-64 modern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Akses tak-aligned (LDR/STR biasa)</td>
+<td>Fault<sup id="fnref7:19"><a class="footnote-ref" href="#fn:19">19</a></sup><sup id="fnref5:20"><a class="footnote-ref" href="#fn:20">20</a></sup></td>
+<td>Didukung, lebih lambat<sup id="fnref4:61"><a class="footnote-ref" href="#fn:61">60</a></sup></td>
+<td>Didukung, lebih lambat</td>
+<td>Didukung</td>
+</tr>
+<tr>
+<td>Akses tak-aligned untuk banyak-register/eksklusif</td>
+<td>Fault</td>
+<td>Fault<sup id="fnref5:61"><a class="footnote-ref" href="#fn:61">60</a></sup></td>
+<td>Fault</td>
+<td>Atomik lintas line = <em>split lock</em>, sangat mahal<sup id="fnref2:24"><a class="footnote-ref" href="#fn:24">24</a></sup></td>
+</tr>
+<tr>
+<td>Ukuran cache line</td>
+<td>Tanpa cache</td>
+<td>Tanpa cache</td>
+<td>32 byte<sup id="fnref10:34"><a class="footnote-ref" href="#fn:34">34</a></sup></td>
+<td>64 byte<sup id="fnref4:22"><a class="footnote-ref" href="#fn:22">22</a></sup></td>
+</tr>
+<tr>
+<td>Penalti tak-aligned dalam satu line</td>
+<td>—</td>
+<td>Beberapa siklus</td>
+<td>Beberapa siklus</td>
+<td>≈0%<sup id="fnref4:23"><a class="footnote-ref" href="#fn:23">23</a></sup></td>
+</tr>
+<tr>
+<td>Penalti tak-aligned lintas line</td>
+<td>—</td>
+<td>—</td>
+<td>Dua line diakses</td>
+<td>±30–70% (pengukuran 10 CPU Intel)<sup id="fnref5:23"><a class="footnote-ref" href="#fn:23">23</a></sup></td>
+</tr>
+<tr>
+<td>Instruksi</td>
+<td>Thumb (sebagian besar 16-bit)</td>
+<td>Thumb-2 (16/32-bit)<sup id="fnref3:31"><a class="footnote-ref" href="#fn:31">31</a></sup></td>
+<td>Thumb-2</td>
+<td>x86 (1–15 byte)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="aturan-alignment-abi-32-bit-ringkas">Aturan alignment ABI 32-bit (ringkas)</h2>
+<table>
+<thead>
+<tr>
+<th>Tipe</th>
+<th>Ukuran</th>
+<th>Alignment AAPCS (Arm 32-bit)<sup id="fnref6:17"><a class="footnote-ref" href="#fn:17">17</a></sup></th>
+<th>Alignment i386 System V (di dalam struct)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>char</code>, <code>uint8_t</code></td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>uint16_t</code></td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>uint32_t</code>, <code>float</code>, pointer</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>uint64_t</code>, <code>double</code></td>
+<td>8</td>
+<td><strong>8</strong></td>
+<td><strong>4</strong></td>
+</tr>
+<tr>
+<td>Stack di batas fungsi publik</td>
+<td>—</td>
+<td>8<sup id="fnref7:17"><a class="footnote-ref" href="#fn:17">17</a></sup></td>
+<td>4 (i386 lama), 16 (Linux modern)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="angka-angka-rfid">Angka-angka RFID</h2>
+<table>
+<thead>
+<tr>
+<th>Hal</th>
+<th>Nilai</th>
+<th>Sumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bank memori tag Gen2</td>
+<td>4 (Reserved, EPC, TID, User)</td>
+<td><sup id="fnref7:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+<tr>
+<td>Satuan alamat memori Gen2</td>
+<td>Word 16-bit</td>
+<td><sup id="fnref5:44"><a class="footnote-ref" href="#fn:44">44</a></sup></td>
+</tr>
+<tr>
+<td>Kill/access password</td>
+<td>Masing-masing 32 bit</td>
+<td><sup id="fnref8:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+<tr>
+<td>EPC minimum</td>
+<td>96 bit</td>
+<td><sup id="fnref9:42"><a class="footnote-ref" href="#fn:42">42</a></sup></td>
+</tr>
+<tr>
+<td>UCODE 9: EPC / siklus tulis</td>
+<td>96 bit / ≥100.000</td>
+<td><sup id="fnref2:45"><a class="footnote-ref" href="#fn:45">45</a></sup></td>
+</tr>
+<tr>
+<td>Header SGTIN-96</td>
+<td><code>0x30</code> (48 desimal)</td>
+<td><sup id="fnref2:56"><a class="footnote-ref" href="#fn:56">56</a></sup></td>
+</tr>
+<tr>
+<td>SGTIN-96: header/filter/partition/prefix+item/serial</td>
+<td>8/3/3/44/38 bit</td>
+<td><sup id="fnref3:57"><a class="footnote-ref" href="#fn:57">57</a></sup></td>
+</tr>
+<tr>
+<td>Port TCP LLRP</td>
+<td>5084</td>
+<td><sup id="fnref3:55"><a class="footnote-ref" href="#fn:55">55</a></sup></td>
+</tr>
+<tr>
+<td>Impinj E710 vs R2000</td>
+<td>Sensitivitas hingga 9 dB lebih baik</td>
+<td><sup id="fnref2:51"><a class="footnote-ref" href="#fn:51">51</a></sup></td>
+</tr>
+<tr>
+<td>ST25R3916B</td>
+<td>FIFO 512 byte, SPI hingga 10 Mbit/s</td>
+<td><sup id="fnref2:52"><a class="footnote-ref" href="#fn:52">52</a></sup></td>
+</tr>
+</tbody>
+</table>
+<h1 id="perdebatan-perspektif">Perdebatan &amp; Perspektif</h1>
+<h2 id="optimisasi-berbasis-undefined-behavior-fitur-atau-jebakan">Optimisasi berbasis <em>undefined behavior</em>: fitur atau jebakan?</h2>
+<p>Kubu pembuat compiler berpendapat bahwa memanfaatkan UB (misalnya menganggap pointer selalu aligned, atau <em>signed overflow</em> tidak pernah terjadi) adalah sumber utama kecepatan kode modern, dan bahwa standar memberi hak itu dengan jelas. Kubu programmer sistem berpendapat bahwa C dipakai justru karena dekat dengan hardware, sehingga compiler yang "menghukum" kode yang dulu berjalan selama puluhan tahun merusak kepercayaan. John Regehr dan kawan-kawan pernah mengusulkan dialek "Friendly C" yang mengubah banyak UB menjadi perilaku yang terdefinisi, dan proyek besar seperti kernel Linux memilih jalan tengah dengan opsi seperti <code>-fno-strict-aliasing</code>. Kedua sisi punya argumen kuat; yang tidak bisa diperdebatkan adalah bahwa <strong>programmer harus tahu di sisi kontrak mana kodenya berdiri</strong>.</p>
+<h2 id="apakah-volatile-sudah-cukup">Apakah <code>volatile</code> sudah cukup?</h2>
+<p>Sebagian pengembang embedded memakai <code>volatile</code> sebagai obat untuk semua masalah konkurensi. Kritikus seperti Regehr menunjukkan bahwa <code>volatile</code> tidak memberi atomisitas maupun pengurutan terhadap akses non-<code>volatile</code><sup id="fnref2:10"><a class="footnote-ref" href="#fn:10">10</a></sup>. Komite C++ bahkan menandai beberapa pemakaian <code>volatile</code> sebagai <em>deprecated</em> di C++20 (misalnya operator majemuk seperti <code>+=</code> pada objek <code>volatile</code>), lalu sebagian dicabut kembali di C++23 setelah keberatan dari komunitas embedded yang memakainya untuk register. Perdebatan ini memperlihatkan ketegangan abadi: <code>volatile</code> adalah alat yang tumpul tetapi universal, sementara atomik C11/C++11 dan barrier lebih tepat tetapi lebih rumit.</p>
+<h2 id="bit-field-dan-struct-packed-untuk-register-dan-protokol">Bit-field dan struct packed untuk register dan protokol</h2>
+<p>Satu kubu (termasuk gaya CMSIS) menolak bit-field untuk register karena tata letaknya <em>implementation-defined</em> dan bisa memicu <em>read-modify-write</em> tak terduga<sup id="fnref4:41"><a class="footnote-ref" href="#fn:41">41</a></sup>. Kubu lain menganggapnya dapat diterima selama toolchain tetap dan diuji, karena kodenya lebih mudah dibaca<sup id="fnref2:63"><a class="footnote-ref" href="#fn:63">62</a></sup>. Hal serupa berlaku untuk struct <code>packed</code>: praktis untuk memetakan format kabel, tetapi rentan di inti tanpa dukungan akses tak-aligned<sup id="fnref3:19"><a class="footnote-ref" href="#fn:19">19</a></sup><sup id="fnref2:21"><a class="footnote-ref" href="#fn:21">21</a></sup>.</p>
+<h2 id="c-c-atau-rust-untuk-firmware">C, C++, atau Rust untuk firmware?</h2>
+<p>Rust menjanjikan keamanan memori tanpa <em>garbage collector</em>, dan ekosistem embedded-nya (<code>cortex-m-rt</code>, <code>embedded-hal</code>, <code>svd2rust</code>) sudah matang untuk banyak keluarga MCU<sup id="fnref2:37"><a class="footnote-ref" href="#fn:37">37</a></sup><sup id="fnref3:38"><a class="footnote-ref" href="#fn:38">38</a></sup>. Rust tidak menghapus masalah alignment atau MMIO. Ia <strong>memindahkannya</strong> ke API yang lebih eksplisit: <code>read_volatile</code>/<code>write_volatile</code>, <code>read_unaligned</code>, dan larangan membuat referensi ke field struct packed. Pendukung C menunjuk ke ekosistem vendor, sertifikasi keselamatan (MISRA C), dan tenaga kerja yang sudah ada. Pendukung Rust menunjuk ke kelas bug yang hilang sama sekali. Untuk proyek RFID baru dengan tim kecil, keduanya sah; untuk perangkat yang memerlukan driver vendor (misalnya pustaka RFAL dari ST atau SDK chip pembaca), C masih jalur termudah.</p>
+<h2 id="assembly-tulisan-tangan">Assembly tulisan tangan</h2>
+<p>Dahulu, kode kritis ditulis langsung dalam assembly. Sejak FORTRAN membuktikan kode mesin buatan compiler bisa menyaingi manusia<sup id="fnref3:4"><a class="footnote-ref" href="#fn:4">4</a></sup>, ruang untuk assembly tulisan tangan terus menyempit. Hari ini assembly masih dipakai untuk kode startup tertentu, <em>context switch</em> RTOS, dan rutinitas DSP yang sangat spesifik. Selebihnya, compiler biasanya menang, terutama dengan <em>intrinsics</em> yang memberi akses ke instruksi khusus tanpa meninggalkan C.</p>
+<h1 id="kondisi-terkini-prospek">Kondisi Terkini &amp; Prospek</h1>
+<p><em>Keadaan per November 2026.</em></p>
+<p><strong>RISC-V dan pertanyaan alignment yang belum selesai.</strong> RISC-V terus menyebar di mikrokontroler dan SoC IoT. Spesifikasinya mengizinkan implementasi menangani akses tak-aligned dengan cara berbeda-beda, dari hardware penuh sampai <em>trap</em> fatal<sup id="fnref:25"><a class="footnote-ref" href="#fn:25">25</a></sup>. Profil-profil RISC-V memakai ekstensi <strong>Zicclsm</strong> untuk menyatakan dukungan akses tak-aligned, dan pada pertengahan 2026 pengembang SiFive mengajukan serangkaian patch agar emulator QEMU bisa memunculkan pengecualian tak-aligned dengan benar ketika Zicclsm dimatikan<sup id="fnref:26"><a class="footnote-ref" href="#fn:26">26</a></sup>. Bagi pengembang, implikasinya tetap sama: jangan berasumsi, gunakan <code>memcpy</code>.</p>
+<p><strong>LLVM sebagai fondasi bersama.</strong> LLVM kini menjadi dasar Clang, Rust, Swift, dan toolchain komersial Arm. Ini berarti optimisasi (dan perilaku terkait alignment serta aliasing) makin seragam di berbagai bahasa, dan peningkatan di satu tempat dinikmati semua.</p>
+<p><strong>Inti dengan cache dan vektor makin umum di MCU.</strong> Cortex-M7, M55, dan M85 membawa cache dan instruksi vektor ke dunia mikrokontroler. Masalah yang dulu hanya dikenal di dunia PC dan ponsel, seperti koherensi cache dengan DMA dan alignment untuk SIMD, kini harus dipahami juga oleh insinyur firmware<sup id="fnref5:34"><a class="footnote-ref" href="#fn:34">34</a></sup><sup id="fnref2:35"><a class="footnote-ref" href="#fn:35">35</a></sup>.</p>
+<p><strong>RFID: chip pembaca makin terintegrasi.</strong> Generasi chip pembaca seperti Impinj E-series memindahkan lebih banyak fungsi (MAC, pembatalan <em>self-jammer</em>) ke dalam chip dengan antarmuka SPI sederhana<sup id="fnref2:49"><a class="footnote-ref" href="#fn:49">49</a></sup>, sementara generasi lama seperti R2000 sudah memasuki akhir masa produksi<sup id="fnref2:50"><a class="footnote-ref" href="#fn:50">50</a></sup>. Bagi pengembang, firmware host makin tipis, tetapi kebutuhan memahami DMA, interupsi, dan parsing biner tidak berkurang. Di sisi tag, chip baru seperti UCODE 9xm memberi fleksibilitas tata letak memori<sup id="fnref2:46"><a class="footnote-ref" href="#fn:46">46</a></sup>, sehingga perangkat lunak pembaca harus membaca PC word dan TID untuk mengetahui tata letak sebenarnya, bukan mengasumsikan EPC 96 bit.</p>
+<p><strong>Skenario ke depan.</strong> Kemungkinan terbesar dalam beberapa tahun ke depan adalah: (1) bahasa yang lebih aman (Rust, C dengan analisis statis lebih ketat) makin banyak dipakai di firmware baru; (2) toolchain makin banyak memberi peringatan untuk pola berbahaya (<em>cast</em> alignment, alamat anggota packed); (3) inti MCU makin canggih, sehingga pengetahuan tentang cache, barrier, dan alignment yang dulu "opsional" menjadi wajib.</p>
+<h1 id="kronologi">Kronologi</h1>
+<table>
+<thead>
+<tr>
+<th>Tahun</th>
+<th>Peristiwa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1951–1952</td>
+<td>Grace Hopper mengembangkan sistem A-0 untuk UNIVAC I<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup>; Alick Glennie mengembangkan Autocode di Inggris<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+</tr>
+<tr>
+<td>1954</td>
+<td>Tim IBM pimpinan John Backus memulai proyek FORTRAN<sup id="fnref5:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+</tr>
+<tr>
+<td>1957</td>
+<td>Compiler FORTRAN I dikirim ke pengguna IBM 704 (April)<sup id="fnref6:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+</tr>
+<tr>
+<td>1969–1973</td>
+<td>Bahasa C dikembangkan di Bell Labs bersama Unix; periode paling kreatif 1972<sup id="fnref5:5"><a class="footnote-ref" href="#fn:5">5</a></sup></td>
+</tr>
+<tr>
+<td>Pertengahan 1980-an</td>
+<td>Komite ANSI X3J11 menstandardisasi C<sup id="fnref6:5"><a class="footnote-ref" href="#fn:5">5</a></sup></td>
+</tr>
+<tr>
+<td>Akhir 1980-an</td>
+<td>GCC dirilis sebagai bagian Proyek GNU</td>
+</tr>
+<tr>
+<td>1999</td>
+<td>Standar C99 memperkenalkan <code>&lt;stdint.h&gt;</code> (<code>uint32_t</code> dan kawan-kawan)</td>
+</tr>
+<tr>
+<td>2000</td>
+<td>Proyek LLVM dimulai di University of Illinois<sup id="fnref4:6"><a class="footnote-ref" href="#fn:6">6</a></sup></td>
+</tr>
+<tr>
+<td>2003</td>
+<td>LLVM 1.0 dirilis<sup id="fnref5:6"><a class="footnote-ref" href="#fn:6">6</a></sup></td>
+</tr>
+<tr>
+<td>2004–2005</td>
+<td>Standar EPC UHF Gen2 diratifikasi; kemudian diadopsi sebagai ISO/IEC 18000-6C (kini 18000-63)</td>
+</tr>
+<tr>
+<td>2007</td>
+<td>LLRP diratifikasi oleh EPCglobal</td>
+</tr>
+<tr>
+<td>2011</td>
+<td>C11 memperkenalkan <code>_Alignas</code> dan <code>_Alignof</code><sup id="fnref3:14"><a class="footnote-ref" href="#fn:14">14</a></sup></td>
+</tr>
+<tr>
+<td>2012</td>
+<td>Arm menerbitkan AN321 tentang barrier di Cortex-M<sup id="fnref4:32"><a class="footnote-ref" href="#fn:32">32</a></sup></td>
+</tr>
+<tr>
+<td>2019</td>
+<td>Linux mulai menambahkan deteksi <em>split lock</em> x86<sup id="fnref3:24"><a class="footnote-ref" href="#fn:24">24</a></sup></td>
+</tr>
+<tr>
+<td>2021</td>
+<td>GS1 menerbitkan LLRP Rilis 2.0<sup id="fnref2:54"><a class="footnote-ref" href="#fn:54">54</a></sup></td>
+</tr>
+<tr>
+<td>2022</td>
+<td>Impinj Indy R2000 memasuki proses akhir masa produksi (September)<sup id="fnref3:50"><a class="footnote-ref" href="#fn:50">50</a></sup></td>
+</tr>
+<tr>
+<td>2023</td>
+<td>C23 menjadikan <code>alignas</code>/<code>alignof</code> kata kunci; RFC Linux untuk penanganan akses tak-aligned di RISC-V<sup id="fnref3:25"><a class="footnote-ref" href="#fn:25">25</a></sup></td>
+</tr>
+<tr>
+<td>2026</td>
+<td>Patch QEMU untuk perilaku Zicclsm yang benar diajukan<sup id="fnref3:26"><a class="footnote-ref" href="#fn:26">26</a></sup></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition catatan">
+<p class="admonition-title">Catatan kronologi</p>
+<p>Tahun ratifikasi Gen2 (sekitar akhir 2004) dan rilis pertama GCC (1987) ditulis berdasarkan pengetahuan umum industri dan tidak dicek silang secara khusus dalam riset ini. Tanggal "compiler pertama" diperdebatkan, seperti dijelaskan di bab sejarah.</p>
+</div>
+<h1 id="glosarium">Glosarium</h1>
+<p><strong>ABI (<em>Application Binary Interface</em>)</strong>: kesepakatan tingkat biner antara kode yang dikompilasi terpisah: ukuran dan alignment tipe, tata letak struct, register untuk argumen, aturan stack. Untuk Arm 32-bit disebut AAPCS.</p>
+<p><strong>Alignment</strong>: syarat bahwa alamat sebuah objek harus kelipatan angka tertentu (1, 2, 4, 8, ...). <em>Natural alignment</em> = alignment sama dengan ukuran tipe.</p>
+<p><strong>AST (<em>Abstract Syntax Tree</em>)</strong>: pohon yang mewakili struktur program setelah di-<em>parse</em>.</p>
+<p><strong>Backscatter</strong>: cara tag pasif "menjawab" dengan memantulkan sebagian gelombang pembaca sambil mengubah impedansi antenanya.</p>
+<p><strong>Barrier</strong>: pagar yang mencegah penyusunan ulang akses memori, baik oleh compiler (<em>compiler barrier</em>) maupun oleh prosesor (<code>DMB</code>, <code>DSB</code>, <code>ISB</code>).</p>
+<p><strong>Bit-field</strong>: anggota struct C selebar beberapa bit; tata letaknya <em>implementation-defined</em>.</p>
+<p><strong>Cache line</strong>: satuan terkecil data yang dipindahkan antara cache dan memori (32 byte di Cortex-M7, 64 byte di x86 modern).</p>
+<p><strong>DMA (<em>Direct Memory Access</em>)</strong>: pengendali yang memindahkan data antar-memori/periferal tanpa CPU.</p>
+<p><strong>Endianness</strong>: urutan byte dalam bilangan multi-byte di memori; <em>little-endian</em> (byte terkecil di alamat terkecil) atau <em>big-endian</em>.</p>
+<p><strong>EPC (<em>Electronic Product Code</em>)</strong>: pengenal barang yang disimpan di bank EPC tag; strukturnya diatur GS1 Tag Data Standard (misalnya SGTIN-96).</p>
+<p><strong>HardFault</strong>: pengecualian umum di Cortex-M untuk kesalahan berat, termasuk akses tak-aligned di M0/M0+.</p>
+<p><strong>IR (<em>Intermediate Representation</em>)</strong>: bentuk program di tengah compiler, tidak terikat bahasa sumber maupun chip target.</p>
+<p><strong>ISA (<em>Instruction Set Architecture</em>)</strong>: kontrak antara perangkat lunak dan prosesor: instruksi, register, model memori.</p>
+<p><strong>Linker script</strong>: file yang memberi tahu linker peta memori chip dan di mana setiap section diletakkan.</p>
+<p><strong>LLRP</strong>: protokol standar GS1 untuk komunikasi antara pembaca RFID dan aplikasi, di atas TCP.</p>
+<p><strong>MMIO (<em>Memory-Mapped I/O</em>)</strong>: register periferal yang diakses seperti alamat memori biasa.</p>
+<p><strong><code>packed</code></strong>: atribut compiler yang menghapus padding di dalam struct, menurunkan alignment menjadi 1.</p>
+<p><strong>Padding</strong>: byte kosong yang disisipkan compiler agar setiap field struct aligned.</p>
+<p><strong>PC word (<em>Protocol Control</em>)</strong>: word 16-bit di bank EPC yang antara lain menyatakan panjang EPC (dalam word).</p>
+<p><strong>Relokasi</strong>: proses linker menambal alamat sebenarnya ke dalam instruksi yang masih berisi "lubang".</p>
+<p><strong>RN16</strong>: bilangan acak 16-bit yang dikirim tag sebagai jawaban pertama dalam proses inventaris Gen2.</p>
+<p><strong>Section (<code>.text</code>, <code>.data</code>, <code>.bss</code>, <code>.rodata</code>)</strong>: bagian-bagian file objek yang berisi kode, data berinisialisasi, data nol, dan konstanta.</p>
+<p><strong>SSA (<em>Static Single Assignment</em>)</strong>: bentuk IR di mana setiap variabel ditetapkan tepat satu kali.</p>
+<p><strong>Strict aliasing</strong>: aturan C bahwa objek hanya boleh diakses lewat tipe yang kompatibel (atau tipe karakter).</p>
+<p><strong>Sintesis logika</strong>: "compiler untuk hardware" yang menerjemahkan Verilog/VHDL menjadi jaringan gerbang logika.</p>
+<p><strong>TID (<em>Tag Identifier</em>)</strong>: bank memori tag berisi identitas chip dari pabrik.</p>
+<p><strong>Undefined behavior (UB)</strong>: perilaku yang tidak dijamin standar; compiler boleh menganggapnya tidak pernah terjadi.</p>
+<p><strong><code>volatile</code></strong>: kualifikasi tipe C yang memaksa compiler melakukan setiap akses ke objek itu persis seperti tertulis.</p>
+<h1 id="kesimpulan">Kesimpulan</h1>
+<p>Perjalanan dari baris kode ke chip bukanlah satu terjemahan, melainkan <strong>rangkaian kontrak</strong>. Standar bahasa berjanji tentang arti program terhadap mesin abstrak. Compiler berjanji menjaga perilaku yang <em>bisa diamati</em>, dan memakai setiap celah lain untuk mempercepat kode. ABI berjanji tentang ukuran, alignment, dan konvensi pemanggilan. ISA berjanji tentang apa yang dilakukan setiap instruksi. Bus dan periferal berjanji bahwa tulisan ke alamat tertentu berarti sebuah aksi fisik. Bug paling sulit di firmware hampir selalu muncul ketika seseorang mengandalkan janji yang <strong>tidak pernah diberikan</strong>: menganggap compiler akan membaca register berulang kali tanpa <code>volatile</code>, menganggap prosesor bisa membaca <code>uint32_t</code> dari alamat ganjil, atau menganggap DMA dan cache melihat memori yang sama.</p>
+<p>Memory alignment adalah contoh terbaik dari prinsip ini. Ia lahir dari fakta fisik (bus dan cache bekerja per word dan per line), dirumuskan menjadi aturan ABI, ditegakkan oleh compiler lewat padding, dan dilanggar oleh programmer lewat <em>cast</em> pointer dan struct <code>packed</code>. Akibatnya berkisar dari tidak terasa (x86), sedikit lebih lambat (Cortex-M4), sampai <em>crash</em> (Cortex-M0+) dan data rusak (DMA dengan cache di Cortex-M7). Solusinya hampir selalu sama: <strong>katakan kepada compiler apa yang benar-benar Anda ketahui</strong>, misalnya dengan <code>memcpy</code> atau perakitan byte untuk data tak-aligned, <code>alignas</code> untuk buffer yang butuh alignment besar, <code>volatile</code> untuk register, barrier untuk urutan, lalu biarkan compiler memilih instruksi terbaik.</p>
+<p>Dunia RFID menunjukkan bahwa pola ini berulang di setiap skala. Di dalam tag, protokol diwujudkan sebagai logika yang "dikompilasi" dari HDL, dengan memori yang dialamatkan per word 16-bit. Di dalam chip pembaca, ada MCU dan firmware sendiri yang hanya terlihat sebagai antarmuka SPI. Di MCU host, firmware Anda berbicara dengan chip itu seperti CPU berbicara dengan register. Dan di jaringan, seluruh pembaca menjadi sebuah "periferal" bagi server, dengan format byte (LLRP, big-endian) yang lagi-lagi harus dipisahkan dari tata letak struct di memori. Siapa pun yang memahami satu lapisan dengan baik akan mengenali pola yang sama di lapisan lain.</p>
+<p>Pelajaran praktis terpenting: <strong>bedakan selalu antara "berjalan" dan "benar"</strong>. Kode yang berjalan di <code>-O0</code>, di laptop, atau di satu jenis MCU belum tentu benar menurut kontraknya. Kode yang benar menurut kontrak akan tetap berjalan ketika compiler diperbarui, optimisasi dinaikkan, atau chip diganti, dan di industri yang umur produknya bisa sepuluh tahun lebih, itulah satu-satunya jenis kode yang layak ditulis.</p>
+<h1 id="bacaan-lanjutan">Bacaan Lanjutan</h1>
+<ul>
+<li><strong>Randal E. Bryant &amp; David R. O'Hallaron, <em>Computer Systems: A Programmer's Perspective</em></strong> (edisi ke-3, 2015). Buku terbaik untuk memahami hubungan C, assembly, linker, memori, dan cache dari sudut pandang programmer. Bab tentang linking adalah sumber banyak bahan kuliah yang dirujuk di sini.</li>
+<li><strong>Joseph Yiu, <em>The Definitive Guide to Arm Cortex-M3 and Cortex-M4 Processors</em></strong> (edisi ke-3, 2013) dan buku sejenisnya untuk Cortex-M0/M0+ dan M23/M33. Rujukan paling lengkap tentang pipeline, bus, interupsi, dan perilaku akses tak-aligned di Cortex-M.</li>
+<li><strong>Arm, <em>Application Note 321: Cortex-M Programming Guide to Memory Barrier Instructions</em></strong> (2012)<sup id="fnref3:32"><a class="footnote-ref" href="#fn:32">32</a></sup>. Singkat, resmi, dan menjelaskan kapan <code>DMB</code>/<code>DSB</code>/<code>ISB</code> benar-benar diperlukan.</li>
+<li><strong>Arm, <em>Procedure Call Standard for the Arm Architecture</em> (AAPCS)</strong> di repositori <code>ARM-software/abi-aa</code><sup id="fnref3:17"><a class="footnote-ref" href="#fn:17">17</a></sup>. Sumber primer untuk aturan alignment dan konvensi pemanggilan.</li>
+<li><strong>Keith Cooper &amp; Linda Torczon, <em>Engineering a Compiler</em></strong> (edisi ke-3, 2022). Pengantar desain compiler modern yang lebih praktis daripada "Dragon Book".</li>
+<li><strong>Ulrich Drepper, <em>What Every Programmer Should Know About Memory</em></strong> (2007). Penjelasan mendalam tentang cache, alignment, dan kinerja memori; berorientasi PC/server tetapi prinsipnya universal.</li>
+<li><strong>Blog John Regehr</strong> (blog.regehr.org)<sup id="fnref3:10"><a class="footnote-ref" href="#fn:10">10</a></sup><sup id="fnref3:12"><a class="footnote-ref" href="#fn:12">12</a></sup>. Tulisan-tulisan tajam tentang <code>volatile</code>, <em>undefined behavior</em>, dan aliasing dari peneliti compiler.</li>
+<li><strong>GS1, <em>EPC UHF Gen2 Air Interface Protocol</em></strong> dan <strong><em>Tag Data Standard</em></strong><sup id="fnref3:44"><a class="footnote-ref" href="#fn:44">44</a></sup><sup id="fnref2:57"><a class="footnote-ref" href="#fn:57">57</a></sup>. Sumber primer untuk memori tag, perintah, dan pengkodean EPC.</li>
+<li><strong>Klaus Finkenzeller, <em>RFID Handbook</em></strong> (edisi ke-3, 2010). Rujukan klasik tentang fisika, pengkodean, dan protokol RFID di semua pita frekuensi.</li>
+<li><strong>Compiler Explorer (godbolt.org)</strong>. Bukan buku, tetapi cara tercepat untuk benar-benar <em>melihat</em> apa yang dilakukan compiler terhadap kode Anda di berbagai target.</li>
+</ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>CACM Blog, <em>Did Grace Hopper Create the First Compiler?</em>, 2022. <a href="https://cacm.acm.org/blogs/blog-cacm/268001-did-grace-hopper-create-the-first-compiler/fulltext">https://cacm.acm.org/blogs/blog-cacm/268001-did-grace-hopper-create-the-first-compiler/fulltext</a>&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>Centre for Computing History, <em>Grace Hopper completes the A-0 Compiler</em>. <a href="https://www.computinghistory.org.uk/det/5487/Grace-Hopper-completes-the-A-0-Compiler/">https://www.computinghistory.org.uk/det/5487/Grace-Hopper-completes-the-A-0-Compiler/</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>IBM, <em>John Backus</em> (IBM History). <a href="https://www.ibm.com/history/john-backus">https://www.ibm.com/history/john-backus</a>&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>Wikipedia, <em>Fortran</em> (diakses November 2026). <a href="https://en.wikipedia.org/wiki/Fortran">https://en.wikipedia.org/wiki/Fortran</a>&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>Dennis M. Ritchie, <em>The Development of the C Language</em>, HOPL-II, 1993. <a href="https://www.nokia.com/bell-labs/about/dennis-m-ritchie/chist.html">https://www.nokia.com/bell-labs/about/dennis-m-ritchie/chist.html</a>&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p>Wikipedia, <em>LLVM</em> (diakses November 2026). <a href="https://en.wikipedia.org/wiki/LLVM">https://en.wikipedia.org/wiki/LLVM</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:6" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:6" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:6" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:7">
+<p>Chris Lattner &amp; Vikram Adve, <em>The LLVM Compiler Framework and Infrastructure</em>, GCC Summit 2003. <a href="https://www-new.llvm.org/pubs/2003-05-01-GCCSummit2003.pdf">https://www-new.llvm.org/pubs/2003-05-01-GCCSummit2003.pdf</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+<li id="fn:8">
+<p>Technische Universität München, <em>Code Generation for Data Processing</em> (buku kuliah), 2024/25. <a href="https://db.cit.tum.de/teaching/ws2425/codegen/book.pdf">https://db.cit.tum.de/teaching/ws2425/codegen/book.pdf</a>&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:9">
+<p>GNU Autoconf Manual, <em>Volatile Objects</em>. <a href="https://www.gnu.org/s/hello/manual/autoconf/Volatile-Objects.html">https://www.gnu.org/s/hello/manual/autoconf/Volatile-Objects.html</a>&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+</li>
+<li id="fn:10">
+<p>John Regehr, <em>Nine ways to break your systems code using volatile</em>, 2010. <a href="https://blog.regehr.org/?p=28">https://blog.regehr.org/?p=28</a>&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:10" title="Jump back to footnote 10 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+</li>
+<li id="fn:11">
+<p>OSDev Wiki, <em>Memory mapped registers in C/C++</em>. <a href="https://wiki.osdev.org/Memory_mapped_registers_in_C/C++">https://wiki.osdev.org/Memory_mapped_registers_in_C/C++</a>&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 11 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:11" title="Jump back to footnote 11 in the text">&#8617;</a></p>
+</li>
+<li id="fn:12">
+<p>John Regehr, <em>Type Punning, Strict Aliasing, and Optimization</em>, 2013. <a href="https://blog.regehr.org/archives/959">https://blog.regehr.org/archives/959</a>&#160;<a class="footnote-backref" href="#fnref:12" title="Jump back to footnote 12 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:12" title="Jump back to footnote 12 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:12" title="Jump back to footnote 12 in the text">&#8617;</a></p>
+</li>
+<li id="fn:13">
+<p>ACCU Overload 160, <em>What is the Strict Aliasing Rule and Why Do We Care?</em>, 2020. <a href="https://accu.org/journals/overload/28/160/anonymous">https://accu.org/journals/overload/28/160/anonymous</a>&#160;<a class="footnote-backref" href="#fnref:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:13" title="Jump back to footnote 13 in the text">&#8617;</a></p>
+</li>
+<li id="fn:14">
+<p>cppreference, <em>_Alignas (since C11), alignas (since C23)</em>. <a href="https://cpp-ref.vnoi.info/c/language/alignas.html">https://cpp-ref.vnoi.info/c/language/alignas.html</a>&#160;<a class="footnote-backref" href="#fnref:14" title="Jump back to footnote 14 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:14" title="Jump back to footnote 14 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:14" title="Jump back to footnote 14 in the text">&#8617;</a></p>
+</li>
+<li id="fn:15">
+<p>WG14, <em>N1507: C and C++ Alignment Compatibility</em>. <a href="https://open-std.org/jtc1/sc22/wg14/www/docs/n1507.htm">https://open-std.org/jtc1/sc22/wg14/www/docs/n1507.htm</a>&#160;<a class="footnote-backref" href="#fnref:15" title="Jump back to footnote 15 in the text">&#8617;</a></p>
+</li>
+<li id="fn:16">
+<p>GCC Manual, <em>Common Type Attributes</em> (GCC 8.5). <a href="https://gcc.gnu.org/onlinedocs/gcc-8.5.0/gcc/Common-Type-Attributes.html">https://gcc.gnu.org/onlinedocs/gcc-8.5.0/gcc/Common-Type-Attributes.html</a>&#160;<a class="footnote-backref" href="#fnref:16" title="Jump back to footnote 16 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:16" title="Jump back to footnote 16 in the text">&#8617;</a></p>
+</li>
+<li id="fn:17">
+<p>Arm, <em>ABI for the Arm Architecture Advisory Note – SP must be 8-byte aligned on entry to AAPCS-conforming functions</em>. <a href="https://github.com/ARM-software/abi-aa/blob/2a70c42d62e9c3eb5887fa50b71257f20daca6f9/advnote132/advnote132.rst">https://github.com/ARM-software/abi-aa/blob/2a70c42d62e9c3eb5887fa50b71257f20daca6f9/advnote132/advnote132.rst</a>&#160;<a class="footnote-backref" href="#fnref:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:17" title="Jump back to footnote 17 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:17" title="Jump back to footnote 17 in the text">&#8617;</a></p>
+</li>
+<li id="fn:18">
+<p>GCC mailing list, <em>Proposed AAPCS update – parameter passing types with modified alignments</em>, Juli 2015. <a href="https://gcc.gnu.org/pipermail/gcc/2015-July/218022.html">https://gcc.gnu.org/pipermail/gcc/2015-July/218022.html</a>&#160;<a class="footnote-backref" href="#fnref:18" title="Jump back to footnote 18 in the text">&#8617;</a></p>
+</li>
+<li id="fn:19">
+<p>ST Community, <em>Questions about unaligned memory accesses and hard faults</em>. <a href="https://community.st.com/stm32cubeide-mcus-28/questions-about-unaligned-memory-accesses-and-hard-faults-165243">https://community.st.com/stm32cubeide-mcus-28/questions-about-unaligned-memory-accesses-and-hard-faults-165243</a>&#160;<a class="footnote-backref" href="#fnref:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:19" title="Jump back to footnote 19 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:19" title="Jump back to footnote 19 in the text">&#8617;</a></p>
+</li>
+<li id="fn:20">
+<p>Infineon Developer Community, <em>XMC1400: How to turn off Unaligned Trap</em>. <a href="https://community.infineon.com/t5/XMC/XMC1400-How-to-turn-off-Unaligned-Trap/td-p/300877">https://community.infineon.com/t5/XMC/XMC1400-How-to-turn-off-Unaligned-Trap/td-p/300877</a>&#160;<a class="footnote-backref" href="#fnref:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:20" title="Jump back to footnote 20 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:20" title="Jump back to footnote 20 in the text">&#8617;</a></p>
+</li>
+<li id="fn:21">
+<p>Launchpad GCC ARM Embedded, <em>Access to struct on unaligned address with -Os option on Cortex-M0 produces hard fault</em>. <a href="https://answers.launchpad.net/gcc-arm-embedded/+question/239149">https://answers.launchpad.net/gcc-arm-embedded/+question/239149</a>&#160;<a class="footnote-backref" href="#fnref:21" title="Jump back to footnote 21 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:21" title="Jump back to footnote 21 in the text">&#8617;</a></p>
+</li>
+<li id="fn:22">
+<p>Agner Fog, diskusi di blog <em>Agner's CPU blog</em>. <a href="https://www.agner.org/optimize/blog/read.php?i=627&amp;v=t">https://www.agner.org/optimize/blog/read.php?i=627&amp;v=t</a>&#160;<a class="footnote-backref" href="#fnref:22" title="Jump back to footnote 22 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:22" title="Jump back to footnote 22 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:22" title="Jump back to footnote 22 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:22" title="Jump back to footnote 22 in the text">&#8617;</a></p>
+</li>
+<li id="fn:23">
+<p><em>Rethinking Misalignment to Raise the Bar for Heap Pointer Corruption</em>, arXiv:1807.01023, 2018. <a href="https://arxiv.org/pdf/1807.01023">https://arxiv.org/pdf/1807.01023</a>&#160;<a class="footnote-backref" href="#fnref:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:23" title="Jump back to footnote 23 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:23" title="Jump back to footnote 23 in the text">&#8617;</a></p>
+</li>
+<li id="fn:24">
+<p>LWN.net, artikel tentang deteksi <em>split lock</em>, 2019. <a href="https://lwn.net/SubscriberLink/790464/96ddd1213598bb1b/">https://lwn.net/SubscriberLink/790464/96ddd1213598bb1b/</a>&#160;<a class="footnote-backref" href="#fnref:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:24" title="Jump back to footnote 24 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:24" title="Jump back to footnote 24 in the text">&#8617;</a></p>
+</li>
+<li id="fn:25">
+<p>LKML, <em>[RFC PATCH 0/6] Add support to handle misaligned accesses in S-mode</em>, 2023. <a href="https://lkml.rescloud.iu.edu/2306.3/00153.html">https://lkml.rescloud.iu.edu/2306.3/00153.html</a>&#160;<a class="footnote-backref" href="#fnref:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:25" title="Jump back to footnote 25 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:25" title="Jump back to footnote 25 in the text">&#8617;</a></p>
+</li>
+<li id="fn:26">
+<p>Frank Chang (SiFive), <em>[PATCH v8] target/riscv: Support the true Zicclsm extension</em>, QEMU, Agustus 2026. <a href="https://patchew.org/QEMU/20260810055618.1175500-1-frank.chang@sifive.com/">https://patchew.org/QEMU/20260810055618.1175500-1-frank.chang@sifive.com/</a>&#160;<a class="footnote-backref" href="#fnref:26" title="Jump back to footnote 26 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:26" title="Jump back to footnote 26 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:26" title="Jump back to footnote 26 in the text">&#8617;</a></p>
+</li>
+<li id="fn:27">
+<p>University of Wisconsin–Madison ECE 353, <em>ARM Cortex-M Memory Map</em>. <a href="https://ece353.engr.wisc.edu/firmware-basics/arm-cortex-m-memory-map">https://ece353.engr.wisc.edu/firmware-basics/arm-cortex-m-memory-map</a>&#160;<a class="footnote-backref" href="#fnref:27" title="Jump back to footnote 27 in the text">&#8617;</a></p>
+</li>
+<li id="fn:28">
+<p>Microchip Online Docs, <em>Behavior of Memory Accesses</em> (Cortex-M). <a href="https://onlinedocs.microchip.com/oxy/GUID-199548F4-607C-436B-80C7-E4F280C1CAD2-en-US-1/GUID-AF2E0CCB-0A02-4BAD-B45B-EB093CF928B2.html">https://onlinedocs.microchip.com/oxy/GUID-199548F4-607C-436B-80C7-E4F280C1CAD2-en-US-1/GUID-AF2E0CCB-0A02-4BAD-B45B-EB093CF928B2.html</a>&#160;<a class="footnote-backref" href="#fnref:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:28" title="Jump back to footnote 28 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:28" title="Jump back to footnote 28 in the text">&#8617;</a></p>
+</li>
+<li id="fn:29">
+<p>Arm Community Blog, <em>A tour of the Cortex-M3 core</em>. <a href="https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/a-tour-of-the-cortex-m3-core">https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/a-tour-of-the-cortex-m3-core</a>&#160;<a class="footnote-backref" href="#fnref:29" title="Jump back to footnote 29 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:29" title="Jump back to footnote 29 in the text">&#8617;</a></p>
+</li>
+<li id="fn:30">
+<p>STMicroelectronics, <em>Arm Cortex-M3 in a nutshell</em>. <a href="https://www.st.com/content/st_com/en/arm-32-bit-microcontrollers/arm-cortex-m3.html">https://www.st.com/content/st_com/en/arm-32-bit-microcontrollers/arm-cortex-m3.html</a>&#160;<a class="footnote-backref" href="#fnref:30" title="Jump back to footnote 30 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:30" title="Jump back to footnote 30 in the text">&#8617;</a></p>
+</li>
+<li id="fn:31">
+<p>Raymond Chen, <em>The Old New Thing</em> (seri tentang Thumb-2), Microsoft, Juni 2021. <a href="https://devblogs.microsoft.com/oldnewthing/20210601-00/?p=105267">https://devblogs.microsoft.com/oldnewthing/20210601-00/?p=105267</a>&#160;<a class="footnote-backref" href="#fnref:31" title="Jump back to footnote 31 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:31" title="Jump back to footnote 31 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:31" title="Jump back to footnote 31 in the text">&#8617;</a></p>
+</li>
+<li id="fn:32">
+<p>Arm, <em>Application Note 321: Cortex-M Programming Guide to Memory Barrier Instructions</em> (DAI 0321A), 2012. <a href="https://documentation-service.arm.com/static/5efefb97dbdee951c1cd5aaf">https://documentation-service.arm.com/static/5efefb97dbdee951c1cd5aaf</a>&#160;<a class="footnote-backref" href="#fnref:32" title="Jump back to footnote 32 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:32" title="Jump back to footnote 32 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:32" title="Jump back to footnote 32 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:32" title="Jump back to footnote 32 in the text">&#8617;</a></p>
+</li>
+<li id="fn:33">
+<p>Arm Community Forum, <em>DMB/DSB/ISB on Cortex-M3/M4/M7 single core parts</em>. <a href="https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/10389/dmb-dsb-isb-on-cortex-m3-m4-m7-single-core-parts/33102">https://community.arm.com/developer/ip-products/processors/f/cortex-m-forum/10389/dmb-dsb-isb-on-cortex-m3-m4-m7-single-core-parts/33102</a>&#160;<a class="footnote-backref" href="#fnref:33" title="Jump back to footnote 33 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:33" title="Jump back to footnote 33 in the text">&#8617;</a></p>
+</li>
+<li id="fn:34">
+<p>ST Community, <em>Maintaining CPU data cache coherence for DMA buffers</em>. <a href="https://community.st.com/stm32-mcus-products-25/maintaining-cpu-data-cache-coherence-for-dma-buffers-11338">https://community.st.com/stm32-mcus-products-25/maintaining-cpu-data-cache-coherence-for-dma-buffers-11338</a>&#160;<a class="footnote-backref" href="#fnref:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:34" title="Jump back to footnote 34 in the text">&#8617;</a><a class="footnote-backref" href="#fnref10:34" title="Jump back to footnote 34 in the text">&#8617;</a></p>
+</li>
+<li id="fn:35">
+<p>Ac6, <em>Cache coherency and DMA on ARM: why your buffers get corrupted</em>. <a href="https://www.ac6-formation.com/en/articles/cache-coherency-dma-arm">https://www.ac6-formation.com/en/articles/cache-coherency-dma-arm</a>&#160;<a class="footnote-backref" href="#fnref:35" title="Jump back to footnote 35 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:35" title="Jump back to footnote 35 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:35" title="Jump back to footnote 35 in the text">&#8617;</a></p>
+</li>
+<li id="fn:36">
+<p>MikroElektronika, <em>mikroSDK Reference Manual: CMSIS Core Cache Functions</em>. <a href="https://searchdoc.mikroe.com/group__CMSIS__Core__CacheFunctions.html">https://searchdoc.mikroe.com/group__CMSIS__Core__CacheFunctions.html</a>&#160;<a class="footnote-backref" href="#fnref:36" title="Jump back to footnote 36 in the text">&#8617;</a></p>
+</li>
+<li id="fn:37">
+<p>Rust Embedded, <em>cortex-m-rt 0.7.6: link.x.in</em>. <a href="https://docs.rs/crate/cortex-m-rt/0.7.6/source/link.x.in">https://docs.rs/crate/cortex-m-rt/0.7.6/source/link.x.in</a>&#160;<a class="footnote-backref" href="#fnref:37" title="Jump back to footnote 37 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:37" title="Jump back to footnote 37 in the text">&#8617;</a></p>
+</li>
+<li id="fn:38">
+<p>Ferrous Systems, <em>Rust Training: Booting a Cortex-M Microcontroller</em>. <a href="https://rust-training.ferrous-systems.com/latest/book/booting-cortex-m">https://rust-training.ferrous-systems.com/latest/book/booting-cortex-m</a>&#160;<a class="footnote-backref" href="#fnref:38" title="Jump back to footnote 38 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:38" title="Jump back to footnote 38 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:38" title="Jump back to footnote 38 in the text">&#8617;</a></p>
+</li>
+<li id="fn:39">
+<p>Princeton University COS 217, <em>Linkers</em> (slide kuliah), 2003. <a href="https://www.cs.princeton.edu/courses/archive/spr03/cs217/lectures/Linker.pdf">https://www.cs.princeton.edu/courses/archive/spr03/cs217/lectures/Linker.pdf</a>&#160;<a class="footnote-backref" href="#fnref:39" title="Jump back to footnote 39 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:39" title="Jump back to footnote 39 in the text">&#8617;</a></p>
+</li>
+<li id="fn:40">
+<p>University of Rochester CSC 254, <em>Linking</em> (catatan kuliah), 2020. <a href="https://www.cs.rochester.edu/courses/254/fall2020/notes/15b-linking.pdf">https://www.cs.rochester.edu/courses/254/fall2020/notes/15b-linking.pdf</a>&#160;<a class="footnote-backref" href="#fnref:40" title="Jump back to footnote 40 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:40" title="Jump back to footnote 40 in the text">&#8617;</a></p>
+</li>
+<li id="fn:41">
+<p>Colin Walls, <em>Device registers in C</em>, Siemens Embedded Software Blog. <a href="https://blogs.sw.siemens.com/embedded-software/?p=1600">https://blogs.sw.siemens.com/embedded-software/?p=1600</a>&#160;<a class="footnote-backref" href="#fnref:41" title="Jump back to footnote 41 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:41" title="Jump back to footnote 41 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:41" title="Jump back to footnote 41 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:41" title="Jump back to footnote 41 in the text">&#8617;</a></p>
+</li>
+<li id="fn:42">
+<p>Atlas RFID Store, <em>Types of Memory in Gen 2 UHF RFID Tags</em>. <a href="https://www.atlasrfidstore.com/rfid-insider/types-of-memory-in-gen-2-uhf-rfid-tags">https://www.atlasrfidstore.com/rfid-insider/types-of-memory-in-gen-2-uhf-rfid-tags</a>&#160;<a class="footnote-backref" href="#fnref:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref7:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref8:42" title="Jump back to footnote 42 in the text">&#8617;</a><a class="footnote-backref" href="#fnref9:42" title="Jump back to footnote 42 in the text">&#8617;</a></p>
+</li>
+<li id="fn:43">
+<p>RAIN RFID Alliance, <em>RAIN RFID Illustrated Glossary</em>, April 2023. <a href="https://therainalliance.org/wp-content/uploads/2023/04/RAIN_RFID_CIN_Illustrated_Glossary_04.2023.pdf">https://therainalliance.org/wp-content/uploads/2023/04/RAIN_RFID_CIN_Illustrated_Glossary_04.2023.pdf</a>&#160;<a class="footnote-backref" href="#fnref:43" title="Jump back to footnote 43 in the text">&#8617;</a></p>
+</li>
+<li id="fn:44">
+<p>GS1, <em>EPC UHF Gen2 Air Interface Protocol</em> (standar). <a href="https://www.gs1.org/standards/rfid/uhf-air-interface-protocol">https://www.gs1.org/standards/rfid/uhf-air-interface-protocol</a>&#160;<a class="footnote-backref" href="#fnref:44" title="Jump back to footnote 44 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:44" title="Jump back to footnote 44 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:44" title="Jump back to footnote 44 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:44" title="Jump back to footnote 44 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:44" title="Jump back to footnote 44 in the text">&#8617;</a></p>
+</li>
+<li id="fn:45">
+<p>NXP Semiconductors, <em>SL3S1206 UCODE 9 Data Sheet</em>. <a href="https://nxp.com/docs/en/data-sheet/SL3S1206.pdf">https://nxp.com/docs/en/data-sheet/SL3S1206.pdf</a>&#160;<a class="footnote-backref" href="#fnref:45" title="Jump back to footnote 45 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:45" title="Jump back to footnote 45 in the text">&#8617;</a></p>
+</li>
+<li id="fn:46">
+<p>NXP Semiconductors, <em>UCODE 9xm</em>. <a href="https://www.nxp.com/products/UCODE-9xm">https://www.nxp.com/products/UCODE-9xm</a>&#160;<a class="footnote-backref" href="#fnref:46" title="Jump back to footnote 46 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:46" title="Jump back to footnote 46 in the text">&#8617;</a></p>
+</li>
+<li id="fn:47">
+<p>US Patent 8,477,015, <em>System and method for using an input data signal as a clock signal in a RFID tag state machine</em>. <a href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8477015">https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8477015</a>&#160;<a class="footnote-backref" href="#fnref:47" title="Jump back to footnote 47 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:47" title="Jump back to footnote 47 in the text">&#8617;</a></p>
+</li>
+<li id="fn:48">
+<p>US Patent 9,000,891, <em>RFID readers, methods and computer program products for adjusting a query command slot-counter parameter Q</em>. <a href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9000891">https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9000891</a>&#160;<a class="footnote-backref" href="#fnref:48" title="Jump back to footnote 48 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:48" title="Jump back to footnote 48 in the text">&#8617;</a></p>
+</li>
+<li id="fn:49">
+<p>Impinj, <em>Impinj E700 Series Reader Chips</em>. <a href="https://www.impinj.com/products/reader-chips/impinj-e700-series-reader-chips">https://www.impinj.com/products/reader-chips/impinj-e700-series-reader-chips</a>&#160;<a class="footnote-backref" href="#fnref:49" title="Jump back to footnote 49 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:49" title="Jump back to footnote 49 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:49" title="Jump back to footnote 49 in the text">&#8617;</a></p>
+</li>
+<li id="fn:50">
+<p>Impinj, <em>Indy RS2000 Product Brief</em> (dengan catatan status akhir masa produksi). <a href="https://support.impinj.com/hc/article_attachments/360016175660/impinj-indy-rs2000-product-brief-en-us.pdf">https://support.impinj.com/hc/article_attachments/360016175660/impinj-indy-rs2000-product-brief-en-us.pdf</a>&#160;<a class="footnote-backref" href="#fnref:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:50" title="Jump back to footnote 50 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:50" title="Jump back to footnote 50 in the text">&#8617;</a></p>
+</li>
+<li id="fn:51">
+<p>RFID Journal, <em>New Reader Chips to Offer Higher Performance, Flexibility</em>. <a href="https://www.rfidjournal.com/?p=190865">https://www.rfidjournal.com/?p=190865</a>&#160;<a class="footnote-backref" href="#fnref:51" title="Jump back to footnote 51 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:51" title="Jump back to footnote 51 in the text">&#8617;</a></p>
+</li>
+<li id="fn:52">
+<p>STMicroelectronics, <em>ST25R3916B</em>. <a href="https://www.st.com/en/nfc/st25r3916b.html">https://www.st.com/en/nfc/st25r3916b.html</a>&#160;<a class="footnote-backref" href="#fnref:52" title="Jump back to footnote 52 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:52" title="Jump back to footnote 52 in the text">&#8617;</a></p>
+</li>
+<li id="fn:53">
+<p>ST Community, <em>STSW-ST25R-LIB using SPI while in IRQ context</em>. <a href="https://community.st.com/t5/st25-nfc-rfid-tags-and-readers/stsw-st25r-lib-using-spi-while-in-irq-context/m-p/729301">https://community.st.com/t5/st25-nfc-rfid-tags-and-readers/stsw-st25r-lib-using-spi-while-in-irq-context/m-p/729301</a>&#160;<a class="footnote-backref" href="#fnref:53" title="Jump back to footnote 53 in the text">&#8617;</a></p>
+</li>
+<li id="fn:54">
+<p>GS1, <em>Low Level Reader Protocol (LLRP)</em>, Release 2.0, 2021. <a href="https://ref.gs1.org/standards/llrp">https://ref.gs1.org/standards/llrp</a>&#160;<a class="footnote-backref" href="#fnref:54" title="Jump back to footnote 54 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:54" title="Jump back to footnote 54 in the text">&#8617;</a></p>
+</li>
+<li id="fn:55">
+<p>Wireshark Wiki, <em>Low-Level Reader Protocol (LLRP)</em>; lihat juga implementasi <code>edgexfoundry/device-rfid-llrp-go</code>. <a href="https://wiki.wireshark.org/LLRP">https://wiki.wireshark.org/LLRP</a>&#160;<a class="footnote-backref" href="#fnref:55" title="Jump back to footnote 55 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:55" title="Jump back to footnote 55 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:55" title="Jump back to footnote 55 in the text">&#8617;</a></p>
+</li>
+<li id="fn:56">
+<p>GS1 Support, <em>What is the EPC header for?</em> <a href="https://support.gs1.org/support/solutions/articles/43000734098-what-is-the-epc-header-for-">https://support.gs1.org/support/solutions/articles/43000734098-what-is-the-epc-header-for-</a>&#160;<a class="footnote-backref" href="#fnref:56" title="Jump back to footnote 56 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:56" title="Jump back to footnote 56 in the text">&#8617;</a></p>
+</li>
+<li id="fn:57">
+<p>GS1, <em>EPC Tag Data Standard</em>. <a href="https://ref.gs1.org/standards/tds/">https://ref.gs1.org/standards/tds/</a>&#160;<a class="footnote-backref" href="#fnref:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:57" title="Jump back to footnote 57 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:57" title="Jump back to footnote 57 in the text">&#8617;</a></p>
+</li>
+<li id="fn:58">
+<p>TSL (Technology Solutions UK), <em>LF, HF, dan UHF RFID</em>. <a href="https://www.tsl.com/?p=598">https://www.tsl.com/?p=598</a>&#160;<a class="footnote-backref" href="#fnref:58" title="Jump back to footnote 58 in the text">&#8617;</a></p>
+</li>
+<li id="fn:59">
+<p>STMicroelectronics, <em>ES0649 Errata sheet: ST25R3916B/ST25R3917B/ST25R3919B/ST25R3920B device limitations</em>. <a href="https://www.st.com.cn/resource/en/errata_sheet/es0649-st25r3916b-st25r3917b-st25r3919b-and-st25r3920b-device-limitations-stmicroelectronics.pdf">https://www.st.com.cn/resource/en/errata_sheet/es0649-st25r3916b-st25r3917b-st25r3919b-and-st25r3920b-device-limitations-stmicroelectronics.pdf</a>&#160;<a class="footnote-backref" href="#fnref:59" title="Jump back to footnote 59 in the text">&#8617;</a></p>
+</li>
+<li id="fn:61">
+<p>Arm, <em>ARMv7-M Architecture Reference Manual</em> (DDI 0403), bagian tentang dukungan akses tak-aligned dan register CCR. <a href="https://developer.arm.com/documentation/ddi0403/latest/">https://developer.arm.com/documentation/ddi0403/latest/</a>&#160;<a class="footnote-backref" href="#fnref:61" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:61" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:61" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:61" title="Jump back to footnote 60 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:61" title="Jump back to footnote 60 in the text">&#8617;</a></p>
+</li>
+<li id="fn:62">
+<p>crossgcc mailing list, <em>Memory mapped registers – WORD Access</em>, November 2001. <a href="https://sourceware.org/pipermail/crossgcc/2001-November/007396.html">https://sourceware.org/pipermail/crossgcc/2001-November/007396.html</a>&#160;<a class="footnote-backref" href="#fnref:62" title="Jump back to footnote 61 in the text">&#8617;</a></p>
+</li>
+<li id="fn:63">
+<p>pagetable.com, <em>Readable and Maintainable Bitfields in C</em>. <a href="https://www.pagetable.com/?p=250">https://www.pagetable.com/?p=250</a>&#160;<a class="footnote-backref" href="#fnref:63" title="Jump back to footnote 62 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:63" title="Jump back to footnote 62 in the text">&#8617;</a></p>
+</li>
+<li id="fn:64">
+<p>Intel Community, <em>SSE and AVX behavior with aligned/unaligned instructions</em>. <a href="https://community.intel.com/t5/Intel-ISA-Extensions/SSE-and-AVX-behavior-with-aligned-unaligned-instructions/td-p/1170000">https://community.intel.com/t5/Intel-ISA-Extensions/SSE-and-AVX-behavior-with-aligned-unaligned-instructions/td-p/1170000</a>&#160;<a class="footnote-backref" href="#fnref:64" title="Jump back to footnote 63 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>

@@ -1,0 +1,7 @@
+{
+  "jenis": "topik",
+  "judul": "Dari Kode ke Chip: Cara Compiler Berbicara dengan Hardware",
+  "subjudul": "Perjalanan sebuah baris kode dari bahasa pemrograman, compiler, linker, hingga transistor di mikrokontroler, termasuk memory alignment, volatile, cache, DMA, dan studi kasus pembaca serta tag RFID",
+  "kode": "topik-dari-bahasa-pemrograman-ke-chip-cara-compiler-berinteraksi-d",
+  "tanggal": "2026-11-12"
+}
