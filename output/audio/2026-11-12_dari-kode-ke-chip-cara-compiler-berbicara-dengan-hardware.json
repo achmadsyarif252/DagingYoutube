@@ -1,0 +1,79 @@
+{
+ "sidik": "21f395d8ba7e",
+ "suara": "id-ID-ArdiNeural",
+ "durasi": 5373,
+ "bab": [
+  {
+   "judul": "Pembuka",
+   "t": 0.0
+  },
+  {
+   "judul": "Pendahuluan",
+   "t": 19.2
+  },
+  {
+   "judul": "Gambaran Besar",
+   "t": 229.9
+  },
+  {
+   "judul": "Sejarah Singkat: Dari Kabel ke Compiler",
+   "t": 410.7
+  },
+  {
+   "judul": "Bahasa Pemrograman sebagai Kontrak",
+   "t": 755.1
+  },
+  {
+   "judul": "Di Dalam Compiler",
+   "t": 991.9
+  },
+  {
+   "judul": "Assembler, Linker, dan Kode Startup",
+   "t": 1491.3
+  },
+  {
+   "judul": "Di Dalam Chip: CPU, Bus, dan Periferal",
+   "t": 1782.9
+  },
+  {
+   "judul": "Memory Alignment Secara Tuntas",
+   "t": 2183.0
+  },
+  {
+   "judul": "Ketika Compiler dan Hardware Salah Paham",
+   "t": 2814.0
+  },
+  {
+   "judul": "Studi Kasus RFID: Dari Udara ke Server",
+   "t": 3184.3
+  },
+  {
+   "judul": "Data & Angka Kunci",
+   "t": 3783.9
+  },
+  {
+   "judul": "Perdebatan & Perspektif",
+   "t": 3809.6
+  },
+  {
+   "judul": "Kondisi Terkini & Prospek",
+   "t": 4004.6
+  },
+  {
+   "judul": "Kronologi",
+   "t": 4151.0
+  },
+  {
+   "judul": "Glosarium",
+   "t": 4179.0
+  },
+  {
+   "judul": "Kesimpulan",
+   "t": 4396.3
+  },
+  {
+   "judul": "Bacaan Lanjutan",
+   "t": 4556.9
+  }
+ ]
+}
